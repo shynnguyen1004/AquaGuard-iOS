@@ -1,0 +1,16 @@
+# Xcode
+.DS_Store
+*/build/
+*.os
+*.b
+*.pbuser
+*.xpbuser
+*.xccheckout
+*.xcscheme
+*.xcuserdata/
+*.xcworkspace/
+!default.xcworkspace/
+*.xcuserstate
+project.xcworkspace/
+xcuserdata/
+DerivedData/
