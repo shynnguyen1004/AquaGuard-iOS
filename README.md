@@ -64,7 +64,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/your-username/AquaGuard-iOS.git](https://github.com/your-username/AquaGuard-iOS.git)
+   git clone https://github.com/shynnguyen1004/AquaGuard-iOS
    ```
 2. Open the project in Xcode:
    ```bash
