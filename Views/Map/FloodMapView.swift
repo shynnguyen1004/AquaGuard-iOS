@@ -13,41 +13,67 @@ struct FloodMapView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // FIX: Sử dụng selection với Hashable FloodZone
+            // 1. MAP VIEW
             Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedZone) {
+                // BỔ SUNG: Hiển thị chấm xanh vị trí người dùng
+                UserAnnotation()
+                
+                // CODE CŨ: Hiển thị các vùng ngập
                 ForEach(viewModel.zones) { zone in
                     Marker(zone.name, coordinate: zone.coordinate)
                         .tint(zone.severity.color)
-                        .tag(zone) // Tag hoạt động được nhờ FloodZone đã Hashable
+                        .tag(zone)
                 }
             }
             .mapControls {
-                MapUserLocationButton()
+                // Bỏ MapUserLocationButton() mặc định đi để dùng nút custom xịn hơn ở dưới
                 MapCompass()
+                MapScaleView()
             }
             
-            // Map Legend
+            // 2. NÚT LOCATE (CUSTOM BUTTON) - Nằm góc trên phải
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        viewModel.checkLocationPermission()
+                    }) {
+                        Image(systemName: "location.fill")
+                            .font(.title2)
+                            .foregroundColor(.aquaNavy)
+                            .padding(12)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .shadow(radius: 4, x: 0, y: 2)
+                    }
+                    .padding(.trailing, 16)
+                    .padding(.top, 60) // Cách tai thỏ một chút
+                }
+                Spacer()
+            }
+            
+            // 3. MAP LEGEND (CODE CŨ GIỮ NGUYÊN)
             VStack {
                 HStack(spacing: 12) {
                     Label("Safe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaSafe)
+                        .foregroundColor(.aquaSafe) // Đảm bảo bạn có màu này trong Assets hoặc Extension
                         .font(.caption)
                     Label("Severe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaDanger)
+                        .foregroundColor(.aquaDanger) // Đảm bảo bạn có màu này
                         .font(.caption)
                     Label("Moderate", systemImage: "circle.fill")
-                        .foregroundColor(.aquaWarning)
+                        .foregroundColor(.aquaWarning) // Đảm bảo bạn có màu này
                         .font(.caption)
                     Label("Critical", systemImage: "circle.fill")
-                        .foregroundColor(.aquaCritical)
+                        .foregroundColor(.aquaCritical) // Đảm bảo bạn có màu này
                         .font(.caption)
                 }
                 .padding(8)
                 .background(.thinMaterial)
                 .cornerRadius(20)
-                Spacer()
+                Spacer() // Đẩy Legend lên trên một chút nếu cần, hoặc để nó nằm dưới cùng
             }
-            .padding(.top, 50)
+            .padding(.top, 30) // Cách đáy màn hình một chút
         }
         .sheet(item: $viewModel.selectedZone) { zone in
             ZoneDetailSheet(zone: zone)
@@ -57,6 +83,7 @@ struct FloodMapView: View {
     }
 }
 
+// Struct ZoneDetailSheet giữ nguyên như cũ...
 struct ZoneDetailSheet: View {
     let zone: FloodZone
     
@@ -96,7 +123,7 @@ struct ZoneDetailSheet: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.aquaPrimary)
+                    .background(Color.aquaPrimary) // Đảm bảo màu này tồn tại
                     .cornerRadius(12)
             }
             .padding(.horizontal)

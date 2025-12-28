@@ -442,6 +442,8 @@
 				DEVELOPMENT_TEAM = GV2ANVD55S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AquaGuard cần vị trí của bạn để hiển thị cảnh báo lũ lụt xung quanh";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -475,6 +477,8 @@
 				DEVELOPMENT_TEAM = GV2ANVD55S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AquaGuard cần vị trí của bạn để hiển thị cảnh báo lũ lụt xung quanh";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
