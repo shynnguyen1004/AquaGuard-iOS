@@ -15,7 +15,7 @@ class MapViewModel: ObservableObject {
     @Published var zones: [FloodZone] = MockData.floodZones
     @Published var selectedZone: FloodZone?
     @Published var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 10.7769, longitude: 106.7009),
+        center: CLLocationCoordinate2D(latitude: 10.778089, longitude: 106.681523),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     ))
 }

@@ -29,11 +29,17 @@ struct FloodMapView: View {
             // Map Legend
             VStack {
                 HStack(spacing: 12) {
+                    Label("Safe", systemImage: "circle.fill")
+                        .foregroundColor(.aquaSafe)
+                        .font(.caption)
                     Label("Severe", systemImage: "circle.fill")
                         .foregroundColor(.aquaDanger)
                         .font(.caption)
                     Label("Moderate", systemImage: "circle.fill")
                         .foregroundColor(.aquaWarning)
+                        .font(.caption)
+                    Label("Critical", systemImage: "circle.fill")
+                        .foregroundColor(.aquaCritical)
                         .font(.caption)
                 }
                 .padding(8)

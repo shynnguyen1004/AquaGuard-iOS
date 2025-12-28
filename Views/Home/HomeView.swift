@@ -45,8 +45,35 @@ struct HomeView: View {
                             .padding(.horizontal)
                         
                         HStack(spacing: 15) {
-                            QuickActionButton(icon: "phone.fill", label: "Emergency", color: .red)
+                            // Nút Shelter (Giữ nguyên)
                             QuickActionButton(icon: "house.fill", label: "Shelter", color: .aquaPrimary)
+                            
+                            // Nút SOS (Đã chỉnh sửa: Nền đỏ, chữ trắng)
+                            Button(action: {}) {
+                                VStack(spacing: 10) {
+                                    // Tạo hình tròn mờ làm nền cho Icon
+                                    Circle()
+                                        .fill(Color.white.opacity(0.2)) // Màu trắng mờ 20%
+                                        .frame(width: 50, height: 50)
+                                        .overlay(
+                                            Image(systemName: "phone.fill")
+                                                .font(.title2)
+                                                .foregroundColor(.white)
+                                        )
+                                    
+                                    Text("SOS")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color(red: 0.94, green: 0.27, blue: 0.27)) // Nền đỏ full nút
+                                .cornerRadius(15)
+                                .shadow(color: Color.red.opacity(0.3), radius: 5, x: 0, y: 2)
+                            }
+                            
+                            // Nút Family (Giữ nguyên)
                             QuickActionButton(icon: "person.2.fill", label: "Family", color: .orange)
                         }
                         .padding(.horizontal)
@@ -87,6 +114,36 @@ struct StatusCard: View {
     let location: String
     let level: SeverityLevel
     
+    // 1. Logic xác định Tiêu đề dựa trên level
+    private var statusTitle: String {
+        switch level {
+        case .low: return "Safe"
+        case .moderate: return "Caution"
+        case .severe: return "Danger"
+        case .critical: return "Critical"
+        }
+    }
+    
+    // 2. Logic xác định Màu nền
+    private var backgroundColor: Color {
+        switch level {
+        case .low: return Color.aquaSafe // Hoặc dùng Color("aquaSafe") nếu bạn có
+        case .moderate: return Color.aquaWarning
+        case .severe: return Color.aquaDanger
+        case .critical: return Color.aquaCritical //(red: 0.6, green: 0, blue: 0) // Màu đỏ đậm/huyết dụ cho Critical
+        }
+    }
+    
+    // 3. Logic xác định Icon
+    private var iconName: String {
+        switch level {
+        case .low: return "checkmark.shield.fill"
+        case .moderate: return "cloud.sun.fill"
+        case .severe: return "cloud.heavyrain.fill"
+        case .critical: return "exclamationmark.octagon.fill"
+        }
+    }
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
@@ -98,7 +155,8 @@ struct StatusCard: View {
                 .fontWeight(.bold)
                 .textCase(.uppercase)
                 
-                Text(level == .severe ? "Danger" : "Warning")
+                // Sử dụng biến statusTitle đã định nghĩa ở trên
+                Text(statusTitle)
                     .font(.largeTitle)
                     .fontWeight(.heavy)
                 
@@ -111,15 +169,17 @@ struct StatusCard: View {
                     .padding(.top, 4)
             }
             Spacer()
-            Image(systemName: level == .severe ? "cloud.heavyrain.fill" : "cloud.rain.fill")
+            // Sử dụng biến iconName đã định nghĩa ở trên
+            Image(systemName: iconName)
                 .font(.system(size: 60))
                 .opacity(0.8)
         }
         .foregroundColor(.white)
         .padding(20)
-        .background(level == .severe ? Color.aquaDanger : Color.aquaWarning)
+        // Sử dụng biến backgroundColor đã định nghĩa ở trên
+        .background(backgroundColor)
         .cornerRadius(20)
-        .shadow(color: level.color.opacity(0.4), radius: 10, x: 0, y: 5)
+        .shadow(color: backgroundColor.opacity(0.4), radius: 10, x: 0, y: 5)
     }
 }
 

@@ -15,9 +15,11 @@ extension Color {
     static let aquaNavy = Color(UIColor { traitCollection in
         return traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 0.11, green: 0.23, blue: 0.31, alpha: 1)
     })
-    
-    static let aquaDanger = Color(red: 0.94, green: 0.27, blue: 0.27)  // #EF4444
+
+    static let aquaSafe = Color.green //
     static let aquaWarning = Color(red: 0.96, green: 0.62, blue: 0.04) // #F59E0B
+    static let aquaDanger = Color(red: 0.94, green: 0.27, blue: 0.27)  // #EF4444
+    static let aquaCritical = Color(red: 0.435, green: 0.176, blue: 0.988) //##6F2DFC
     
     // FIX: Màu nền tổng thể (Xám nhạt / Đen)
     static let aquaBackground = Color(UIColor.systemGroupedBackground)

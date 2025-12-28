@@ -14,10 +14,10 @@ enum SeverityLevel: String, Codable {
     
     var color: Color {
         switch self {
-        case .low: return .green
+        case .low: return .aquaSafe
         case .moderate: return .aquaWarning
         case .severe: return .aquaDanger
-        case .critical: return .red
+        case .critical: return .aquaCritical
         }
     }
 }
@@ -52,13 +52,15 @@ struct Alert: Identifiable {
 // MARK: - Mock Data
 class MockData {
     static let floodZones = [
-        FloodZone(name: "Downtown District", coordinate: CLLocationCoordinate2D(latitude: 10.7769, longitude: 106.7009), severity: .severe, waterLevel: 1.2),
-        FloodZone(name: "Riverside Park", coordinate: CLLocationCoordinate2D(latitude: 10.7800, longitude: 106.7050), severity: .moderate, waterLevel: 0.5),
-        FloodZone(name: "Harbor View", coordinate: CLLocationCoordinate2D(latitude: 10.7700, longitude: 106.6900), severity: .low, waterLevel: 0.1)
+        FloodZone(name: "Phu Nhuan", coordinate: CLLocationCoordinate2D(latitude: 10.794211, longitude: 106.677869), severity: .moderate, waterLevel: 0.5),
+        FloodZone(name: "Bui Vien Walking Street", coordinate: CLLocationCoordinate2D(latitude: 10.767308, longitude: 106.693755), severity: .critical, waterLevel: 1.4),
+        FloodZone(name: "Cong Hoa Roundabout", coordinate: CLLocationCoordinate2D(latitude: 10.765401, longitude: 106.681643), severity: .severe, waterLevel: 0.9),
+        FloodZone(name: "HCMUT Football Field", coordinate: CLLocationCoordinate2D(latitude: 10.772741, longitude: 106.659507), severity: .low, waterLevel: 0.1),
+        FloodZone(name: "Nam Ky Khoi Nghia x Dien Bien Phu", coordinate: CLLocationCoordinate2D(latitude: 10.783487, longitude: 106.690790), severity: .low, waterLevel: 0.1)
     ]
     
     static let alerts = [
-        Alert(title: "Heavy Rainfall Expected", location: "Downtown District", timeAgo: "15 min ago", severity: .moderate, iconName: "cloud.heavyrain.fill"),
-        Alert(title: "River Water Level Rising", location: "Riverside Area", timeAgo: "1 hour ago", severity: .severe, iconName: "waveform.path.ecg")
+        Alert(title: "Heavy Rainfall Expected", location: "Bui Vien Walking Street", timeAgo: "15 min ago", severity: .moderate, iconName: "cloud.heavyrain.fill"),
+        Alert(title: "River Water Level Rising", location: "Phu Nhuan", timeAgo: "1 hour ago", severity: .severe, iconName: "waveform.path.ecg")
     ]
 }
