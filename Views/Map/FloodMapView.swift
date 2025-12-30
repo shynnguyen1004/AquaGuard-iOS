@@ -58,11 +58,11 @@ struct FloodMapView: View {
                     Label("Safe", systemImage: "circle.fill")
                         .foregroundColor(.aquaSafe) // Đảm bảo bạn có màu này trong Assets hoặc Extension
                         .font(.caption)
-                    Label("Severe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaDanger) // Đảm bảo bạn có màu này
-                        .font(.caption)
                     Label("Moderate", systemImage: "circle.fill")
                         .foregroundColor(.aquaWarning) // Đảm bảo bạn có màu này
+                        .font(.caption)
+                    Label("Severe", systemImage: "circle.fill")
+                        .foregroundColor(.aquaDanger) // Đảm bảo bạn có màu này
                         .font(.caption)
                     Label("Critical", systemImage: "circle.fill")
                         .foregroundColor(.aquaCritical) // Đảm bảo bạn có màu này

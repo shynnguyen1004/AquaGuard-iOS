@@ -12,5 +12,5 @@ import Combine // FIX: Import thư viện này để sửa lỗi ObservableObjec
 class HomeViewModel: ObservableObject {
     @Published var activeAlerts: [Alert] = MockData.alerts
     @Published var currentRiskLocation: String = "Ho Chi Minh city University of Technology, Dien Hong Ward"
-    @Published var currentRiskLevel: SeverityLevel = .low
+    @Published var currentRiskLevel: SeverityLevel = .severe
 }

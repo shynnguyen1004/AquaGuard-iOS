@@ -19,7 +19,7 @@ class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate { // B
     @Published var selectedZone: FloodZone?
     @Published var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 10.778089, longitude: 106.681523),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     ))
     
     // --- PHẦN BỔ SUNG CHO TÍNH NĂNG LOCATE ---
