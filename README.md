@@ -36,7 +36,7 @@
 
 ### 🆘 Safety & Connectivity (New)
 - **One-Tap SMS:** Smart "4G SOS" button allows users to instantly register for emergency data packages (Viettel, Vinaphone, Mobifone) with a single tap, ensuring connectivity when it matters most.
-- **Emergency Contacts:** Direct dial shortcuts for Police (113), Fire Brigade (114) or Ambulance (115).
+- **Emergency Contacts:** Direct dial shortcuts for Police (113), Fire Station (114) or Ambulance (115).
 - **Survival Guides:** Offline-accessible safety instructions for flood scenarios.
 
 ### 📝 Crowdsourced Reporting
@@ -54,7 +54,7 @@
 * **Language:** Swift 5.9
 * **UI Framework:** SwiftUI (MVVM Architecture)
 * **Maps:** MapKit & CoreLocation
-* **Compatibility:** iOS 16.0+
+* **Compatibility:** iOS 26.0+
 * **Tools:** Xcode 16
 
 ---
