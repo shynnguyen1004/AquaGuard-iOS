@@ -18,7 +18,7 @@ struct ReportView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(height: 100)
-                        .padding(.top, -20)
+                        .padding(.top, -3)
                         .frame(maxWidth: .infinity, alignment: .center)
                     // Header Illustration
                     Image(systemName: "exclamationmark.bubble.fill")
@@ -33,15 +33,23 @@ struct ReportView: View {
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
                             
-                            HStack {
-                                TextField("Enter street or landmark", text: $viewModel.locationName)
-                                    .foregroundColor(.primary) // Tự động trắng/đen
-                                
-                                Button(action: { viewModel.locationName = "Current Location: 10.77, 106.70" }) {
-                                    Image(systemName: "location.fill")
-                                        .foregroundColor(.aquaPrimary)
-                                }
-                            }
+                            // Location Input Row
+                                    HStack {
+                                        TextField("Enter location or pin on map", text: $viewModel.locationName)
+                                            //.textFieldStyle(RoundedBorderTextFieldStyle())
+                                        
+                                        // Nút Lấy Vị Trí (Đã sửa logic)
+                                        Button(action: {
+                                            // Gọi hàm lấy toạ độ thật từ ViewModel
+                                            viewModel.requestCurrentLocation()
+                                        }) {
+                                            Image(systemName: "location.fill")
+                                                .foregroundColor(.aquaPrimary)
+                                                .padding(10) // Tăng vùng bấm lên một chút cho dễ bấm
+                                                .background(Color.aquaPrimary.opacity(0.1)) // Thêm nền mờ cho đẹp
+                                                .cornerRadius(8)
+                                        }
+                                    }
                             .padding()
                             .background(Color.aquaCard) // FIX: Dùng màu nền thông minh
                             .cornerRadius(12)
@@ -77,7 +85,7 @@ struct ReportView: View {
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
                             
-                            TextEditor(text: $viewModel.description)
+                            TextEditor(text: $viewModel.reportDescription)
                                 .scrollContentBackground(.hidden) // FIX: Ẩn nền trắng mặc định của iOS
                                 .frame(height: 100)
                                 .padding(8)

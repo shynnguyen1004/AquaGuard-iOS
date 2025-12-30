@@ -54,7 +54,7 @@ class MockData {
     static let floodZones = [
         FloodZone(name: "Phu Nhuan", coordinate: CLLocationCoordinate2D(latitude: 10.794211, longitude: 106.677869), severity: .moderate, waterLevel: 0.5),
         FloodZone(name: "Bui Vien Walking Street", coordinate: CLLocationCoordinate2D(latitude: 10.767308, longitude: 106.693755), severity: .critical, waterLevel: 1.4),
-        FloodZone(name: "Cong Hoa Roundabout", coordinate: CLLocationCoordinate2D(latitude: 10.765401, longitude: 106.681643), severity: .severe, waterLevel: 0.9),
+        FloodZone(name: "An Dong Market", coordinate: CLLocationCoordinate2D(latitude: 10.757304, longitude: 106.672451), severity: .severe, waterLevel: 0.9),
         FloodZone(name: "HCMUT Football Field", coordinate: CLLocationCoordinate2D(latitude: 10.772741, longitude: 106.659507), severity: .low, waterLevel: 0.1),
         FloodZone(name: "Nam Ky Khoi Nghia x Dien Bien Phu", coordinate: CLLocationCoordinate2D(latitude: 10.783487, longitude: 106.690790), severity: .low, waterLevel: 0.1)
     ]

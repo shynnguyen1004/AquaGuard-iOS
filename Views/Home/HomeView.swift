@@ -15,6 +15,13 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     // Header
+                    Image("AquaLogoHeader")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 100)
+                        .padding(.top, -20)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Welcome back,")

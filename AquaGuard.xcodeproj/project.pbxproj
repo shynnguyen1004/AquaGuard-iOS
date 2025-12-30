@@ -27,6 +27,8 @@
 		3A7D4C512EF035C7006B202E /* AquaGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AquaGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A7D4C5E2EF035CC006B202E /* AquaGuardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AquaGuardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AquaGuardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A9F39422F03FA88001F31D5 /* sydney.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = sydney.gpx; path = ../../../../truongsonnguyen/Downloads/sydney.gpx; sourceTree = "<group>"; };
+		3A9F39442F041FA4001F31D5 /* hcmc.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = hcmc.gpx; path = ../../../../truongsonnguyen/Downloads/hcmc.gpx; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -115,6 +117,8 @@
 		3A7D4C482EF035C7006B202E = {
 			isa = PBXGroup;
 			children = (
+				3A9F39442F041FA4001F31D5 /* hcmc.gpx */,
+				3A9F39422F03FA88001F31D5 /* sydney.gpx */,
 				3A7D4C532EF035C7006B202E /* AquaGuard */,
 				3A7D4C612EF035CC006B202E /* AquaGuardTests */,
 				3A7D4C6B2EF035CC006B202E /* AquaGuardUITests */,

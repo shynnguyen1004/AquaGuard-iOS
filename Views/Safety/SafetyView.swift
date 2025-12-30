@@ -215,18 +215,23 @@ struct EmergencyCallButton: View {
             HStack {
                 Image(systemName: icon)
                     .font(.title3)
+                    
                 VStack(alignment: .leading) {
                     Text(label)
                         .font(.caption)
                         .fontWeight(.bold)
+                        //.frame(maxWidth: .inftrinity, alignment: .trailing)
+
                     Text(number)
                         .font(.caption2)
                         .fontWeight(.bold)
+                        //.frame(maxWidth: .infinity, alignment: .trailing)
+
                 }
+                
                 Spacer()
             }
             .padding(10)
-            //.padding(.horizontal)
             .foregroundColor(.white)
             .background(color)
             .cornerRadius(12)
