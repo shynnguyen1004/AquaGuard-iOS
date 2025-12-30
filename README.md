@@ -15,7 +15,7 @@
 
 | Home Dashboard | Flood Map | Incident Report | Safety Guides | Rescue Ops |
 |:---:|:---:|:---:|:---:|:---:|
-| <img src="Captures/home.PNG" width="200"/> | <img src="Captures/map.PNG" width="200"/> | <img src="Captures/report.PNG" width="200"/> | <img src="Captures/safety.PNG" width="200"/> | <img src="Captures/rescue.PNG" width="200"/> |
+| <img src="Captures/home.png" width="200"/> | <img src="Captures/map.png" width="200"/> | <img src="Captures/report.png" width="200"/> | <img src="Captures/safety.png" width="200"/> | <img src="Captures/rescue.png" width="200"/> |
 
 ---
 
