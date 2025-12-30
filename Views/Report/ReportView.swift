@@ -14,11 +14,17 @@ struct ReportView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    Image("AquaLogoHeader")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 100)
+                        .padding(.top, -20)
+                        .frame(maxWidth: .infinity, alignment: .center)
                     // Header Illustration
                     Image(systemName: "exclamationmark.bubble.fill")
                         .font(.system(size: 50))
                         .foregroundColor(.aquaPrimary)
-                        .padding(.top, 20)
+                        //.padding(.top, 20)
                     
                     VStack(alignment: .leading, spacing: 20) {
                         // Location Field
@@ -131,8 +137,7 @@ struct ReportView: View {
                 }
             }
             .background(Color.aquaBackground)
-            .navigationTitle("Report Incident")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
             .alert("Report Submitted", isPresented: $viewModel.showSuccessAlert) {
                 Button("OK", role: .cancel) { }
             } message: {

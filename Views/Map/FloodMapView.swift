@@ -40,14 +40,14 @@ struct FloodMapView: View {
                     }) {
                         Image(systemName: "location.fill")
                             .font(.title2)
-                            .foregroundColor(.aquaNavy)
+                            .foregroundColor(.aquaPrimary)
                             .padding(12)
                             .background(Color.white)
                             .clipShape(Circle())
-                            .shadow(radius: 4, x: 0, y: 2)
+                            .shadow(radius: 3, x: 0, y: 2)
                     }
                     .padding(.trailing, 16)
-                    .padding(.top, 60) // Cách tai thỏ một chút
+                    .padding(.top, 70) // Cách tai thỏ một chút
                 }
                 Spacer()
             }

@@ -11,7 +11,7 @@ struct ContentView: View {
     // Customizing TabBar appearance
     init() {
         UITabBar.appearance().unselectedItemTintColor = UIColor.systemGray
-        UITabBar.appearance().backgroundColor = UIColor.systemBackground
+        //UITabBar.appearance().backgroundColor = UIColor.systemBackground
     }
     
     var body: some View {

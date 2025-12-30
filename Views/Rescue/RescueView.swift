@@ -127,6 +127,13 @@ struct RescueView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Resource Availability
+                    Image("AquaLogoHeader")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 100)
+                        .padding(.top, -20)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
                     Text("Resource Availability")
                         .font(.headline).foregroundColor(.aquaNavy)
                         .padding(.horizontal)
@@ -160,8 +167,7 @@ struct RescueView: View {
                 .padding(.vertical)
             }
             .background(Color.aquaBackground)
-            .navigationTitle("AquaGuard")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
         }
     }
 }

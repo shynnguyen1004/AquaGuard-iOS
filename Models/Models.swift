@@ -64,3 +64,18 @@ class MockData {
         Alert(title: "River Water Level Rising", location: "Phu Nhuan", timeAgo: "1 hour ago", severity: .severe, iconName: "waveform.path.ecg")
     ]
 }
+
+struct DataPackage {
+    let carrier: String
+    let name: String
+    let number: String
+    let syntax: String
+}
+
+// Danh sách các gói cứu hộ nhanh
+let emergencyPackages = [
+    DataPackage(carrier: "Viettel", name: "ST5K (5k/500MB)", number: "191", syntax: "ST5K"),
+    DataPackage(carrier: "Vinaphone", name: "D5 (5k/1GB)", number: "888", syntax: "DK D5"),
+    DataPackage(carrier: "Mobifone", name: "D5 (5k/1GB)", number: "999", syntax: "DK D5"),
+    DataPackage(carrier: "Vietnamobile", name: "N3 (3k/3GB)", number: "345", syntax: "DK N3")
+]

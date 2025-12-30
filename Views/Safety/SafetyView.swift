@@ -1,11 +1,5 @@
-//
-//  SafetyView.swift
-//  AquaGuard
-//
-//  Created by Shyn Nguyễn on 16/12/25.
-//
-
 import SwiftUI
+
 
 struct SafetyStep: View {
     let text: String
@@ -74,27 +68,82 @@ struct SafetySection: View {
 }
 
 struct SafetyView: View {
+    // Biến để bật tắt menu chọn nhà mạng
+    @State private var showCarrierSelection = false
+    
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    // Emergency Contacts Header
-                    VStack(alignment: .leading, spacing: 15) {
-                        Label("Emergency Contacts", systemImage: "phone.fill")
-                            .font(.headline)
-                            .foregroundColor(.red)
-                        
-                        VStack(spacing: 1) {
-                            ContactRow(name: "Emergency Services", phone: "113, 114, 115")
-                            Divider()
-                            ContactRow(name: "Flood Hotline", phone: "1800 6132")
-                        }
-                        .background(Color.aquaCard)
-                        .cornerRadius(15)
-                    }
-                    .padding(.horizontal)
+                VStack(alignment: .leading, spacing: 20) {
                     
-                    // Safety Sections
+                    // --- HEADER LOGO (Code cũ giữ nguyên) ---
+                    Image("AquaLogoHeader")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 100)
+                        .padding(.top, -20)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
+                    Text("Emergency Assistance")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.aquaNavy)
+                    
+                    // --- KHỐI CHỨC NĂNG KHẨN CẤP (MỚI) ---
+                    HStack(spacing: 15) {
+                        
+                        // CỘT TRÁI: Các số điện thoại khẩn cấp
+                        VStack(spacing: 10) {
+                            EmergencyCallButton(icon: "shield.fill", number: "113", label: "Police", color: .red)
+                            EmergencyCallButton(icon: "fire.extinguisher.fill", number: "114", label: "Fire Brigade", color: .red)
+                            EmergencyCallButton(icon: "cross.case.fill", number: "115", label: "Ambulance", color: .red)
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        // CỘT PHẢI: Nút Đăng ký 4G Đa Năng (Màu xanh dương)
+                        Button(action: {
+                            showCarrierSelection = true
+                        }) {
+                            VStack(spacing: 12) {
+                                Image(systemName: "antenna.radiowaves.left.and.right")
+                                    .font(.system(size: 64))
+                                    .fontWeight(.bold)
+                                
+                                Text("4G SOS")
+                                    //.font(.headline)
+                                    .font(.system(size: 16))
+                                    .fontWeight(.heavy)
+                                
+                                Text("Tap to Register")
+                                    .font(.caption2)
+                                    .opacity(0.8)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 180) // Chiều cao bằng 2 nút bên kia cộng lại
+                            .background(Color.aquaPrimary) // Màu xanh dương
+                            .cornerRadius(16)
+                            .shadow(color: .aquaPrimary.opacity(0.3), radius: 5, x: 0, y: 3)
+                        }
+                        // MENU CHỌN NHÀ MẠNG (Hiện ra khi bấm nút)
+                        .confirmationDialog("Select your Carrier", isPresented: $showCarrierSelection, titleVisibility: .visible) {
+                            ForEach(emergencyPackages, id: \.carrier) { pkg in
+                                Button("\(pkg.carrier) - \(pkg.name)") {
+                                    sendSMS(number: pkg.number, message: pkg.syntax)
+                                }
+                            }
+                            Button("Cancel", role: .cancel) {}
+                        }
+                    }
+                    // ----------------------------------------
+
+                    Text("Safety Guides")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.aquaNavy)
+                        .padding(.top)
+                    
+                    // ... Phần danh sách hướng dẫn bên dưới giữ nguyên ...
                     SafetySection(
                         icon: "house.fill",
                         iconColor: .red,
@@ -138,27 +187,50 @@ struct SafetyView: View {
                     )
                     .padding(.horizontal)
                 }
-                .padding(.vertical)
+                .padding()
             }
+            .navigationBarHidden(true)
             .background(Color.aquaBackground)
-            .navigationTitle("AquaGuard")
-            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+    
+    // Hàm gửi tin nhắn
+    func sendSMS(number: String, message: String) {
+        let smsString = "sms:\(number)&body=\(message)"
+        if let url = URL(string: smsString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!) {
+            UIApplication.shared.open(url)
         }
     }
 }
 
-struct ContactRow: View {
-    let name: String
-    let phone: String
+// Component nút gọi nhỏ (cho cột bên trái)
+struct EmergencyCallButton: View {
+    let icon: String
+    let number: String
+    let label: String
+    let color: Color
+    
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(name).font(.subheadline).bold()
-                Text(phone).font(.caption).foregroundColor(.gray)
+        Link(destination: URL(string: "tel:\(number)")!) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title3)
+                VStack(alignment: .leading) {
+                    Text(label)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                    Text(number)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                }
+                Spacer()
             }
-            Spacer()
-            Image(systemName: "chevron.right").font(.caption).foregroundColor(.gray)
+            .padding(10)
+            //.padding(.horizontal)
+            .foregroundColor(.white)
+            .background(color)
+            .cornerRadius(12)
+            .shadow(color: color.opacity(0.3), radius: 3, x: 0, y: 2)
         }
-        .padding()
     }
 }
