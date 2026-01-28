@@ -15,6 +15,9 @@ class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         span: MKCoordinateSpan(latitudeDelta: 10, longitudeDelta: 10)
     ))
     
+    // --- 1. THÊM BIẾN NÀY ĐỂ LƯU ĐƯỜNG ĐI ---
+    @Published var route: MKRoute?
+    
     private let locationManager = CLLocationManager()
     private var db = Firestore.firestore() // 3. Khởi tạo Database
     private var listenerRegistration: ListenerRegistration? // Biến để quản lý việc lắng nghe
@@ -23,6 +26,46 @@ class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         setupLocationManager()
         fetchFloodZones() // 4. Gọi hàm lấy dữ liệu ngay khi khởi tạo
+    }
+    
+    // --- 2. THÊM HÀM TÍNH TOÁN ĐƯỜNG ĐI ---
+    func getDirections(to zone: FloodZone) {
+        // Kiểm tra xem đã có vị trí người dùng chưa
+        guard let userLocation = locationManager.location else {
+            print("Chưa lấy được vị trí người dùng")
+            return
+        }
+        
+        // Tạo yêu cầu chỉ đường
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation.coordinate))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: zone.coordinate))
+        request.transportType = .automobile // Hoặc .walking nếu muốn
+        
+        let directions = MKDirections(request: request)
+        
+        Task {
+            do {
+                let response = try await directions.calculate()
+                // Lấy đường đi đầu tiên (ngắn nhất/tốt nhất)
+                if let firstRoute = response.routes.first {
+                    self.route = firstRoute
+                    
+                    // Tự động zoom bản đồ để thấy toàn bộ quãng đường
+                    withAnimation {
+                        self.cameraPosition = .item(MKMapItem(placemark: MKPlacemark(coordinate: zone.coordinate)))
+                        // Hoặc dùng .rect(firstRoute.polyline.boundingMapRect) nếu muốn bao quát hơn
+                    }
+                }
+            } catch {
+                print("Lỗi tìm đường: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    // --- 3. HÀM XÓA ĐƯỜNG ĐI (Khi user không muốn xem nữa) ---
+    func clearRoute() {
+        self.route = nil
     }
     
     // --- HÀM MỚI: Lắng ngh dữ liệu Realtime ---
