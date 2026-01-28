@@ -11,8 +11,8 @@ class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var zones: [FloodZone] = [] // 2. Xoá MockData, để mảng rỗng ban đầu
     @Published var selectedZone: FloodZone?
     @Published var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 10.778089, longitude: 106.681523),
-        span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+        center: CLLocationCoordinate2D(latitude: 16.352147, longitude: 107.016871),
+        span: MKCoordinateSpan(latitudeDelta: 10, longitudeDelta: 10)
     ))
     
     private let locationManager = CLLocationManager()
