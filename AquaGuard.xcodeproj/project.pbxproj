@@ -6,6 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3A6776DE2F27802F006396C8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776DD2F27802F006396C8 /* FirebaseAuth */; };
+		3A6776E02F27802F006396C8 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776DF2F27802F006396C8 /* FirebaseDatabase */; };
+		3A6776E22F27802F006396C8 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776E12F27802F006396C8 /* FirebaseFirestore */; };
+		3A6776E42F27802F006396C8 /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776E32F27802F006396C8 /* FirebaseInAppMessaging-Beta */; };
+		3A6776E62F27802F006396C8 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776E52F27802F006396C8 /* FirebaseMessaging */; };
+		3A6776E82F27802F006396C8 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776E72F27802F006396C8 /* FirebaseRemoteConfig */; };
+		3A6776EA2F27802F006396C8 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3A6776E92F27802F006396C8 /* FirebaseStorage */; };
+		3A94DFD52F2A001100CDF258 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFD42F2A001100CDF258 /* GoogleSignIn */; };
+		3A94DFD72F2A001100CDF258 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFD62F2A001100CDF258 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3A7D4C5F2EF035CC006B202E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -32,6 +44,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3A94DFD22F29C7B900CDF258 /* Exceptions for "AquaGuard" folder in "AquaGuard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3A7D4C502EF035C7006B202E /* AquaGuard */;
+		};
 		3AB1AA612EF06ADD006C37A3 /* Exceptions for "Models" folder in "AquaGuard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -42,6 +61,7 @@
 		3AB1AA622EF06ADD006C37A3 /* Exceptions for "ViewModels" folder in "AquaGuard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AuthenticationViewModel.swift,
 				HomeViewModel.swift,
 				MapViewModel.swift,
 				ReportViewModel.swift,
@@ -53,6 +73,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3A7D4C532EF035C7006B202E /* AquaGuard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3A94DFD22F29C7B900CDF258 /* Exceptions for "AquaGuard" folder in "AquaGuard" target */,
+			);
 			path = AquaGuard;
 			sourceTree = "<group>";
 		};
@@ -64,6 +87,11 @@
 		3A7D4C6B2EF035CC006B202E /* AquaGuardUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = AquaGuardUITests;
+			sourceTree = "<group>";
+		};
+		3AA3137F2F1967C20068E471 /* Services */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Services;
 			sourceTree = "<group>";
 		};
 		3AB1AA482EF06ADD006C37A3 /* Models */ = {
@@ -94,6 +122,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A94DFD72F2A001100CDF258 /* GoogleSignInSwift in Frameworks */,
+				3A6776E02F27802F006396C8 /* FirebaseDatabase in Frameworks */,
+				3A94DFD52F2A001100CDF258 /* GoogleSignIn in Frameworks */,
+				3A6776DE2F27802F006396C8 /* FirebaseAuth in Frameworks */,
+				3A6776E62F27802F006396C8 /* FirebaseMessaging in Frameworks */,
+				3A6776E82F27802F006396C8 /* FirebaseRemoteConfig in Frameworks */,
+				3A6776EA2F27802F006396C8 /* FirebaseStorage in Frameworks */,
+				3A6776E22F27802F006396C8 /* FirebaseFirestore in Frameworks */,
+				3A6776E42F27802F006396C8 /* FirebaseInAppMessaging-Beta in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,6 +154,7 @@
 		3A7D4C482EF035C7006B202E = {
 			isa = PBXGroup;
 			children = (
+				3AA3137F2F1967C20068E471 /* Services */,
 				3A9F39442F041FA4001F31D5 /* hcmc.gpx */,
 				3A9F39422F03FA88001F31D5 /* sydney.gpx */,
 				3A7D4C532EF035C7006B202E /* AquaGuard */,
@@ -160,6 +198,15 @@
 			);
 			name = AquaGuard;
 			packageProductDependencies = (
+				3A6776DD2F27802F006396C8 /* FirebaseAuth */,
+				3A6776DF2F27802F006396C8 /* FirebaseDatabase */,
+				3A6776E12F27802F006396C8 /* FirebaseFirestore */,
+				3A6776E32F27802F006396C8 /* FirebaseInAppMessaging-Beta */,
+				3A6776E52F27802F006396C8 /* FirebaseMessaging */,
+				3A6776E72F27802F006396C8 /* FirebaseRemoteConfig */,
+				3A6776E92F27802F006396C8 /* FirebaseStorage */,
+				3A94DFD42F2A001100CDF258 /* GoogleSignIn */,
+				3A94DFD62F2A001100CDF258 /* GoogleSignInSwift */,
 			);
 			productName = AquaGuard;
 			productReference = 3A7D4C512EF035C7006B202E /* AquaGuard.app */;
@@ -243,6 +290,10 @@
 			);
 			mainGroup = 3A7D4C482EF035C7006B202E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				3A94DFD32F2A001100CDF258 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3A7D4C522EF035C7006B202E /* Products */;
 			projectDirPath = "";
@@ -446,7 +497,7 @@
 				DEVELOPMENT_TEAM = GV2ANVD55S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = AquaGuard/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AquaGuard cần vị trí của bạn để hiển thị cảnh báo lũ lụt xung quanh";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -481,7 +532,7 @@
 				DEVELOPMENT_TEAM = GV2ANVD55S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = AquaGuard/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AquaGuard cần vị trí của bạn để hiển thị cảnh báo lũ lụt xung quanh";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -626,6 +677,73 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+		3A94DFD32F2A001100CDF258 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3A6776DD2F27802F006396C8 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		3A6776DF2F27802F006396C8 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		3A6776E12F27802F006396C8 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		3A6776E32F27802F006396C8 /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
+		};
+		3A6776E52F27802F006396C8 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		3A6776E72F27802F006396C8 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
+		3A6776E92F27802F006396C8 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A6776DC2F27802F006396C8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		3A94DFD42F2A001100CDF258 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A94DFD32F2A001100CDF258 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		3A94DFD62F2A001100CDF258 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A94DFD32F2A001100CDF258 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3A7D4C492EF035C7006B202E /* Project object */;
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
@@ -27,16 +28,59 @@ struct HomeView: View {
                             Text("Welcome back,")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
-                            Text("Responder Alpha")
+                            Text(Auth.auth().currentUser?.displayName ?? "Responder Alpha")
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.aquaNavy)
                         }
                         Spacer()
-                        Image(systemName: "person.crop.circle.fill")
+                        /*Image(systemName: "person.crop.circle.fill")
                             .resizable()
                             .frame(width: 40, height: 40)
                             .foregroundColor(.gray)
+                         */
+                        // --- ĐOẠN CODE MỚI ---
+                        // Kiểm tra xem User hiện tại có ảnh Avatar không?
+                        // --- ĐOẠN CODE AVATAR CÓ CHỨC NĂNG ĐĂNG XUẤT ---
+                        Menu {
+                            Button(role: .destructive) {
+                                do {
+                                    try Auth.auth().signOut()
+                                    // Khi đăng xuất, AquaGuardApp sẽ tự động phát hiện
+                                    // và chuyển về màn hình LoginView ngay lập tức.
+                                } catch {
+                                    print("Lỗi đăng xuất: \(error.localizedDescription)")
+                                }
+                            } label: {
+                                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                            }
+                        } label: {
+                            // Phần giao diện Avatar (Code cũ của bạn nằm trong này)
+                            if let photoURL = Auth.auth().currentUser?.photoURL {
+                                AsyncImage(url: photoURL) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 40, height: 40)
+                                            .clipShape(Circle())
+                                            .overlay(Circle().stroke(Color.aquaPrimary, lineWidth: 2))
+                                            .shadow(radius: 3)
+                                    default:
+                                        Image(systemName: "person.crop.circle.fill")
+                                            .resizable()
+                                            .frame(width: 40, height: 40)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            } else {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .frame(width: 40, height: 40)
+                                    .foregroundColor(.gray)
+                            }
+                        }
                     }
                     .padding(.horizontal)
                     

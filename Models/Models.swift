@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import SwiftUI
+import FirebaseFirestore // Nhớ import cái này
 
 enum SeverityLevel: String, Codable {
     case low, moderate, severe, critical
@@ -22,19 +23,35 @@ enum SeverityLevel: String, Codable {
     }
 }
 
-// FIX: Thêm Hashable và Equatable thủ công vì CLLocationCoordinate2D không tự hỗ trợ
-struct FloodZone: Identifiable, Hashable {
-    let id = UUID()
-    let name: String
-    let coordinate: CLLocationCoordinate2D
-    let severity: SeverityLevel
-    let waterLevel: Double
+// CẬP NHẬT STRUCT NÀY (Thêm Hashable và hàm so sánh)
+struct FloodZone: Identifiable, Codable, Hashable {
+    @DocumentID var id: String?
     
-    // Hàm so sánh để tuân thủ Equatable/Hashable
+    var name: String
+    var location: GeoPoint
+    var severity: SeverityLevel
+    var waterLevel: Double
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case location
+        case severity
+        case waterLevel = "water_level"
+    }
+    
+    var coordinate: CLLocationCoordinate2D {
+        return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+    }
+    
+    // --- PHẦN BỔ SUNG QUAN TRỌNG ĐỂ SỬA LỖI ---
+    
+    // 1. Hàm so sánh bằng (Equatable): Chỉ cần ID giống nhau là coi như giống nhau
     static func == (lhs: FloodZone, rhs: FloodZone) -> Bool {
         return lhs.id == rhs.id
     }
     
+    // 2. Hàm băm (Hashable): Dùng ID để tạo mã băm
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -52,12 +69,31 @@ struct Alert: Identifiable {
 // MARK: - Mock Data
 class MockData {
     static let floodZones = [
-        FloodZone(name: "Phu Nhuan", coordinate: CLLocationCoordinate2D(latitude: 10.794211, longitude: 106.677869), severity: .moderate, waterLevel: 0.5),
-        FloodZone(name: "Bui Vien Walking Street", coordinate: CLLocationCoordinate2D(latitude: 10.767308, longitude: 106.693755), severity: .critical, waterLevel: 1.4),
-        FloodZone(name: "An Dong Market", coordinate: CLLocationCoordinate2D(latitude: 10.757304, longitude: 106.672451), severity: .severe, waterLevel: 0.9),
-        FloodZone(name: "HCMUT Football Field", coordinate: CLLocationCoordinate2D(latitude: 10.772741, longitude: 106.659507), severity: .low, waterLevel: 0.1),
-        FloodZone(name: "Nam Ky Khoi Nghia x Dien Bien Phu", coordinate: CLLocationCoordinate2D(latitude: 10.783487, longitude: 106.690790), severity: .low, waterLevel: 0.1)
-    ]
+            FloodZone(name: "Phu Nhuan",
+                      location: GeoPoint(latitude: 10.794211, longitude: 106.677869),
+                      severity: .moderate,
+                      waterLevel: 0.5),
+            
+            FloodZone(name: "Bui Vien Walking Street",
+                      location: GeoPoint(latitude: 10.767308, longitude: 106.693755),
+                      severity: .critical,
+                      waterLevel: 1.4),
+            
+            FloodZone(name: "An Dong Market",
+                      location: GeoPoint(latitude: 10.757304, longitude: 106.672451),
+                      severity: .severe,
+                      waterLevel: 0.9),
+            
+            FloodZone(name: "HCMUT Football Field",
+                      location: GeoPoint(latitude: 10.772741, longitude: 106.659507),
+                      severity: .low,
+                      waterLevel: 0.1),
+            
+            FloodZone(name: "Nam Ky Khoi Nghia x Dien Bien Phu",
+                      location: GeoPoint(latitude: 10.783487, longitude: 106.690790),
+                      severity: .low,
+                      waterLevel: 0.1)
+        ]
     
     static let alerts = [
         Alert(title: "Heavy Rainfall Expected", location: "Bui Vien Walking Street", timeAgo: "15 min ago", severity: .moderate, iconName: "cloud.heavyrain.fill"),

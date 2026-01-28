@@ -1,52 +1,68 @@
-//
-//  MapViewModel.swift
-//  AquaGuard
-//
-//  Created by Shyn Nguyễn on 15/12/25.
-//
-
 import Foundation
 import MapKit
 import Combine
 import SwiftUI
-import CoreLocation // BỔ SUNG: Import CoreLocation
+import CoreLocation
+import FirebaseFirestore // 1. Import Firebase
 
 @MainActor
-class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate { // BỔ SUNG: Kế thừa NSObject, CLLocationManagerDelegate
+class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     
-    // --- CODE CŨ (GIỮ NGUYÊN) ---
-    @Published var zones: [FloodZone] = MockData.floodZones
+    @Published var zones: [FloodZone] = [] // 2. Xoá MockData, để mảng rỗng ban đầu
     @Published var selectedZone: FloodZone?
     @Published var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 10.778089, longitude: 106.681523),
         span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
     ))
     
-    // --- PHẦN BỔ SUNG CHO TÍNH NĂNG LOCATE ---
     private let locationManager = CLLocationManager()
+    private var db = Firestore.firestore() // 3. Khởi tạo Database
+    private var listenerRegistration: ListenerRegistration? // Biến để quản lý việc lắng nghe
     
     override init() {
         super.init()
         setupLocationManager()
+        fetchFloodZones() // 4. Gọi hàm lấy dữ liệu ngay khi khởi tạo
     }
     
+    // --- HÀM MỚI: Lắng ngh dữ liệu Realtime ---
+    func fetchFloodZones() {
+        listenerRegistration = db.collection("flood_zones").addSnapshotListener { [weak self] (querySnapshot, error) in
+            guard let documents = querySnapshot?.documents else {
+                print("LỖI: Không tìm thấy document nào hoặc lỗi mạng: \(error?.localizedDescription ?? "Unknown")")
+                return
+            }
+            
+            print("TÌM THẤY: \(documents.count) địa điểm trên Firebase") // Xem nó in ra số mấy
+            
+            self?.zones = documents.compactMap { queryDocumentSnapshot -> FloodZone? in
+                let zone = try? queryDocumentSnapshot.data(as: FloodZone.self)
+                if zone == nil { print("LỖI GIẢI MÃ: Document ID \(queryDocumentSnapshot.documentID) bị sai dữ liệu") }
+                return zone
+            }
+        }
+    }
+    
+    // Hủy lắng nghe khi không dùng nữa (tốt cho hiệu năng)
+    deinit {
+        listenerRegistration?.remove()
+    }
+    
+    // ... (Giữ nguyên các hàm setupLocationManager, checkLocationPermission cũ của bạn ở dưới) ...
     func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
     
-    // Hàm gọi khi bấm nút Locate
     func checkLocationPermission() {
         switch locationManager.authorizationStatus {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
             print("Location access denied")
-            // Ở đây có thể thêm logic hiển thị Alert hướng dẫn user bật lại trong Settings
         case .authorizedAlways, .authorizedWhenInUse:
             if let location = locationManager.location {
                 withAnimation {
-                    // Zoom camera về vị trí người dùng
                     cameraPosition = .region(MKCoordinateRegion(
                         center: location.coordinate,
                         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -58,11 +74,7 @@ class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate { // B
         }
     }
     
-    // Tự động check khi quyền thay đổi (ví dụ user vừa bấm Allow)
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        Task { @MainActor in
-            // Logic xử lý khi quyền thay đổi
-            // (Có thể gọi checkLocationPermission() nếu muốn tự động zoom ngay khi cấp quyền)
-        }
+        // Logic xử lý khi quyền thay đổi
     }
 }
