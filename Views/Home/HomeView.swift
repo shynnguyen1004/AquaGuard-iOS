@@ -10,6 +10,13 @@ import FirebaseAuth
 
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
+    @State private var showLogoutAlert = false
+    
+    // UPDATE 1: Nhận Binding để điều khiển TabView
+    @Binding var selectedTab: Int
+    
+    // UPDATE 2: Biến trạng thái cho thông báo SOS
+    @State private var showSOSAlert = false
     
     var body: some View {
         NavigationStack {
@@ -88,7 +95,7 @@ struct HomeView: View {
                     StatusCard(location: viewModel.currentRiskLocation, level: viewModel.currentRiskLevel)
                         .padding(.horizontal)
                     
-                    // Quick Actions
+                    // --- QUICK ACTIONS (PHẦN CHỈNH SỬA CHÍNH) ---
                     VStack(alignment: .leading) {
                         Text("Quick Actions")
                             .font(.headline)
@@ -96,15 +103,18 @@ struct HomeView: View {
                             .padding(.horizontal)
                         
                         HStack(spacing: 15) {
-                            // Nút Shelter (Giữ nguyên)
-                            QuickActionButton(icon: "house.fill", label: "Shelter", color: .aquaPrimary)
+                            // UPDATE 3: Nút Shelter -> Chuyển sang Tab Rescue (Tag 4)
+                            QuickActionButton(icon: "house.fill", label: "Shelter", color: .aquaPrimary) {
+                                selectedTab = 4
+                            }
                             
-                            // Nút SOS (Đã chỉnh sửa: Nền đỏ, chữ trắng)
-                            Button(action: {}) {
+                            // UPDATE 4: Nút SOS -> Hiện Alert
+                            Button(action: {
+                                showSOSAlert = true
+                            }) {
                                 VStack(spacing: 10) {
-                                    // Tạo hình tròn mờ làm nền cho Icon
                                     Circle()
-                                        .fill(Color.white.opacity(0.2)) // Màu trắng mờ 20%
+                                        .fill(Color.white.opacity(0.2))
                                         .frame(width: 50, height: 50)
                                         .overlay(
                                             Image(systemName: "phone.fill")
@@ -119,13 +129,15 @@ struct HomeView: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color(red: 0.94, green: 0.27, blue: 0.27)) // Nền đỏ full nút
+                                .background(Color(red: 0.94, green: 0.27, blue: 0.27))
                                 .cornerRadius(15)
                                 .shadow(color: Color.red.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
                             
-                            // Nút Family (Giữ nguyên)
-                            QuickActionButton(icon: "person.2.fill", label: "Family", color: .orange)
+                            // UPDATE 5: Nút Family -> Chuyển sang Tab Rescue (Tag 4)
+                            QuickActionButton(icon: "person.2.fill", label: "Family", color: .orange) {
+                                selectedTab = 4
+                            }
                         }
                         .padding(.horizontal)
                     }
@@ -156,6 +168,43 @@ struct HomeView: View {
             .background(Color.aquaBackground)
             .navigationTitle("AquaGuard")
             .navigationBarHidden(true)
+            .alert("SOS Sent", isPresented: $showSOSAlert) {
+                Button("OK") {
+                    // Khi bấm OK -> Chuyển sang Tab Safety (Tag 3)
+                    selectedTab = 3
+                }
+            } message: {
+                Text("Your information is sent! Stay at your current position and wait for help")
+            }
+        }
+    }
+}
+
+// UPDATE 7: Cập nhật QuickActionButton để nhận Action
+struct QuickActionButton: View {
+    let icon: String
+    let label: String
+    let color: Color
+    var action: () -> Void // Thêm biến closure hành động
+    
+    var body: some View {
+        Button(action: action) { // Gọi action khi bấm
+            VStack(spacing: 10) {
+                Circle()
+                    .fill(color.opacity(0.1))
+                    .frame(width: 50, height: 50)
+                    .overlay(Image(systemName: icon).foregroundColor(color))
+                
+                Text(label)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.aquaNavy)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.aquaCard)
+            .cornerRadius(15)
+            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
     }
 }
@@ -234,32 +283,6 @@ struct StatusCard: View {
     }
 }
 
-struct QuickActionButton: View {
-    let icon: String
-    let label: String
-    let color: Color
-    
-    var body: some View {
-        Button(action: {}) {
-            VStack(spacing: 10) {
-                Circle()
-                    .fill(color.opacity(0.1))
-                    .frame(width: 50, height: 50)
-                    .overlay(Image(systemName: icon).foregroundColor(color))
-                
-                Text(label)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.aquaNavy)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.aquaCard)
-            .cornerRadius(15)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-        }
-    }
-}
 
 struct AlertRow: View {
     let alert: Alert
