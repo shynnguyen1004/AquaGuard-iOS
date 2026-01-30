@@ -10,6 +10,14 @@ import SwiftUI
 struct ReportView: View {
     @StateObject var viewModel = ReportViewModel()
     
+    // 1. Thêm biến quản lý Focus bàn phím
+    @FocusState private var isInputActive: Bool
+    
+    // Thêm các biến trạng thái cho ImagePicker
+    @State private var showImagePicker = false
+    @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
+    @State private var showActionSheet = false
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -37,7 +45,8 @@ struct ReportView: View {
                                     HStack {
                                         TextField("Enter location or pin on map", text: $viewModel.locationName)
                                             //.textFieldStyle(RoundedBorderTextFieldStyle())
-                                        
+                                            //.disabled(true)
+                                            .focused($isInputActive) // Gắn focus
                                         // Nút Lấy Vị Trí (Đã sửa logic)
                                         Button(action: {
                                             // Gọi hàm lấy toạ độ thật từ ViewModel
@@ -86,6 +95,7 @@ struct ReportView: View {
                                 .foregroundColor(.aquaNavy)
                             
                             TextEditor(text: $viewModel.reportDescription)
+                                .focused($isInputActive) // 2. Gắn biến focus vào đây
                                 .scrollContentBackground(.hidden) // FIX: Ẩn nền trắng mặc định của iOS
                                 .frame(height: 100)
                                 .padding(8)
@@ -96,25 +106,30 @@ struct ReportView: View {
                         
                         // Photo Upload
                         VStack(alignment: .leading) {
-                            Text("Add Photo (Optional)")
-                                .font(.headline)
-                                .foregroundColor(.aquaNavy)
+                            Text("Add Photo (Optional)").font(.headline).foregroundColor(.aquaNavy)
                             
-                            Button(action: {}) {
+                            Button(action: { showActionSheet = true }) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
                                         .foregroundColor(.gray.opacity(0.5))
-                                        .background(Color.aquaCard.opacity(0.3)) // FIX: Thêm nền nhẹ để không bị "lủng"
+                                        .background(Color.aquaCard.opacity(0.3))
                                         .frame(height: 150)
                                     
-                                    VStack {
-                                        Image(systemName: "camera.fill")
-                                            .font(.title)
-                                            .foregroundColor(.gray)
-                                        Text("Tap to upload")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
+                                    if let image = viewModel.selectedImage {
+                                        // Nếu đã chọn ảnh thì hiện ảnh
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(height: 150)
+                                            .cornerRadius(12)
+                                            .clipped()
+                                    } else {
+                                        // Chưa chọn thì hiện icon
+                                        VStack {
+                                            Image(systemName: "camera.fill").font(.title).foregroundColor(.gray)
+                                            Text("Tap to upload").font(.caption).foregroundColor(.gray)
+                                        }
                                     }
                                 }
                             }
@@ -125,19 +140,11 @@ struct ReportView: View {
                     // Submit Button
                     Button(action: viewModel.submitReport) {
                         HStack {
-                            if viewModel.isSubmitting {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("Submit Report")
-                                    .bold()
-                            }
+                            if viewModel.isSubmitting { ProgressView().tint(.white) }
+                            else { Text("Submit Report").bold() }
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.aquaPrimary)
-                        .foregroundColor(.white)
-                        .cornerRadius(16)
+                        .frame(maxWidth: .infinity).padding()
+                        .background(Color.aquaPrimary).foregroundColor(.white).cornerRadius(16)
                     }
                     .disabled(viewModel.isSubmitting)
                     .padding(.horizontal)
@@ -146,10 +153,45 @@ struct ReportView: View {
             }
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
-            .alert("Report Submitted", isPresented: $viewModel.showSuccessAlert) {
+            // Alert Thành công
+            .alert("Success", isPresented: $viewModel.showSuccessAlert) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text("Thank you for helping the community stay safe.")
+                Text("Your report has been submitted successfully.")
+            }
+            // Alert Lỗi
+            .alert("Error", isPresented: $viewModel.showErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.errorMessage)
+            }
+            // Action Sheet chọn Camera/Library
+            .confirmationDialog("Select Photo", isPresented: $showActionSheet) {
+                Button("Camera") {
+                    sourceType = .camera
+                    showImagePicker = true
+                }
+                Button("Photo Library") {
+                    sourceType = .photoLibrary
+                    showImagePicker = true
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+            // Mở Image Picker
+            .sheet(isPresented: $showImagePicker) {
+                ImagePicker(selectedImage: $viewModel.selectedImage, sourceType: sourceType)
+            }
+            
+            // 3. THÊM TOOLBAR ĐỂ TẮT BÀN PHÍM
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer() // Đẩy nút Done sang phải
+                    Button("Done") {
+                        isInputActive = false // Tắt focus -> Bàn phím tự ẩn
+                    }
+                    .fontWeight(.bold)
+                    .foregroundColor(.blue)
+                }
             }
         }
     }
