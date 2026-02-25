@@ -9,31 +9,31 @@ import SwiftUI
 
 struct LoginView: View {
     @StateObject var viewModel = AuthenticationViewModel()
-    
+
     var body: some View {
         ZStack {
             Color.aquaBackground.ignoresSafeArea()
-            
+
             VStack(spacing: 40) {
                 // Logo
                 Image("AquaLogoHeader")
                     .resizable()
                     .scaledToFit()
                     .frame(height: 120)
-                
+
                 VStack(spacing: 12) {
                     Text("Welcome to AquaGuard")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.aquaNavy)
-                    
+
                     Text("Sign in to access flood alerts and rescue features")
                         .font(.caption)
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
-                
+
                 // Nút đăng nhập Google
                 Button(action: {
                     viewModel.signInWithGoogle()
@@ -46,7 +46,7 @@ struct LoginView: View {
                             // Hoặc dùng tạm text chữ G
                             Image(systemName: "globe")
                                 .font(.title3)
-                            
+
                             Text("Sign in with Google")
                                 .fontWeight(.semibold)
                         }
@@ -62,7 +62,9 @@ struct LoginView: View {
             }
         }
         .alert(isPresented: $viewModel.showAlert) {
-            SwiftUI.Alert(title: Text("Error"), message: Text(viewModel.alertMessage), dismissButton: .default(Text("OK")))
+            Alert(
+                title: Text("Error"), message: Text(viewModel.alertMessage),
+                dismissButton: .default(Text("OK")))
         }
     }
 }

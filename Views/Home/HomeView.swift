@@ -5,19 +5,19 @@
 //  Created by Shyn Nguyễn on 15/12/25.
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
     @State private var showLogoutAlert = false
-    
+
     // UPDATE 1: Nhận Binding để điều khiển TabView
     @Binding var selectedTab: Int
-    
+
     // UPDATE 2: Biến trạng thái cho thông báo SOS
     @State private var showSOSAlert = false
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -29,7 +29,7 @@ struct HomeView: View {
                         .frame(height: 100)
                         .padding(.top, -20)
                         .frame(maxWidth: .infinity, alignment: .center)
-                    
+
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Welcome back,")
@@ -72,7 +72,9 @@ struct HomeView: View {
                                             .scaledToFill()
                                             .frame(width: 40, height: 40)
                                             .clipShape(Circle())
-                                            .overlay(Circle().stroke(Color.aquaPrimary, lineWidth: 2))
+                                            .overlay(
+                                                Circle().stroke(Color.aquaPrimary, lineWidth: 2)
+                                            )
                                             .shadow(radius: 3)
                                     default:
                                         Image(systemName: "person.crop.circle.fill")
@@ -90,24 +92,28 @@ struct HomeView: View {
                         }
                     }
                     .padding(.horizontal)
-                    
+
                     // Risk Status Card
-                    StatusCard(location: viewModel.currentRiskLocation, level: viewModel.currentRiskLevel)
-                        .padding(.horizontal)
-                    
+                    StatusCard(
+                        location: viewModel.currentRiskLocation, level: viewModel.currentRiskLevel
+                    )
+                    .padding(.horizontal)
+
                     // --- QUICK ACTIONS (PHẦN CHỈNH SỬA CHÍNH) ---
                     VStack(alignment: .leading) {
                         Text("Quick Actions")
                             .font(.headline)
                             .foregroundColor(.aquaNavy)
                             .padding(.horizontal)
-                        
+
                         HStack(spacing: 15) {
                             // UPDATE 3: Nút Shelter -> Chuyển sang Tab Rescue (Tag 4)
-                            QuickActionButton(icon: "house.fill", label: "Shelter", color: .aquaPrimary) {
+                            QuickActionButton(
+                                icon: "house.fill", label: "Shelter", color: .aquaPrimary
+                            ) {
                                 selectedTab = 4
                             }
-                            
+
                             // UPDATE 4: Nút SOS -> Hiện Alert
                             Button(action: {
                                 showSOSAlert = true
@@ -121,7 +127,7 @@ struct HomeView: View {
                                                 .font(.title2)
                                                 .foregroundColor(.white)
                                         )
-                                    
+
                                     Text("SOS")
                                         .font(.caption)
                                         .fontWeight(.bold)
@@ -133,15 +139,17 @@ struct HomeView: View {
                                 .cornerRadius(15)
                                 .shadow(color: Color.red.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
-                            
+
                             // UPDATE 5: Nút Family -> Chuyển sang Tab Rescue (Tag 4)
-                            QuickActionButton(icon: "person.2.fill", label: "Family", color: .orange) {
+                            QuickActionButton(
+                                icon: "person.2.fill", label: "Family", color: .orange
+                            ) {
                                 selectedTab = 4
                             }
                         }
                         .padding(.horizontal)
                     }
-                    
+
                     // Active Alerts
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
@@ -156,7 +164,7 @@ struct HomeView: View {
                                 .cornerRadius(8)
                         }
                         .padding(.horizontal)
-                        
+
                         ForEach(viewModel.activeAlerts) { alert in
                             AlertRow(alert: alert)
                         }
@@ -185,16 +193,16 @@ struct QuickActionButton: View {
     let icon: String
     let label: String
     let color: Color
-    var action: () -> Void // Thêm biến closure hành động
-    
+    var action: () -> Void  // Thêm biến closure hành động
+
     var body: some View {
-        Button(action: action) { // Gọi action khi bấm
+        Button(action: action) {  // Gọi action khi bấm
             VStack(spacing: 10) {
                 Circle()
                     .fill(color.opacity(0.1))
                     .frame(width: 50, height: 50)
                     .overlay(Image(systemName: icon).foregroundColor(color))
-                
+
                 Text(label)
                     .font(.caption)
                     .fontWeight(.medium)
@@ -213,7 +221,7 @@ struct QuickActionButton: View {
 struct StatusCard: View {
     let location: String
     let level: SeverityLevel
-    
+
     // 1. Logic xác định Tiêu đề dựa trên level
     private var statusTitle: String {
         switch level {
@@ -223,17 +231,17 @@ struct StatusCard: View {
         case .critical: return "Critical"
         }
     }
-    
+
     // 2. Logic xác định Màu nền
     private var backgroundColor: Color {
         switch level {
-        case .low: return Color.aquaSafe // Hoặc dùng Color("aquaSafe") nếu bạn có
+        case .low: return Color.aquaSafe  // Hoặc dùng Color("aquaSafe") nếu bạn có
         case .moderate: return Color.aquaWarning
         case .severe: return Color.aquaDanger
-        case .critical: return Color.aquaCritical //(red: 0.6, green: 0, blue: 0) // Màu đỏ đậm/huyết dụ cho Critical
+        case .critical: return Color.aquaCritical  //(red: 0.6, green: 0, blue: 0) // Màu đỏ đậm/huyết dụ cho Critical
         }
     }
-    
+
     // 3. Logic xác định Icon
     private var iconName: String {
         switch level {
@@ -243,7 +251,7 @@ struct StatusCard: View {
         case .critical: return "exclamationmark.octagon.fill"
         }
     }
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
@@ -254,16 +262,16 @@ struct StatusCard: View {
                 .font(.caption)
                 .fontWeight(.bold)
                 .textCase(.uppercase)
-                
+
                 // Sử dụng biến statusTitle đã định nghĩa ở trên
                 Text(statusTitle)
                     .font(.largeTitle)
                     .fontWeight(.heavy)
-                
+
                 Text("Location: \(location)")
                     .font(.subheadline)
                     .opacity(0.9)
-                
+
                 Text("Take action immediately")
                     .font(.caption)
                     .padding(.top, 4)
@@ -283,20 +291,22 @@ struct StatusCard: View {
     }
 }
 
-
 struct AlertRow: View {
-    let alert: Alert
-    
+    let alert: FloodAlert
+
     var body: some View {
         HStack(spacing: 15) {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(alert.severity == .severe ? Color.red.opacity(0.1) : Color.orange.opacity(0.1))
+                    .fill(
+                        alert.severity == .severe
+                            ? Color.red.opacity(0.1) : Color.orange.opacity(0.1)
+                    )
                     .frame(width: 50, height: 50)
                 Image(systemName: alert.iconName)
                     .foregroundColor(alert.severity == .severe ? .red : .orange)
             }
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(alert.title)
                     .font(.subheadline)
