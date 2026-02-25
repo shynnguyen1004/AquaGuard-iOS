@@ -131,7 +131,7 @@ struct SafetyView: View {
                         ) {
                             ForEach(MockData.emergencyPackages, id: \.carrier) { pkg in
                                 Button("\(pkg.carrier) - \(pkg.name)") {
-                                    sendSMS(number: pkg.number, message: pkg.syntax)
+                                    SMSHelper.send(number: pkg.number, message: pkg.syntax)
                                 }
                             }
                             Button("Cancel", role: .cancel) {}
@@ -193,16 +193,6 @@ struct SafetyView: View {
             }
             .navigationBarHidden(true)
             .background(Color.aquaBackground)
-        }
-    }
-
-    // Hàm gửi tin nhắn
-    func sendSMS(number: String, message: String) {
-        let smsString = "sms:\(number)&body=\(message)"
-        if let url = URL(
-            string: smsString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-        {
-            UIApplication.shared.open(url)
         }
     }
 }
