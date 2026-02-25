@@ -40,6 +40,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct AquaGuardApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var languageManager = LanguageManager.shared
     @State private var userID: String? = nil
     @State private var authHandle: AuthStateDidChangeListenerHandle?
 
@@ -52,6 +53,7 @@ struct AquaGuardApp: App {
                     LoginView()
                 }
             }
+            .environmentObject(languageManager)
             .onAppear {
                 authHandle = Auth.auth().addStateDidChangeListener { auth, user in
                     if let user = user {

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
+    @EnvironmentObject var languageManager: LanguageManager
     @State private var showLogoutAlert = false
 
     // Binding to control TabView from parent
@@ -41,8 +42,23 @@ struct HomeView: View {
                             .frame(width: 40, height: 40)
                             .foregroundColor(.gray)
                          */
-                        // Avatar with sign-out menu
+                        // Avatar with settings menu
                         Menu {
+                            // Language toggle
+                            Button {
+                                languageManager.toggle()
+                            } label: {
+                                Label(
+                                    languageManager.current == .english
+                                        ? "🇻🇳 Tiếng Việt"
+                                        : "🇺🇸 English",
+                                    systemImage: "globe"
+                                )
+                            }
+
+                            Divider()
+
+                            // Sign out
                             Button(role: .destructive) {
                                 viewModel.signOut()
                             } label: {
