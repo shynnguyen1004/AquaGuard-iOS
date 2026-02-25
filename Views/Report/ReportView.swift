@@ -26,12 +26,7 @@ struct ReportView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    Image("AquaLogoHeader")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 100)
-                        .padding(.top, -3)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    LogoHeaderView(topPadding: -3)
                     // Header Illustration
                     Image(systemName: "exclamationmark.bubble.fill")
                         .font(.system(size: 50))

@@ -13,7 +13,7 @@ struct ResourceCard: View {
     let current: Int
     let total: Int
     let color: Color
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -30,11 +30,11 @@ struct ResourceCard: View {
                     .fontWeight(.bold)
                     .foregroundColor(.gray)
             }
-            
+
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.aquaNavy)
-            
+
             ProgressView(value: Double(current), total: Double(total))
                 .tint(color)
         }
@@ -52,7 +52,7 @@ struct RescueRequestRow: View {
     let status: String
     let team: String?
     let severityColor: Color
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -72,7 +72,7 @@ struct RescueRequestRow: View {
                     .foregroundColor(statusColor)
                     .cornerRadius(8)
             }
-            
+
             HStack(spacing: 15) {
                 Label("\(people) people", systemImage: "person.2")
                 Text("•")
@@ -84,7 +84,7 @@ struct RescueRequestRow: View {
             }
             .font(.caption)
             .foregroundColor(.gray)
-            
+
             if status == "In Progress" {
                 HStack {
                     Button("Track") {}.buttonStyle(.bordered)
@@ -111,7 +111,7 @@ struct RescueRequestRow: View {
                 .stroke(severityColor, lineWidth: status == "Pending" ? 2 : 0)
         )
     }
-    
+
     var statusColor: Color {
         switch status {
         case "In Progress": return .blue
@@ -127,25 +127,29 @@ struct RescueView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Resource Availability
-                    Image("AquaLogoHeader")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 100)
-                        .padding(.top, -20)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    
+                    LogoHeaderView()
+
                     Text("Resource Availability")
                         .font(.headline).foregroundColor(.aquaNavy)
                         .padding(.horizontal)
-                    
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-                        ResourceCard(icon: "ferry", title: "Rescue Boats", current: 8, total: 12, color: .teal)
-                        ResourceCard(icon: "house", title: "Shelters Open", current: 5, total: 8, color: .blue)
-                        ResourceCard(icon: "heart", title: "Medical Teams", current: 6, total: 10, color: .orange)
-                        ResourceCard(icon: "person.3", title: "Active Rescues", current: 3, total: 3, color: .gray)
+
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15)
+                    {
+                        ResourceCard(
+                            icon: "ferry", title: "Rescue Boats", current: 8, total: 12,
+                            color: .teal)
+                        ResourceCard(
+                            icon: "house", title: "Shelters Open", current: 5, total: 8,
+                            color: .blue)
+                        ResourceCard(
+                            icon: "heart", title: "Medical Teams", current: 6, total: 10,
+                            color: .orange)
+                        ResourceCard(
+                            icon: "person.3", title: "Active Rescues", current: 3, total: 3,
+                            color: .gray)
                     }
                     .padding(.horizontal)
-                    
+
                     // Rescue Requests
                     HStack {
                         Text("Rescue Requests")
@@ -153,14 +157,21 @@ struct RescueView: View {
                         Spacer()
                         Text("2 Pending")
                             .font(.caption).bold()
-                            .padding(4).background(Color.red.opacity(0.1)).foregroundColor(.red).cornerRadius(4)
+                            .padding(4).background(Color.red.opacity(0.1)).foregroundColor(.red)
+                            .cornerRadius(4)
                     }
                     .padding(.horizontal)
-                    
+
                     VStack(spacing: 12) {
-                        RescueRequestRow(address: "123 Ly Thuong Kiet", people: 4, time: "10 min ago", status: "In Progress", team: "Team Alpha", severityColor: .orange)
-                        RescueRequestRow(address: "456 To Hien Thanh", people: 2, time: "5 min ago", status: "Pending", team: nil, severityColor: .red)
-                        RescueRequestRow(address: "789 Nguyen Tri Phuong", people: 6, time: "45 min ago", status: "Completed", team: "Team Bravo", severityColor: .orange)
+                        RescueRequestRow(
+                            address: "123 Ly Thuong Kiet", people: 4, time: "10 min ago",
+                            status: "In Progress", team: "Team Alpha", severityColor: .orange)
+                        RescueRequestRow(
+                            address: "456 To Hien Thanh", people: 2, time: "5 min ago",
+                            status: "Pending", team: nil, severityColor: .red)
+                        RescueRequestRow(
+                            address: "789 Nguyen Tri Phuong", people: 6, time: "45 min ago",
+                            status: "Completed", team: "Team Bravo", severityColor: .orange)
                     }
                     .padding(.horizontal)
                 }
