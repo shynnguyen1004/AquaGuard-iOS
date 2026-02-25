@@ -2,9 +2,10 @@
 //  RescueViewModel.swift
 //  AquaGuard
 //
-//  Created for P1 refactor: extract hardcoded data from RescueView.
+//  Created by Shyn Nguyễn on 25/2/26.
 //
 
+import Combine
 import Foundation
 
 @MainActor
