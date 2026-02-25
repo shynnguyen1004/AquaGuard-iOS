@@ -5,6 +5,7 @@
 //  Manages the app's language preference (English / Vietnamese).
 //
 
+import Combine
 import Foundation
 
 enum AppLanguage: String, CaseIterable {
