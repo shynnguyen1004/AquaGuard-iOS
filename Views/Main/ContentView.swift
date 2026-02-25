@@ -8,46 +8,44 @@
 import SwiftUI
 
 struct ContentView: View {
-    // 1. Thêm biến quản lý Tab được chọn (Mặc định là 0 - Home)
     @State private var selectedTab = 0
-    
+    @StateObject private var locationService = LocationService()
+
     init() {
         UITabBar.appearance().unselectedItemTintColor = UIColor.systemGray
     }
-    
+
     var body: some View {
-        // 2. Binding biến selectedTab vào TabView
         TabView(selection: $selectedTab) {
-            // 3. Truyền binding xuống HomeView để nút bấm có thể đổi tab
             HomeView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
-                .tag(0) // Đánh dấu số 0
-            
-            FloodMapView()
+                .tag(0)
+
+            FloodMapView(locationService: locationService)
                 .tabItem {
                     Label("Map", systemImage: "map.fill")
                 }
-                .tag(1) // Đánh dấu số 1
-            
-            ReportView()
+                .tag(1)
+
+            ReportView(locationService: locationService)
                 .tabItem {
                     Label("Report", systemImage: "exclamationmark.bubble.fill")
                 }
-                .tag(2) // Đánh dấu số 2
-            
+                .tag(2)
+
             SafetyView()
                 .tabItem {
                     Label("Safety", systemImage: "shield.fill")
                 }
-                .tag(3) // Đánh dấu số 3 (Trang Safety)
-            
+                .tag(3)
+
             RescueView()
                 .tabItem {
                     Label("Rescue", systemImage: "dot.radiowaves.left.and.right")
                 }
-                .tag(4) // Đánh dấu số 4 (Trang Rescue)
+                .tag(4)
         }
         .tint(Color.aquaPrimary)
     }
