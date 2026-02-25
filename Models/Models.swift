@@ -115,6 +115,27 @@ class MockData {
         DataPackage(carrier: "Mobifone", name: "D5 (5k/1GB)", number: "999", syntax: "DK D5"),
         DataPackage(carrier: "Vietnamobile", name: "N3 (3k/3GB)", number: "345", syntax: "DK N3"),
     ]
+
+    static let rescueResources = [
+        RescueResource(icon: "ferry", title: "Rescue Boats", current: 8, total: 12, color: .teal),
+        RescueResource(icon: "house", title: "Shelters Open", current: 5, total: 8, color: .blue),
+        RescueResource(
+            icon: "heart", title: "Medical Teams", current: 6, total: 10, color: .orange),
+        RescueResource(
+            icon: "person.3", title: "Active Rescues", current: 3, total: 3, color: .gray),
+    ]
+
+    static let rescueRequests = [
+        RescueRequest(
+            address: "123 Ly Thuong Kiet", people: 4, time: "10 min ago",
+            status: "In Progress", team: "Team Alpha", severityColor: .orange),
+        RescueRequest(
+            address: "456 To Hien Thanh", people: 2, time: "5 min ago",
+            status: "Pending", team: nil, severityColor: .red),
+        RescueRequest(
+            address: "789 Nguyen Tri Phuong", people: 6, time: "45 min ago",
+            status: "Completed", team: "Team Bravo", severityColor: .orange),
+    ]
 }
 
 struct DataPackage {
