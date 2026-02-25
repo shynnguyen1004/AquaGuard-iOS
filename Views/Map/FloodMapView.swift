@@ -29,19 +29,19 @@ struct FloodMapView: View {
                         .tag(zone)
                 }
 
-                // --- VẼ ĐƯỜNG ĐI NẾU CÓ ---
+                // Draw route polyline if available
                 if let route = viewModel.route {
                     MapPolyline(route)
-                        .stroke(.blue, lineWidth: 5)  // Đường màu xanh, dày 5pt
+                        .stroke(.blue, lineWidth: 5)
                 }
             }
             .mapControls {
-                // Bỏ MapUserLocationButton() mặc định đi để dùng nút custom xịn hơn ở dưới
+                // Use custom locate button instead of default MapUserLocationButton
                 MapCompass()
                 MapScaleView()
             }
 
-            // --- NÚT XÓA ĐƯỜNG ĐI (Hiện ra khi đang dẫn đường) ---
+            // Clear route button (visible when navigating)
             if viewModel.route != nil {
                 VStack {
                     HStack {
@@ -62,7 +62,7 @@ struct FloodMapView: View {
                 }
             }
 
-            // 2. NÚT LOCATE (CUSTOM BUTTON) - Nằm góc trên phải
+            // Custom locate button (top-right corner)
             VStack {
                 HStack {
                     Spacer()
@@ -78,7 +78,7 @@ struct FloodMapView: View {
                             .shadow(radius: 3, x: 0, y: 2)
                     }
                     .padding(.trailing, 16)
-                    .padding(.top, 70)  // Cách tai thỏ một chút
+                    .padding(.top, 70)
                 }
                 Spacer()
             }
@@ -87,24 +87,24 @@ struct FloodMapView: View {
             VStack {
                 HStack(spacing: 12) {
                     Label("Safe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaSafe)  // Đảm bảo bạn có màu này trong Assets hoặc Extension
+                        .foregroundColor(.aquaSafe)  
                         .font(.caption)
                     Label("Moderate", systemImage: "circle.fill")
-                        .foregroundColor(.aquaWarning)  // Đảm bảo bạn có màu này
+                        .foregroundColor(.aquaWarning)  
                         .font(.caption)
                     Label("Severe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaDanger)  // Đảm bảo bạn có màu này
+                        .foregroundColor(.aquaDanger)  
                         .font(.caption)
                     Label("Critical", systemImage: "circle.fill")
-                        .foregroundColor(.aquaCritical)  // Đảm bảo bạn có màu này
+                        .foregroundColor(.aquaCritical)  
                         .font(.caption)
                 }
                 .padding(8)
                 .background(.thinMaterial)
                 .cornerRadius(20)
-                Spacer()  // Đẩy Legend lên trên một chút nếu cần, hoặc để nó nằm dưới cùng
+                Spacer()
             }
-            .padding(.top, 30)  // Cách đáy màn hình một chút
+            .padding(.top, 30)
         }
         .sheet(item: $viewModel.selectedZone) { zone in
             ZoneDetailSheet(zone: zone, viewModel: viewModel)
@@ -117,8 +117,8 @@ struct FloodMapView: View {
 // --- CẬP NHẬT SHEET CHI TIẾT ---
 struct ZoneDetailSheet: View {
     let zone: FloodZone
-    @ObservedObject var viewModel: MapViewModel  // Nhận viewModel từ cha
-    @Environment(\.dismiss) var dismiss  // Để đóng sheet sau khi bấm nút
+    @ObservedObject var viewModel: MapViewModel
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         VStack(spacing: 20) {
@@ -144,9 +144,9 @@ struct ZoneDetailSheet: View {
 
             // --- NÚT NAVIGATE MỚI ---
             Button(action: {
-                // 1. Gọi hàm tìm đường
+                // Request directions
                 viewModel.getDirections(to: zone)
-                // 2. Đóng sheet lại để user nhìn thấy bản đồ
+                // Dismiss sheet
                 dismiss()
             }) {
                 HStack {
@@ -157,7 +157,7 @@ struct ZoneDetailSheet: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.aquaPrimary)  // Đổi màu xanh dương cho giống nút dẫn đường chuẩn
+                .background(Color.aquaPrimary)
                 .cornerRadius(12)
             }
             .padding(.horizontal)

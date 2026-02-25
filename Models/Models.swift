@@ -6,7 +6,7 @@
 //
 
 import CoreLocation
-import FirebaseFirestore  // Nhớ import cái này
+import FirebaseFirestore
 import Foundation
 import SwiftUI
 
@@ -23,7 +23,7 @@ enum SeverityLevel: String, Codable {
     }
 }
 
-// CẬP NHẬT STRUCT NÀY (Thêm Hashable và hàm so sánh)
+// FloodZone model with Hashable conformance
 struct FloodZone: Identifiable, Codable, Hashable {
     @DocumentID var id: String?
 
@@ -44,14 +44,14 @@ struct FloodZone: Identifiable, Codable, Hashable {
         return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
     }
 
-    // --- PHẦN BỔ SUNG QUAN TRỌNG ĐỂ SỬA LỖI ---
+    // MARK: Equatable & Hashable
 
-    // 1. Hàm so sánh bằng (Equatable): Chỉ cần ID giống nhau là coi như giống nhau
+    // Equatable: compare by document ID
     static func == (lhs: FloodZone, rhs: FloodZone) -> Bool {
         return lhs.id == rhs.id
     }
 
-    // 2. Hàm băm (Hashable): Dùng ID để tạo mã băm
+    // Hashable: hash by document ID
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

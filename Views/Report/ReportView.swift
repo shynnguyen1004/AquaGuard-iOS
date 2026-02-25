@@ -14,10 +14,10 @@ struct ReportView: View {
         _viewModel = StateObject(wrappedValue: ReportViewModel(locationService: locationService))
     }
 
-    // 1. Thêm biến quản lý Focus bàn phím
+    // Keyboard focus management
     @FocusState private var isInputActive: Bool
 
-    // Thêm các biến trạng thái cho ImagePicker
+    // ImagePicker state
     @State private var showImagePicker = false
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var showActionSheet = false
@@ -47,23 +47,23 @@ struct ReportView: View {
                                 )
                                 //.textFieldStyle(RoundedBorderTextFieldStyle())
                                 //.disabled(true)
-                                .focused($isInputActive)  // Gắn focus
-                                // Nút Lấy Vị Trí (Đã sửa logic)
+                                .focused($isInputActive)
+                                // Get current location button
                                 Button(action: {
-                                    // Gọi hàm lấy toạ độ thật từ ViewModel
+                                    // Request location from ViewModel
                                     viewModel.requestCurrentLocation()
                                 }) {
                                     Image(systemName: "location.fill")
                                         .foregroundColor(.aquaPrimary)
-                                        .padding(10)  // Tăng vùng bấm lên một chút cho dễ bấm
-                                        .background(Color.aquaPrimary.opacity(0.1))  // Thêm nền mờ cho đẹp
+                                        .padding(10)
+                                        .background(Color.aquaPrimary.opacity(0.1))
                                         .cornerRadius(8)
                                 }
                             }
                             .padding()
-                            .background(Color.aquaCard)  // FIX: Dùng màu nền thông minh
+                            .background(Color.aquaCard)
                             .cornerRadius(12)
-                            // FIX: Viền mờ đi cho đẹp
+                            // Subtle border
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.3)))
                         }
@@ -97,11 +97,11 @@ struct ReportView: View {
                                 .foregroundColor(.aquaNavy)
 
                             TextEditor(text: $viewModel.reportDescription)
-                                .focused($isInputActive)  // 2. Gắn biến focus vào đây
-                                .scrollContentBackground(.hidden)  // FIX: Ẩn nền trắng mặc định của iOS
+                                .focused($isInputActive)
+                                .scrollContentBackground(.hidden)
                                 .frame(height: 100)
                                 .padding(8)
-                                .background(Color.aquaCard)  // FIX: Dùng màu nền thông minh
+                                .background(Color.aquaCard)
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12).stroke(
@@ -121,7 +121,7 @@ struct ReportView: View {
                                         .frame(height: 150)
 
                                     if let image = viewModel.selectedImage {
-                                        // Nếu đã chọn ảnh thì hiện ảnh
+                                        // Show selected image
                                         Image(uiImage: image)
                                             .resizable()
                                             .scaledToFill()
@@ -129,7 +129,7 @@ struct ReportView: View {
                                             .cornerRadius(12)
                                             .clipped()
                                     } else {
-                                        // Chưa chọn thì hiện icon
+                                        // Show placeholder icon
                                         VStack {
                                             Image(systemName: "camera.fill").font(.title)
                                                 .foregroundColor(.gray)
@@ -162,19 +162,19 @@ struct ReportView: View {
             }
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
-            // Alert Thành công
+            // Success alert
             .alert("Success", isPresented: $viewModel.showSuccessAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Your report has been submitted successfully.")
             }
-            // Alert Lỗi
+            // Error alert
             .alert("Error", isPresented: $viewModel.showErrorAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage)
             }
-            // Action Sheet chọn Camera/Library
+            // Camera/Library action sheet
             .confirmationDialog("Select Photo", isPresented: $showActionSheet) {
                 Button("Camera") {
                     sourceType = .camera
@@ -186,17 +186,17 @@ struct ReportView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
-            // Mở Image Picker
+            // Present ImagePicker
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(selectedImage: $viewModel.selectedImage, sourceType: sourceType)
             }
 
-            // 3. THÊM TOOLBAR ĐỂ TẮT BÀN PHÍM
+            // Keyboard dismiss toolbar
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()  // Đẩy nút Done sang phải
+                    Spacer()
                     Button("Done") {
-                        isInputActive = false  // Tắt focus -> Bàn phím tự ẩn
+                        isInputActive = false
                     }
                     .fontWeight(.bold)
                     .foregroundColor(.blue)

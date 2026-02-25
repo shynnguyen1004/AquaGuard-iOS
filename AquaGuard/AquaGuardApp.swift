@@ -1,39 +1,39 @@
 import FirebaseAuth
-import FirebaseCore  // 1. Import cái này
+import FirebaseCore
 import SwiftUI
 
-// 2. Tạo một cái Adapter để kết nối AppDelegate cũ với SwiftUI mới
+// MARK: - AppDelegate Adapter for SwiftUI
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        FirebaseApp.configure()  // 3. Dòng code kích hoạt Firebase
-        print("AquaGuard Firebase Configured!")  // In ra để biết đã chạy
+        FirebaseApp.configure()
+        print("AquaGuard Firebase Configured!")
         return true
     }
-    // --- BỔ SUNG 2 HÀM DƯỚI ĐÂY ---
+    // MARK: Remote Notifications
 
-    // Hàm 1: Đăng ký nhận thông báo (APNs Token)
+    // Register APNs device token with Firebase Auth
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        // Gửi token của máy lên cho Firebase Auth
+        // Forward device token to Firebase Auth
         Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     }
 
-    // Hàm 2: Xử lý khi có thông báo chạy ngầm (Silent Push)
+    // Handle silent push notifications
     func application(
         _ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        // Kiểm tra xem thông báo này có phải của Firebase Auth gửi không
+        // Check if notification belongs to Firebase Auth
         if Auth.auth().canHandleNotification(userInfo) {
             completionHandler(.noData)
             return
         }
-        // Nếu không phải thì xử lý như thông báo bình thường
+        // Otherwise handle as a regular notification
     }
 }
 

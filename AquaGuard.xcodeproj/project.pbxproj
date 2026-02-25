@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A41D3922F4F226E00355F07 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41D3902F4F226E00355F07 /* LocationService.swift */; };
+		3A41D3932F4F226E00355F07 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41D3902F4F226E00355F07 /* LocationService.swift */; };
+		3A41D39C2F4F2E0C00355F07 /* SMSHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41D39B2F4F2E0C00355F07 /* SMSHelper.swift */; };
+		3A41D39D2F4F2E0C00355F07 /* SMSHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41D39B2F4F2E0C00355F07 /* SMSHelper.swift */; };
+		3A41D39E2F4F2E0C00355F07 /* SMSHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A41D39B2F4F2E0C00355F07 /* SMSHelper.swift */; };
 		3A94DFDA2F2AF52B00CDF258 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFD92F2AF52B00CDF258 /* FirebaseAuth */; };
 		3A94DFDC2F2AF52B00CDF258 /* FirebaseAuthCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFDB2F2AF52B00CDF258 /* FirebaseAuthCombine-Community */; };
 		3A94DFDE2F2AF52B00CDF258 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFDD2F2AF52B00CDF258 /* FirebaseFirestore */; };
@@ -37,6 +42,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3A41D3902F4F226E00355F07 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		3A41D39B2F4F2E0C00355F07 /* SMSHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMSHelper.swift; sourceTree = "<group>"; };
 		3A7D4C512EF035C7006B202E /* AquaGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AquaGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A7D4C5E2EF035CC006B202E /* AquaGuardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AquaGuardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AquaGuardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,6 +73,7 @@
 				HomeViewModel.swift,
 				MapViewModel.swift,
 				ReportViewModel.swift,
+				RescueViewModel.swift,
 			);
 			target = 3A7D4C502EF035C7006B202E /* AquaGuard */;
 		};
@@ -88,11 +96,6 @@
 		3A7D4C6B2EF035CC006B202E /* AquaGuardUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = AquaGuardUITests;
-			sourceTree = "<group>";
-		};
-		3AA3137F2F1967C20068E471 /* Services */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Services;
 			sourceTree = "<group>";
 		};
 		3AB1AA482EF06ADD006C37A3 /* Models */ = {
@@ -153,10 +156,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3A41D3912F4F226E00355F07 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3A41D39B2F4F2E0C00355F07 /* SMSHelper.swift */,
+				3A41D3902F4F226E00355F07 /* LocationService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		3A7D4C482EF035C7006B202E = {
 			isa = PBXGroup;
 			children = (
-				3AA3137F2F1967C20068E471 /* Services */,
+				3A41D3912F4F226E00355F07 /* Services */,
 				3A9F39442F041FA4001F31D5 /* hcmc.gpx */,
 				3A9F39422F03FA88001F31D5 /* sydney.gpx */,
 				3A7D4C532EF035C7006B202E /* AquaGuard */,
@@ -338,6 +350,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A41D39C2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
+				3A41D3922F4F226E00355F07 /* LocationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,6 +359,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A41D39E2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -352,6 +367,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A41D39D2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
+				3A41D3932F4F226E00355F07 /* LocationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

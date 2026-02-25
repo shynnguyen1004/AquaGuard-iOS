@@ -34,7 +34,7 @@ struct LoginView: View {
                         .padding(.horizontal)
                 }
 
-                // Nút đăng nhập Google
+                // Google Sign-In button
                 Button(action: {
                     viewModel.signInWithGoogle()
                 }) {
@@ -42,8 +42,8 @@ struct LoginView: View {
                         if viewModel.isLoading {
                             ProgressView()
                         } else {
-                            // Bạn có thể tìm icon Google logo trên mạng bỏ vào Assets tên là "google_icon"
-                            // Hoặc dùng tạm text chữ G
+                            // Google icon from Assets
+                            
                             Image(systemName: "globe")
                                 .font(.title3)
 

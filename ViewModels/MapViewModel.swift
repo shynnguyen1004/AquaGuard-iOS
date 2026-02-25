@@ -31,7 +31,7 @@ class MapViewModel: ObservableObject {
 
     func getDirections(to zone: FloodZone) {
         guard let userLocation = locationService.lastKnownLocation else {
-            print("Chưa lấy được vị trí người dùng")
+            print("User location not available")
             return
         }
 
@@ -53,7 +53,7 @@ class MapViewModel: ObservableObject {
                     }
                 }
             } catch {
-                print("Lỗi tìm đường: \(error.localizedDescription)")
+                print("Directions error: \(error.localizedDescription)")
             }
         }
     }
@@ -69,18 +69,18 @@ class MapViewModel: ObservableObject {
             [weak self] (querySnapshot, error) in
             guard let documents = querySnapshot?.documents else {
                 print(
-                    "LỖI: Không tìm thấy document nào hoặc lỗi mạng: \(error?.localizedDescription ?? "Unknown")"
+                    "ERROR: No documents found or network error: \(error?.localizedDescription ?? "Unknown")"
                 )
                 return
             }
 
-            print("TÌM THẤY: \(documents.count) địa điểm trên Firebase")
+            print("Found \(documents.count) flood zones on Firebase")
 
             self?.zones = documents.compactMap { queryDocumentSnapshot -> FloodZone? in
                 let zone = try? queryDocumentSnapshot.data(as: FloodZone.self)
                 if zone == nil {
                     print(
-                        "LỖI GIẢI MÃ: Document ID \(queryDocumentSnapshot.documentID) bị sai dữ liệu"
+                        "DECODE ERROR: Document ID \(queryDocumentSnapshot.documentID) has invalid data"
                     )
                 }
                 return zone

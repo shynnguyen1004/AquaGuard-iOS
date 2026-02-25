@@ -1,0 +1,189 @@
+# 🔍 Phân Tích Dự Án AquaGuard
+
+## 1. Dự Án Làm Gì?
+
+**AquaGuard** là ứng dụng iOS cảnh báo và cứu hộ lũ lụt, bao gồm 5 tính năng chính:
+
+| Tab | Mô tả | File chính |
+|-----|--------|------------|
+| **Home** | Dashboard hiển thị mức độ nguy hiểm, cảnh báo, và nút SOS | [HomeView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Home/HomeView.swift) |
+| **Map** | Bản đồ tương tác với các điểm ngập, chỉ đường, vị trí người dùng | [FloodMapView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Map/FloodMapView.swift) |
+| **Report** | Form báo cáo sự cố (ảnh, vị trí, mức nước) gửi lên Firebase | [ReportView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Report/ReportView.swift) |
+| **Safety** | Hướng dẫn an toàn + gọi cứu hộ 113/114/115 + đăng ký 4G SOS | [SafetyView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Safety/SafetyView.swift) |
+| **Rescue** | Dashboard quản lý tài nguyên cứu hộ (thuyền, trạm y tế...) | [RescueView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Rescue/RescueView.swift) |
+
+---
+
+## 2. Tech Stack & Kiến Trúc
+
+```mermaid
+graph TD
+    A["SwiftUI App (MVVM)"] --> B["Views (9 files)"]
+    A --> C["ViewModels (4 files)"]
+    A --> D["Models (1 file)"]
+    A --> E["Firebase"]
+    E --> F["Auth (Google Sign-In)"]
+    E --> G["Firestore (Flood Zones, Reports)"]
+    E --> H["Storage (Report Images)"]
+    A --> I["MapKit + CoreLocation"]
+```
+
+| Thành phần | Công nghệ |
+|-----------|-----------|
+| UI Framework | SwiftUI |
+| Architecture | MVVM |
+| Authentication | Firebase Auth + Google Sign-In |
+| Database | Cloud Firestore (real-time) |
+| Storage | Firebase Storage |
+| Maps | MapKit + CoreLocation |
+| Min iOS | iOS 26.0+ |
+
+---
+
+## 3. Cấu Trúc Thư Mục
+
+```
+AquaGuard/
+├── AquaGuard/              ← App entry point
+│   ├── AquaGuardApp.swift
+│   ├── Assets.xcassets/
+│   ├── GoogleService-Info.plist
+│   └── Info.plist
+├── Models/                 ← ⚠️ NẰM NGOÀI thư mục chính
+│   └── Models.swift
+├── ViewModels/             ← ⚠️ NẰM NGOÀI thư mục chính
+│   ├── AuthenticationViewModel.swift
+│   ├── HomeViewModel.swift
+│   ├── MapViewModel.swift
+│   └── ReportViewModel.swift
+├── Views/                  ← ⚠️ NẰM NGOÀI thư mục chính
+│   ├── Authentication/LoginView.swift
+│   ├── Helpers/ImagePicker.swift
+│   ├── Home/HomeView.swift
+│   ├── Main/ContentView.swift
+│   ├── Map/FloodMapView.swift
+│   ├── Report/ReportView.swift
+│   ├── Rescue/RescueView.swift
+│   ├── Safety/SafetyView.swift
+│   └── Shared/Extensions.swift
+└── hcmc.gpx
+```
+
+> [!WARNING]
+> ### Vấn đề cấu trúc chính
+> `Models/`, `ViewModels/`, `Views/` nằm **ngoài** thư mục `AquaGuard/` (thư mục chính của target). Đây là cấu trúc bất thường — thông thường tất cả source code nên nằm trong cùng một thư mục gốc của target. Hiện tại nó vẫn hoạt động vì Xcode quản lý qua file `.xcodeproj`, nhưng sẽ gây khó hiểu khi scale dự án.
+
+---
+
+## 4. Đánh Giá Code & Các Vấn Đề
+
+### ✅ Điểm tốt
+
+- **MVVM rõ ràng**: View và ViewModel tách biệt, sử dụng `@StateObject` / `@ObservedObject` đúng cách
+- **Firebase integration chuyên nghiệp**: Real-time listener cho flood zones, image upload flow tốt
+- **Design System nhất quán**: Color extensions (`aquaPrimary`, `aquaNavy`...) hỗ trợ Dark Mode
+- **Reusable components**: `QuickActionButton`, `StatusCard`, `ResourceCard`, `SafetySection` được tách thành struct riêng
+- **Location permission handling** đầy đủ các case
+
+---
+
+### 🔴 Vấn đề nghiêm trọng
+
+#### 1. Trùng lặp `CLLocationManager` ❌
+
+Cả `MapViewModel` và `ReportViewModel` đều tạo riêng một `CLLocationManager`:
+
+```diff
+// MapViewModel.swift (line 21)
+  private let locationManager = CLLocationManager()
+
+// ReportViewModel.swift (line 31)
+  private let locationManager = CLLocationManager()
+```
+
+Cả 2 đều có logic xin quyền, setup delegate, xử lý authorization — **copy-paste gần như y hệt**. Nên tạo một `LocationService` dùng chung.
+
+#### 2. Xung đột tên `Alert` ❌
+
+Struct `Alert` trong [Models.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Models/Models.swift#L60-L67) trùng tên với `SwiftUI.Alert`. Bạn đã phải dùng `SwiftUI.Alert(...)` tại [LoginView.swift:65](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Authentication/LoginView.swift#L65) để tránh conflict. Nên đổi tên thành `FloodAlert` hoặc `AlertItem`.
+
+#### 3. Biến global `emergencyPackages` ❌
+
+Tại [Models.swift:112-117](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Models/Models.swift#L112-L117), mảng `emergencyPackages` nằm ở **top-level scope** (không thuộc class/struct nào). Nên đặt vào `MockData` hoặc tạo struct riêng.
+
+---
+
+### 🟡 Vấn đề cần cải thiện
+
+#### 4. Hardcoded data ở `RescueView` & `HomeViewModel`
+
+- [RescueView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Rescue/RescueView.swift) — Toàn bộ data (rescue requests, resource numbers) đều hardcoded ngay trong View, **không có ViewModel**
+- [HomeViewModel.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Home/HomeView.swift) — Dùng `MockData.alerts` trực tiếp, `currentRiskLevel` cũng hardcoded `.severe`
+
+#### 5. Business logic trong View
+
+- [HomeView.swift:54-59](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Home/HomeView.swift#L54-L59): Gọi `Auth.auth().signOut()` trực tiếp trong View thay vì delegate cho ViewModel
+- [SafetyView.swift:198-203](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Safety/SafetyView.swift#L198-L203): Hàm `sendSMS()` nằm trong View, nên chuyển ra service/ViewModel
+
+#### 6. Trùng lặp UI code — Logo Header
+
+5/5 tab views có **đoạn code logo giống hệt nhau**:
+
+```swift
+// Xuất hiện ở: HomeView, ReportView, SafetyView, RescueView
+Image("AquaLogoHeader")
+    .resizable()
+    .scaledToFit()
+    .frame(height: 100)
+    .padding(.top, -20)
+    .frame(maxWidth: .infinity, alignment: .center)
+```
+
+Nên tạo một `LogoHeaderView` component dùng chung.
+
+#### 7. Severity color logic bị trùng
+
+Logic mapping `SeverityLevel → Color` xuất hiện ở 2 chỗ:
+- [Models.swift:16-23](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Models/Models.swift#L16-L23) — `SeverityLevel.color`
+- [HomeView.swift:228-235](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Home/HomeView.swift#L228-L235) — `StatusCard.backgroundColor`
+
+Cả hai đều mapping severity → color, nhưng `StatusCard` tạo riêng computed property thay vì dùng `level.color` sẵn có.
+
+#### 8. Thiếu Error handling & Loading states
+
+- `MapViewModel.fetchFloodZones()` chỉ `print()` lỗi mà không hiển thị lên UI
+- `MapViewModel.getDirections()` không có loading indicator
+- `AuthenticationViewModel` không có `async/await` — dùng callback lồng nhau
+
+---
+
+### 🔵 Gợi ý nhỏ (Nice-to-have)
+
+| # | Vấn đề | File |
+|---|--------|------|
+| 9 | File [FloodMapView.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Map/FloodMapView.swift) có comment header `Untitled.swift` | [FloodMapView.swift:2](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Map/FloodMapView.swift#L2) |
+| 10 | `HomeViewModel` chỉ có 3 `@Published` vars, không có logic — quá nhỏ để cần ViewModel riêng | [HomeViewModel.swift](file:///Users/ShynData/Code/SwiftUI/AquaGuard/ViewModels/HomeViewModel.swift) |
+| 11 | Comment tiếng Việt xen lẫn tiếng Anh — nên thống nhất | Toàn bộ project |
+| 12 | Deprecated API: `@Environment(\.presentationMode)` trong ImagePicker, nên dùng `@Environment(\.dismiss)` | [ImagePicker.swift:13](file:///Users/ShynData/Code/SwiftUI/AquaGuard/Views/Helpers/ImagePicker.swift#L13) |
+| 13 | `Auth.auth().addStateDidChangeListener` trong `AquaGuardApp` — listener không bao giờ bị remove | [AquaGuardApp.swift:48](file:///Users/ShynData/Code/SwiftUI/AquaGuard/AquaGuard/AquaGuardApp.swift#L48) |
+| 14 | Tất cả Views đều `.navigationBarHidden(true)` — nên set ở parent `ContentView` | Nhiều files |
+
+---
+
+## 5. Tổng Kết & Ưu Tiên Cải Thiện
+
+| Ưu tiên | Hành động | Độ khó |
+|---------|-----------|--------|
+| 🔴 P0 | Tạo `LocationService` dùng chung, xóa trùng lặp `CLLocationManager` | Trung bình |
+| 🔴 P0 | Đổi tên `Alert` → `FloodAlert` để tránh conflict với SwiftUI | Dễ |
+| 🟡 P1 | Di chuyển `emergencyPackages` vào struct, xóa global variable | Dễ |
+| 🟡 P1 | Tạo `LogoHeaderView` component, xóa trùng lặp logo | Dễ |
+| 🟡 P1 | Dùng `level.color` thay vì duplicate logic ở `StatusCard` | Dễ |
+| 🟡 P1 | Tạo `RescueViewModel` cho `RescueView` | Trung bình |
+| 🔵 P2 | Chuyển `sendSMS()` và sign-out logic ra khỏi View | Dễ |
+| 🔵 P2 | Thêm error state UI cho Map & loading states | Trung bình |
+| 🔵 P2 | Thống nhất ngôn ngữ comment (Việt hoặc Anh) | Dễ |
+| 🔵 P2 | Cập nhật deprecated API (`presentationMode` → `dismiss`) | Dễ |
+
+> [!TIP]
+> Nhìn chung, dự án có nền tảng tốt cho một MVP. Pattern MVVM được áp dụng đúng hướng, UI components được tách rõ ràng. Vấn đề chính là **trùng lặp code** (LocationManager, logo header, severity colors) và **business logic lẫn vào View** — đây là những vấn đề rất phổ biến ở giai đoạn prototyping, dễ sửa khi refactor.

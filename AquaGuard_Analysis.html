@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AquaGuard - Code Review & Architecture Analysis</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        color: #1a1a2e;
+        background: #fff;
+        line-height: 1.7;
+        font-size: 14px;
+        padding: 40px 50px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 8px;
+        padding-bottom: 12px;
+        border-bottom: 3px solid #68c5cb;
+      }
+
+      h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 32px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #334155;
+        margin-top: 20px;
+        margin-bottom: 8px;
+      }
+
+      h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #475569;
+        margin-top: 16px;
+        margin-bottom: 6px;
+      }
+
+      p {
+        margin-bottom: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0 20px;
+        font-size: 13px;
+      }
+
+      th {
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 600;
+        text-align: left;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+      }
+
+      td {
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+      }
+
+      tr:nth-child(even) {
+        background: #f8fafc;
+      }
+
+      code {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 12px;
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #e11d48;
+      }
+
+      pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 16px 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 12px 0 16px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      pre code {
+        background: none;
+        color: inherit;
+        padding: 0;
+      }
+
+      .diff-add {
+        color: #4ade80;
+      }
+      .diff-remove {
+        color: #f87171;
+      }
+      .diff-comment {
+        color: #94a3b8;
+      }
+
+      .alert-box {
+        padding: 14px 18px;
+        border-radius: 8px;
+        margin: 16px 0;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .alert-warning {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        color: #92400e;
+      }
+
+      .alert-tip {
+        background: #d1fae5;
+        border-left: 4px solid #10b981;
+        color: #065f46;
+      }
+
+      .alert-warning strong,
+      .alert-tip strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      ul,
+      ol {
+        margin: 8px 0 12px 20px;
+      }
+
+      li {
+        margin-bottom: 4px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-red {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .badge-yellow {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .badge-blue {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .badge-green {
+        background: #d1fae5;
+        color: #059669;
+      }
+
+      .architecture-diagram {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 16px 0;
+        text-align: center;
+      }
+
+      .arch-box {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        margin: 4px;
+      }
+
+      .section-good h3 {
+        color: #059669;
+      }
+      .section-bad h3 {
+        color: #dc2626;
+      }
+      .section-warn h3 {
+        color: #d97706;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #e2e8f0;
+        margin: 28px 0;
+      }
+
+      .tree {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px 20px;
+        line-height: 1.8;
+        margin: 12px 0;
+      }
+
+      .tree .warn {
+        color: #d97706;
+        font-weight: 600;
+      }
+
+      @media print {
+        body {
+          padding: 20px 30px;
+          font-size: 12px;
+        }
+        h1 {
+          font-size: 24px;
+        }
+        h2 {
+          font-size: 17px;
+          page-break-after: avoid;
+        }
+        h3 {
+          font-size: 14px;
+          page-break-after: avoid;
+        }
+        pre {
+          font-size: 11px;
+        }
+        table {
+          font-size: 11px;
+        }
+        .no-break {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Phân Tích Dự Án AquaGuard</h1>
+    <p style="color: #64748b; margin-bottom: 4px">
+      Code Review & Architecture Analysis
+    </p>
+    <p style="color: #94a3b8; font-size: 12px">
+      Ngày: 24/02/2026 &bull; Phiên bản: MVP / Beta
+    </p>
+
+    <hr />
+
+    <h2>1. Dự Án Làm Gì?</h2>
+    <p>
+      <strong>AquaGuard</strong> là ứng dụng iOS cảnh báo và cứu hộ lũ lụt, bao
+      gồm 5 tính năng chính:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tab</th>
+          <th>Mô tả</th>
+          <th>File chính</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Home</strong></td>
+          <td>Dashboard hiển thị mức độ nguy hiểm, cảnh báo, và nút SOS</td>
+          <td><code>HomeView.swift</code></td>
+        </tr>
+        <tr>
+          <td><strong>Map</strong></td>
+          <td>
+            Bản đồ tương tác với các điểm ngập, chỉ đường, vị trí người dùng
+          </td>
+          <td><code>FloodMapView.swift</code></td>
+        </tr>
+        <tr>
+          <td><strong>Report</strong></td>
+          <td>Form báo cáo sự cố (ảnh, vị trí, mức nước) gửi lên Firebase</td>
+          <td><code>ReportView.swift</code></td>
+        </tr>
+        <tr>
+          <td><strong>Safety</strong></td>
+          <td>Hướng dẫn an toàn + gọi cứu hộ 113/114/115 + đăng ký 4G SOS</td>
+          <td><code>SafetyView.swift</code></td>
+        </tr>
+        <tr>
+          <td><strong>Rescue</strong></td>
+          <td>Dashboard quản lý tài nguyên cứu hộ (thuyền, trạm y tế...)</td>
+          <td><code>RescueView.swift</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <h2>2. Tech Stack & Kiến Trúc</h2>
+
+    <div class="architecture-diagram">
+      <div style="margin-bottom: 12px">
+        <span class="arch-box" style="background: #68c5cb; color: white"
+          >SwiftUI App (MVVM)</span
+        >
+      </div>
+      <div style="margin-bottom: 8px">
+        <span class="arch-box" style="background: #dbeafe; color: #1e40af"
+          >Views (9 files)</span
+        >
+        <span class="arch-box" style="background: #fce7f3; color: #9d174d"
+          >ViewModels (4 files)</span
+        >
+        <span class="arch-box" style="background: #d1fae5; color: #065f46"
+          >Models (1 file)</span
+        >
+      </div>
+      <div>
+        <span class="arch-box" style="background: #fef3c7; color: #92400e"
+          >Firebase Auth</span
+        >
+        <span class="arch-box" style="background: #fef3c7; color: #92400e"
+          >Firestore</span
+        >
+        <span class="arch-box" style="background: #fef3c7; color: #92400e"
+          >Storage</span
+        >
+        <span class="arch-box" style="background: #e0e7ff; color: #3730a3"
+          >MapKit + CoreLocation</span
+        >
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Thành phần</th>
+          <th>Công nghệ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>UI Framework</td>
+          <td>SwiftUI</td>
+        </tr>
+        <tr>
+          <td>Architecture</td>
+          <td>MVVM</td>
+        </tr>
+        <tr>
+          <td>Authentication</td>
+          <td>Firebase Auth + Google Sign-In</td>
+        </tr>
+        <tr>
+          <td>Database</td>
+          <td>Cloud Firestore (real-time)</td>
+        </tr>
+        <tr>
+          <td>Storage</td>
+          <td>Firebase Storage</td>
+        </tr>
+        <tr>
+          <td>Maps</td>
+          <td>MapKit + CoreLocation</td>
+        </tr>
+        <tr>
+          <td>Min iOS</td>
+          <td>iOS 26.0+</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <h2>3. Cấu Trúc Thư Mục</h2>
+
+    <div class="tree">
+      AquaGuard/<br />
+      ├── AquaGuard/
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      ← App entry point<br />
+      │&nbsp;&nbsp; ├── AquaGuardApp.swift<br />
+      │&nbsp;&nbsp; ├── Assets.xcassets/<br />
+      │&nbsp;&nbsp; ├── GoogleService-Info.plist<br />
+      │&nbsp;&nbsp; └── Info.plist<br />
+      ├── Models/
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="warn">← ⚠️ NẰM NGOÀI thư mục chính</span><br />
+      │&nbsp;&nbsp; └── Models.swift<br />
+      ├── ViewModels/
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="warn">← ⚠️ NẰM NGOÀI thư mục chính</span><br />
+      │&nbsp;&nbsp; ├── AuthenticationViewModel.swift<br />
+      │&nbsp;&nbsp; ├── HomeViewModel.swift<br />
+      │&nbsp;&nbsp; ├── MapViewModel.swift<br />
+      │&nbsp;&nbsp; └── ReportViewModel.swift<br />
+      ├── Views/
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="warn">← ⚠️ NẰM NGOÀI thư mục chính</span><br />
+      │&nbsp;&nbsp; ├── Authentication/LoginView.swift<br />
+      │&nbsp;&nbsp; ├── Helpers/ImagePicker.swift<br />
+      │&nbsp;&nbsp; ├── Home/HomeView.swift<br />
+      │&nbsp;&nbsp; ├── Main/ContentView.swift<br />
+      │&nbsp;&nbsp; ├── Map/FloodMapView.swift<br />
+      │&nbsp;&nbsp; ├── Report/ReportView.swift<br />
+      │&nbsp;&nbsp; ├── Rescue/RescueView.swift<br />
+      │&nbsp;&nbsp; ├── Safety/SafetyView.swift<br />
+      │&nbsp;&nbsp; └── Shared/Extensions.swift<br />
+      └── hcmc.gpx
+    </div>
+
+    <div class="alert-box alert-warning">
+      <strong>⚠️ Vấn đề cấu trúc chính</strong>
+      <code>Models/</code>, <code>ViewModels/</code>, <code>Views/</code> nằm
+      <strong>ngoài</strong> thư mục <code>AquaGuard/</code> (thư mục chính của
+      target). Đây là cấu trúc bất thường — thông thường tất cả source code nên
+      nằm trong cùng một thư mục gốc. Hiện tại vẫn hoạt động vì Xcode quản lý
+      qua <code>.xcodeproj</code>, nhưng sẽ gây khó hiểu khi scale dự án.
+    </div>
+
+    <hr />
+
+    <h2>4. Đánh Giá Code & Các Vấn Đề</h2>
+
+    <div class="section-good no-break">
+      <h3>✅ Điểm tốt</h3>
+      <ul>
+        <li>
+          <strong>MVVM rõ ràng:</strong> View và ViewModel tách biệt, sử dụng
+          <code>@StateObject</code> / <code>@ObservedObject</code> đúng cách
+        </li>
+        <li>
+          <strong>Firebase integration chuyên nghiệp:</strong> Real-time
+          listener cho flood zones, image upload flow tốt
+        </li>
+        <li>
+          <strong>Design System nhất quán:</strong> Color extensions
+          (<code>aquaPrimary</code>, <code>aquaNavy</code>...) hỗ trợ Dark Mode
+        </li>
+        <li>
+          <strong>Reusable components:</strong> <code>QuickActionButton</code>,
+          <code>StatusCard</code>, <code>ResourceCard</code>,
+          <code>SafetySection</code> được tách thành struct riêng
+        </li>
+        <li><strong>Location permission handling</strong> đầy đủ các case</li>
+      </ul>
+    </div>
+
+    <hr />
+
+    <div class="section-bad">
+      <h3>🔴 Vấn đề nghiêm trọng</h3>
+
+      <h4>1. Trùng lặp CLLocationManager ❌</h4>
+      <p>
+        Cả <code>MapViewModel</code> và <code>ReportViewModel</code> đều tạo
+        riêng một <code>CLLocationManager</code>:
+      </p>
+
+      <pre><code><span class="diff-comment">// MapViewModel.swift (line 21)</span>
+  <span class="diff-remove">private let locationManager = CLLocationManager()</span>
+
+<span class="diff-comment">// ReportViewModel.swift (line 31)</span>
+  <span class="diff-remove">private let locationManager = CLLocationManager()</span></code></pre>
+
+      <p>
+        Cả 2 đều có logic xin quyền, setup delegate, xử lý authorization —
+        <strong>copy-paste gần như y hệt</strong>. Nên tạo một
+        <code>LocationService</code> dùng chung.
+      </p>
+
+      <h4>2. Xung đột tên Alert ❌</h4>
+      <p>
+        Struct <code>Alert</code> trong <code>Models.swift</code> (line 60)
+        trùng tên với <code>SwiftUI.Alert</code>. Bạn đã phải dùng
+        <code>SwiftUI.Alert(...)</code> tại <code>LoginView.swift:65</code> để
+        tránh conflict. Nên đổi tên thành <code>FloodAlert</code> hoặc
+        <code>AlertItem</code>.
+      </p>
+
+      <h4>3. Biến global emergencyPackages ❌</h4>
+      <p>
+        Tại <code>Models.swift:112-117</code>, mảng
+        <code>emergencyPackages</code> nằm ở
+        <strong>top-level scope</strong> (không thuộc class/struct nào). Nên đặt
+        vào <code>MockData</code> hoặc tạo struct riêng.
+      </p>
+    </div>
+
+    <hr />
+
+    <div class="section-warn">
+      <h3>🟡 Vấn đề cần cải thiện</h3>
+
+      <h4>4. Hardcoded data ở RescueView & HomeViewModel</h4>
+      <ul>
+        <li>
+          <code>RescueView.swift</code> — Toàn bộ data (rescue requests,
+          resource numbers) đều hardcoded ngay trong View,
+          <strong>không có ViewModel</strong>
+        </li>
+        <li>
+          <code>HomeViewModel.swift</code> — Dùng
+          <code>MockData.alerts</code> trực tiếp,
+          <code>currentRiskLevel</code> cũng hardcoded <code>.severe</code>
+        </li>
+      </ul>
+
+      <h4>5. Business logic trong View</h4>
+      <ul>
+        <li>
+          <code>HomeView.swift:54-59</code>: Gọi
+          <code>Auth.auth().signOut()</code> trực tiếp trong View thay vì
+          delegate cho ViewModel
+        </li>
+        <li>
+          <code>SafetyView.swift:198-203</code>: Hàm <code>sendSMS()</code> nằm
+          trong View, nên chuyển ra service/ViewModel
+        </li>
+      </ul>
+
+      <h4>6. Trùng lặp UI code — Logo Header</h4>
+      <p>5/5 tab views có <strong>đoạn code logo giống hệt nhau</strong>:</p>
+      <pre><code><span class="diff-comment">// Xuất hiện ở: HomeView, ReportView, SafetyView, RescueView</span>
+Image("AquaLogoHeader")
+    .resizable()
+    .scaledToFit()
+    .frame(height: 100)
+    .padding(.top, -20)
+    .frame(maxWidth: .infinity, alignment: .center)</code></pre>
+      <p>Nên tạo một <code>LogoHeaderView</code> component dùng chung.</p>
+
+      <h4>7. Severity color logic bị trùng</h4>
+      <p>Logic mapping <code>SeverityLevel → Color</code> xuất hiện ở 2 chỗ:</p>
+      <ul>
+        <li>
+          <code>Models.swift:16-23</code> — <code>SeverityLevel.color</code>
+        </li>
+        <li>
+          <code>HomeView.swift:228-235</code> —
+          <code>StatusCard.backgroundColor</code>
+        </li>
+      </ul>
+      <p>
+        Cả hai đều mapping severity → color, nhưng <code>StatusCard</code> tạo
+        riêng computed property thay vì dùng <code>level.color</code> sẵn có.
+      </p>
+
+      <h4>8. Thiếu Error handling & Loading states</h4>
+      <ul>
+        <li>
+          <code>MapViewModel.fetchFloodZones()</code> chỉ
+          <code>print()</code> lỗi mà không hiển thị lên UI
+        </li>
+        <li>
+          <code>MapViewModel.getDirections()</code> không có loading indicator
+        </li>
+        <li>
+          <code>AuthenticationViewModel</code> không có
+          <code>async/await</code> — dùng callback lồng nhau
+        </li>
+      </ul>
+    </div>
+
+    <hr />
+
+    <h3>🔵 Gợi ý nhỏ (Nice-to-have)</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Vấn đề</th>
+          <th>File</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>9</td>
+          <td>
+            File <code>FloodMapView.swift</code> có comment header
+            <code>Untitled.swift</code>
+          </td>
+          <td>FloodMapView.swift:2</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>
+            <code>HomeViewModel</code> chỉ có 3 <code>@Published</code> vars,
+            không có logic — quá nhỏ để cần ViewModel riêng
+          </td>
+          <td>HomeViewModel.swift</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td>Comment tiếng Việt xen lẫn tiếng Anh — nên thống nhất</td>
+          <td>Toàn bộ project</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td>
+            Deprecated API: <code>@Environment(\.presentationMode)</code>, nên
+            dùng <code>@Environment(\.dismiss)</code>
+          </td>
+          <td>ImagePicker.swift:13</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td>
+            <code>Auth.auth().addStateDidChangeListener</code> — listener không
+            bao giờ bị remove
+          </td>
+          <td>AquaGuardApp.swift:48</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td>
+            Tất cả Views đều <code>.navigationBarHidden(true)</code> — nên set ở
+            parent
+          </td>
+          <td>Nhiều files</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <h2>5. Tổng Kết & Ưu Tiên Cải Thiện</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Ưu tiên</th>
+          <th>Hành động</th>
+          <th>Độ khó</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-red">P0</span></td>
+          <td>
+            Tạo <code>LocationService</code> dùng chung, xóa trùng lặp
+            <code>CLLocationManager</code>
+          </td>
+          <td>Trung bình</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-red">P0</span></td>
+          <td>
+            Đổi tên <code>Alert</code> → <code>FloodAlert</code> để tránh
+            conflict với SwiftUI
+          </td>
+          <td>Dễ</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">P1</span></td>
+          <td>
+            Di chuyển <code>emergencyPackages</code> vào struct, xóa global
+            variable
+          </td>
+          <td>Dễ</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">P1</span></td>
+          <td>Tạo <code>LogoHeaderView</code> component, xóa trùng lặp logo</td>
+          <td>Dễ</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">P1</span></td>
+          <td>
+            Dùng <code>level.color</code> thay vì duplicate logic ở
+            <code>StatusCard</code>
+          </td>
+          <td>Dễ</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">P1</span></td>
+          <td>Tạo <code>RescueViewModel</code> cho <code>RescueView</code></td>
+          <td>Trung bình</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">P2</span></td>
+          <td>Chuyển <code>sendSMS()</code> và sign-out logic ra khỏi View</td>
+          <td>Dễ</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">P2</span></td>
+          <td>Thêm error state UI cho Map & loading states</td>
+          <td>Trung bình</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">P2</span></td>
+          <td>Thống nhất ngôn ngữ comment (Việt hoặc Anh)</td>
+          <td>Dễ</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">P2</span></td>
+          <td>
+            Cập nhật deprecated API (<code>presentationMode</code> →
+            <code>dismiss</code>)
+          </td>
+          <td>Dễ</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box alert-tip">
+      <strong>💡 Nhận xét chung</strong>
+      Nhìn chung, dự án có nền tảng tốt cho một MVP. Pattern MVVM được áp dụng
+      đúng hướng, UI components được tách rõ ràng. Vấn đề chính là
+      <strong>trùng lặp code</strong> (LocationManager, logo header, severity
+      colors) và <strong>business logic lẫn vào View</strong> — đây là những vấn
+      đề rất phổ biến ở giai đoạn prototyping, dễ sửa khi refactor.
+    </div>
+  </body>
+</html>

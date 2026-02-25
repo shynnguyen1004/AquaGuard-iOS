@@ -67,7 +67,7 @@ struct SafetySection: View {
 }
 
 struct SafetyView: View {
-    // Biến để bật tắt menu chọn nhà mạng
+    // State to toggle carrier selection menu
     @State private var showCarrierSelection = false
 
     var body: some View {
@@ -86,7 +86,7 @@ struct SafetyView: View {
                     // --- KHỐI CHỨC NĂNG KHẨN CẤP (MỚI) ---
                     HStack(spacing: 15) {
 
-                        // CỘT TRÁI: Các số điện thoại khẩn cấp
+                        // LEFT COLUMN: Emergency phone numbers
                         VStack(spacing: 10) {
                             EmergencyCallButton(
                                 icon: "shield.fill", number: "113", label: "Police", color: .red)
@@ -99,7 +99,7 @@ struct SafetyView: View {
                         }
                         .frame(maxWidth: .infinity)
 
-                        // CỘT PHẢI: Nút Đăng ký 4G Đa Năng (Màu xanh dương)
+                        // RIGHT COLUMN: Universal 4G registration button
                         Button(action: {
                             showCarrierSelection = true
                         }) {
@@ -119,12 +119,12 @@ struct SafetyView: View {
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 180)  // Chiều cao bằng 2 nút bên kia cộng lại
-                            .background(Color.aquaPrimary)  // Màu xanh dương
+                            .frame(height: 180)  // Height matches the two buttons combined
+                            .background(Color.aquaPrimary)
                             .cornerRadius(16)
                             .shadow(color: .aquaPrimary.opacity(0.3), radius: 5, x: 0, y: 3)
                         }
-                        // MENU CHỌN NHÀ MẠNG (Hiện ra khi bấm nút)
+                        // Carrier selection menu (shown on button tap)
                         .confirmationDialog(
                             "Select your Carrier", isPresented: $showCarrierSelection,
                             titleVisibility: .visible
@@ -145,7 +145,7 @@ struct SafetyView: View {
                         .foregroundColor(.aquaNavy)
                         .padding(.top)
 
-                    // ... Phần danh sách hướng dẫn bên dưới giữ nguyên ...
+                    // Safety guides list
                     SafetySection(
                         icon: "house.fill",
                         iconColor: .red,
@@ -197,7 +197,7 @@ struct SafetyView: View {
     }
 }
 
-// Component nút gọi nhỏ (cho cột bên trái)
+// MARK: - EmergencyCallButton (left column)
 struct EmergencyCallButton: View {
     let icon: String
     let number: String

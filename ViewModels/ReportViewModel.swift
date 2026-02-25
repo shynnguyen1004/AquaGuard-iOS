@@ -21,7 +21,7 @@ class ReportViewModel: ObservableObject {
     @Published var reportDescription: String = ""
     @Published var selectedImage: UIImage?
 
-    // Trạng thái
+    // State
     @Published var isSubmitting: Bool = false
     @Published var showSuccessAlert: Bool = false
     @Published var errorMessage: String = ""
@@ -66,12 +66,12 @@ class ReportViewModel: ObservableObject {
 
     func submitReport() {
         guard let user = Auth.auth().currentUser else {
-            self.errorMessage = "Bạn cần đăng nhập để gửi báo cáo."
+            self.errorMessage = "You must be signed in to submit a report."
             self.showErrorAlert = true
             return
         }
         guard let location = locationService.currentLocation else {
-            self.errorMessage = "Vui lòng lấy vị trí hiện tại."
+            self.errorMessage = "Please get your current location first."
             self.showErrorAlert = true
             return
         }
@@ -85,7 +85,7 @@ class ReportViewModel: ObservableObject {
                     self?.saveDataToFirestore(photoURL: url, user: user, location: location)
                 case .failure(let error):
                     self?.isSubmitting = false
-                    self?.errorMessage = "Lỗi upload ảnh: \(error.localizedDescription)"
+                    self?.errorMessage = "Image upload error: \(error.localizedDescription)"
                     self?.showErrorAlert = true
                 }
             }

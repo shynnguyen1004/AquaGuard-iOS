@@ -12,10 +12,10 @@ struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
     @State private var showLogoutAlert = false
 
-    // UPDATE 1: Nhận Binding để điều khiển TabView
+    // Binding to control TabView from parent
     @Binding var selectedTab: Int
 
-    // UPDATE 2: Biến trạng thái cho thông báo SOS
+    // SOS alert state
     @State private var showSOSAlert = false
 
     var body: some View {
@@ -41,9 +41,7 @@ struct HomeView: View {
                             .frame(width: 40, height: 40)
                             .foregroundColor(.gray)
                          */
-                        // --- ĐOẠN CODE MỚI ---
-                        // Kiểm tra xem User hiện tại có ảnh Avatar không?
-                        // --- ĐOẠN CODE AVATAR CÓ CHỨC NĂNG ĐĂNG XUẤT ---
+                        // Avatar with sign-out menu
                         Menu {
                             Button(role: .destructive) {
                                 viewModel.signOut()
@@ -51,7 +49,6 @@ struct HomeView: View {
                                 Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                             }
                         } label: {
-                            // Phần giao diện Avatar (Code cũ của bạn nằm trong này)
                             if let photoURL = Auth.auth().currentUser?.photoURL {
                                 AsyncImage(url: photoURL) { phase in
                                     switch phase {
@@ -96,14 +93,14 @@ struct HomeView: View {
                             .padding(.horizontal)
 
                         HStack(spacing: 15) {
-                            // UPDATE 3: Nút Shelter -> Chuyển sang Tab Rescue (Tag 4)
+                            // Shelter button -> navigate to Rescue tab
                             QuickActionButton(
                                 icon: "house.fill", label: "Shelter", color: .aquaPrimary
                             ) {
                                 selectedTab = 4
                             }
 
-                            // UPDATE 4: Nút SOS -> Hiện Alert
+                            // SOS button -> show alert
                             Button(action: {
                                 showSOSAlert = true
                             }) {
@@ -129,7 +126,7 @@ struct HomeView: View {
                                 .shadow(color: Color.red.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
 
-                            // UPDATE 5: Nút Family -> Chuyển sang Tab Rescue (Tag 4)
+                            // Family button -> navigate to Rescue tab
                             QuickActionButton(
                                 icon: "person.2.fill", label: "Family", color: .orange
                             ) {
@@ -167,7 +164,7 @@ struct HomeView: View {
             .navigationBarHidden(true)
             .alert("SOS Sent", isPresented: $showSOSAlert) {
                 Button("OK") {
-                    // Khi bấm OK -> Chuyển sang Tab Safety (Tag 3)
+                    // Navigate to Safety tab on dismiss
                     selectedTab = 3
                 }
             } message: {
@@ -177,15 +174,15 @@ struct HomeView: View {
     }
 }
 
-// UPDATE 7: Cập nhật QuickActionButton để nhận Action
+// MARK: - QuickActionButton
 struct QuickActionButton: View {
     let icon: String
     let label: String
     let color: Color
-    var action: () -> Void  // Thêm biến closure hành động
+    var action: () -> Void
 
     var body: some View {
-        Button(action: action) {  // Gọi action khi bấm
+        Button(action: action) {
             VStack(spacing: 10) {
                 Circle()
                     .fill(color.opacity(0.1))
@@ -211,7 +208,7 @@ struct StatusCard: View {
     let location: String
     let level: SeverityLevel
 
-    // 1. Logic xác định Tiêu đề dựa trên level
+    // Status title based on severity level
     private var statusTitle: String {
         switch level {
         case .low: return "Safe"
@@ -221,10 +218,10 @@ struct StatusCard: View {
         }
     }
 
-    // 2. Màu nền — dùng trực tiếp từ SeverityLevel.color (single source of truth)
+    // Background color — delegates to SeverityLevel.color (single source of truth)
     private var backgroundColor: Color { level.color }
 
-    // 3. Logic xác định Icon
+    // Icon based on severity level
     private var iconName: String {
         switch level {
         case .low: return "checkmark.shield.fill"
@@ -245,7 +242,7 @@ struct StatusCard: View {
                 .fontWeight(.bold)
                 .textCase(.uppercase)
 
-                // Sử dụng biến statusTitle đã định nghĩa ở trên
+                // Use computed statusTitle
                 Text(statusTitle)
                     .font(.largeTitle)
                     .fontWeight(.heavy)
@@ -259,14 +256,14 @@ struct StatusCard: View {
                     .padding(.top, 4)
             }
             Spacer()
-            // Sử dụng biến iconName đã định nghĩa ở trên
+            // Use computed iconName
             Image(systemName: iconName)
                 .font(.system(size: 60))
                 .opacity(0.8)
         }
         .foregroundColor(.white)
         .padding(20)
-        // Sử dụng biến backgroundColor đã định nghĩa ở trên
+        // Use computed backgroundColor
         .background(backgroundColor)
         .cornerRadius(20)
         .shadow(color: backgroundColor.opacity(0.4), radius: 10, x: 0, y: 5)

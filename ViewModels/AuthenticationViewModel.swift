@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseAuth
 import FirebaseCore
-import GoogleSignIn // 1. Import thêm cái này
+import GoogleSignIn
 import SwiftUI
 import Combine
 
@@ -17,10 +17,10 @@ class AuthenticationViewModel: ObservableObject {
     @Published var alertMessage: String = ""
     @Published var showAlert: Bool = false
     
-    // Hàm đăng nhập Google
+    // Google Sign-In handler
     @MainActor
     func signInWithGoogle() {
-        // Lấy màn hình hiện tại để hiển thị popup đăng nhập Google
+        // Get the presenting view controller for Google Sign-In
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
             return
@@ -28,13 +28,13 @@ class AuthenticationViewModel: ObservableObject {
         
         isLoading = true
         
-        // 1. Gọi thư viện Google Sign-In
+        // Call Google Sign-In SDK
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { [weak self] result, error in
             guard let self = self else { return }
             
             if let error = error {
                 self.isLoading = false
-                self.alertMessage = "Lỗi Google: \(error.localizedDescription)"
+                self.alertMessage = "Google error: \(error.localizedDescription)"
                 self.showAlert = true
                 return
             }
@@ -47,19 +47,19 @@ class AuthenticationViewModel: ObservableObject {
             
             let accessToken = user.accessToken.tokenString
             
-            // 2. Tạo Credential để gửi cho Firebase
+            // Create Firebase credential from Google tokens
             let credential = GoogleAuthProvider.credential(withIDToken: idToken,
                                                            accessToken: accessToken)
             
-            // 3. Đăng nhập vào Firebase
+            // Sign in to Firebase with credential
             Auth.auth().signIn(with: credential) { authResult, error in
                 self.isLoading = false
                 if let error = error {
-                    self.alertMessage = "Lỗi Firebase: \(error.localizedDescription)"
+                    self.alertMessage = "Firebase error: \(error.localizedDescription)"
                     self.showAlert = true
                     return
                 }
-                print("Đăng nhập Google thành công: \(authResult?.user.email ?? "")")
+                print("Google sign-in successful: \(authResult?.user.email ?? "")")
             }
         }
     }
