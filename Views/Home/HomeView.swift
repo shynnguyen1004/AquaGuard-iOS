@@ -46,13 +46,7 @@ struct HomeView: View {
                         // --- ĐOẠN CODE AVATAR CÓ CHỨC NĂNG ĐĂNG XUẤT ---
                         Menu {
                             Button(role: .destructive) {
-                                do {
-                                    try Auth.auth().signOut()
-                                    // Khi đăng xuất, AquaGuardApp sẽ tự động phát hiện
-                                    // và chuyển về màn hình LoginView ngay lập tức.
-                                } catch {
-                                    print("Lỗi đăng xuất: \(error.localizedDescription)")
-                                }
+                                viewModel.signOut()
                             } label: {
                                 Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                             }
