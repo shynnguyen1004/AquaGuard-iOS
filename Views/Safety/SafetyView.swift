@@ -129,7 +129,7 @@ struct SafetyView: View {
                             "Select your Carrier", isPresented: $showCarrierSelection,
                             titleVisibility: .visible
                         ) {
-                            ForEach(emergencyPackages, id: \.carrier) { pkg in
+                            ForEach(MockData.emergencyPackages, id: \.carrier) { pkg in
                                 Button("\(pkg.carrier) - \(pkg.name)") {
                                     sendSMS(number: pkg.number, message: pkg.syntax)
                                 }

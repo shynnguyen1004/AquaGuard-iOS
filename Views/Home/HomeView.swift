@@ -227,15 +227,8 @@ struct StatusCard: View {
         }
     }
 
-    // 2. Logic xác định Màu nền
-    private var backgroundColor: Color {
-        switch level {
-        case .low: return Color.aquaSafe  // Hoặc dùng Color("aquaSafe") nếu bạn có
-        case .moderate: return Color.aquaWarning
-        case .severe: return Color.aquaDanger
-        case .critical: return Color.aquaCritical  //(red: 0.6, green: 0, blue: 0) // Màu đỏ đậm/huyết dụ cho Critical
-        }
-    }
+    // 2. Màu nền — dùng trực tiếp từ SeverityLevel.color (single source of truth)
+    private var backgroundColor: Color { level.color }
 
     // 3. Logic xác định Icon
     private var iconName: String {
