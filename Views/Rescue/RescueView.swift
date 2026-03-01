@@ -65,7 +65,7 @@ struct RescueRequestRow: View {
             }
 
             HStack(spacing: 15) {
-                Label("\(request.people) people", systemImage: "person.2")
+                Label("\(request.people) \("people".localized)", systemImage: "person.2")
                 Text("•")
                 Label(request.time, systemImage: "clock")
                 if let team = request.team {
@@ -78,13 +78,13 @@ struct RescueRequestRow: View {
 
             if request.status == "In Progress" {
                 HStack {
-                    Button("Track") {}.buttonStyle(.bordered)
-                    Button("Complete") {}.buttonStyle(.borderedProminent).tint(.green)
+                    Button("Track".localized) {}.buttonStyle(.bordered)
+                    Button("Complete".localized) {}.buttonStyle(.borderedProminent).tint(.green)
                 }
                 .controlSize(.small)
             } else if request.status == "Pending" {
                 Button(action: {}) {
-                    Text("Assign Team")
+                    Text("Assign Team".localized)
                         .font(.subheadline).bold()
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -114,6 +114,7 @@ struct RescueRequestRow: View {
 
 struct RescueView: View {
     @StateObject var viewModel = RescueViewModel()
+    @EnvironmentObject var languageManager: LanguageManager
 
     var body: some View {
         NavigationStack {
@@ -122,7 +123,7 @@ struct RescueView: View {
                     // Resource Availability
                     LogoHeaderView()
 
-                    Text("Resource Availability")
+                    Text(languageManager.localize("Resource Availability"))
                         .font(.headline).foregroundColor(.aquaNavy)
                         .padding(.horizontal)
 
@@ -136,10 +137,10 @@ struct RescueView: View {
 
                     // Rescue Requests
                     HStack {
-                        Text("Rescue Requests")
+                        Text(languageManager.localize("Rescue Requests"))
                             .font(.headline).foregroundColor(.aquaNavy)
                         Spacer()
-                        Text("\(viewModel.pendingCount) Pending")
+                        Text("\(viewModel.pendingCount) \(languageManager.localize("Pending"))")
                             .font(.caption).bold()
                             .padding(4).background(Color.red.opacity(0.1)).foregroundColor(.red)
                             .cornerRadius(4)

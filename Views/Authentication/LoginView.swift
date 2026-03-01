@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LoginView: View {
     @StateObject var viewModel = AuthenticationViewModel()
+    @EnvironmentObject var languageManager: LanguageManager
 
     var body: some View {
         ZStack {
@@ -22,16 +23,19 @@ struct LoginView: View {
                     .frame(height: 120)
 
                 VStack(spacing: 12) {
-                    Text("Welcome to AquaGuard")
+                    Text(languageManager.localize("Welcome to AquaGuard"))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.aquaNavy)
 
-                    Text("Sign in to access flood alerts and rescue features")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                    Text(
+                        languageManager.localize(
+                            "Sign in to access flood alerts and rescue features")
+                    )
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
                 }
 
                 // Google Sign-In button
@@ -43,11 +47,11 @@ struct LoginView: View {
                             ProgressView()
                         } else {
                             // Google icon from Assets
-                            
+
                             Image(systemName: "globe")
                                 .font(.title3)
 
-                            Text("Sign in with Google")
+                            Text(languageManager.localize("Sign in with Google"))
                                 .fontWeight(.semibold)
                         }
                     }
@@ -63,8 +67,9 @@ struct LoginView: View {
         }
         .alert(isPresented: $viewModel.showAlert) {
             Alert(
-                title: Text("Error"), message: Text(viewModel.alertMessage),
-                dismissButton: .default(Text("OK")))
+                title: Text(languageManager.localize("Error")),
+                message: Text(viewModel.alertMessage),
+                dismissButton: .default(Text(languageManager.localize("OK"))))
         }
     }
 }

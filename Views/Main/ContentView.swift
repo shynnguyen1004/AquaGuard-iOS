@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedTab = 0
     @StateObject private var locationService = LocationService()
+    @EnvironmentObject var languageManager: LanguageManager
 
     init() {
         UITabBar.appearance().unselectedItemTintColor = UIColor.systemGray
@@ -19,31 +20,35 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             HomeView(selectedTab: $selectedTab)
                 .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                    Label(languageManager.localize("Home"), systemImage: "house.fill")
                 }
                 .tag(0)
 
             FloodMapView(locationService: locationService)
                 .tabItem {
-                    Label("Map", systemImage: "map.fill")
+                    Label(languageManager.localize("Map"), systemImage: "map.fill")
                 }
                 .tag(1)
 
             ReportView(locationService: locationService)
                 .tabItem {
-                    Label("Report", systemImage: "exclamationmark.bubble.fill")
+                    Label(
+                        languageManager.localize("Report"),
+                        systemImage: "exclamationmark.bubble.fill")
                 }
                 .tag(2)
 
             SafetyView()
                 .tabItem {
-                    Label("Safety", systemImage: "shield.fill")
+                    Label(languageManager.localize("Safety"), systemImage: "shield.fill")
                 }
                 .tag(3)
 
             RescueView()
                 .tabItem {
-                    Label("Rescue", systemImage: "dot.radiowaves.left.and.right")
+                    Label(
+                        languageManager.localize("Rescue"),
+                        systemImage: "dot.radiowaves.left.and.right")
                 }
                 .tag(4)
         }

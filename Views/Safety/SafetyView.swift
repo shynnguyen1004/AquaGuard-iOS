@@ -69,6 +69,7 @@ struct SafetySection: View {
 struct SafetyView: View {
     // State to toggle carrier selection menu
     @State private var showCarrierSelection = false
+    @EnvironmentObject var languageManager: LanguageManager
 
     var body: some View {
         NavigationStack {
@@ -78,7 +79,7 @@ struct SafetyView: View {
                     // --- HEADER LOGO ---
                     LogoHeaderView()
 
-                    Text("Emergency Assistance")
+                    Text(languageManager.localize("Emergency Assistance"))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.aquaNavy)
@@ -89,12 +90,14 @@ struct SafetyView: View {
                         // LEFT COLUMN: Emergency phone numbers
                         VStack(spacing: 10) {
                             EmergencyCallButton(
-                                icon: "shield.fill", number: "113", label: "Police", color: .red)
+                                icon: "shield.fill", number: "113",
+                                label: languageManager.localize("Police"), color: .red)
                             EmergencyCallButton(
                                 icon: "fire.extinguisher.fill", number: "114",
-                                label: "Fire Brigade", color: .red)
+                                label: languageManager.localize("Fire Brigade"), color: .red)
                             EmergencyCallButton(
-                                icon: "cross.case.fill", number: "115", label: "Ambulance",
+                                icon: "cross.case.fill", number: "115",
+                                label: languageManager.localize("Ambulance"),
                                 color: .red)
                         }
                         .frame(maxWidth: .infinity)
@@ -113,7 +116,7 @@ struct SafetyView: View {
                                     .font(.system(size: 16))
                                     .fontWeight(.heavy)
 
-                                Text("Tap to Register")
+                                Text(languageManager.localize("Tap to Register"))
                                     .font(.caption2)
                                     .opacity(0.8)
                             }
@@ -126,7 +129,8 @@ struct SafetyView: View {
                         }
                         // Carrier selection menu (shown on button tap)
                         .confirmationDialog(
-                            "Select your Carrier", isPresented: $showCarrierSelection,
+                            languageManager.localize("Select your Carrier"),
+                            isPresented: $showCarrierSelection,
                             titleVisibility: .visible
                         ) {
                             ForEach(MockData.emergencyPackages, id: \.carrier) { pkg in
@@ -134,12 +138,12 @@ struct SafetyView: View {
                                     SMSHelper.send(number: pkg.number, message: pkg.syntax)
                                 }
                             }
-                            Button("Cancel", role: .cancel) {}
+                            Button(languageManager.localize("Cancel"), role: .cancel) {}
                         }
                     }
                     // ----------------------------------------
 
-                    Text("Safety Guides")
+                    Text(languageManager.localize("Safety Guides"))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.aquaNavy)
@@ -149,14 +153,15 @@ struct SafetyView: View {
                     SafetySection(
                         icon: "house.fill",
                         iconColor: .red,
-                        title: "During a Flood",
-                        tag: "Critical",
+                        title: languageManager.localize("During a Flood"),
+                        tag: languageManager.localize("Critical"),
                         tagColor: .red,
                         steps: [
-                            "Move to higher ground immediately",
-                            "Avoid walking or driving through flood waters",
-                            "Stay away from downed power lines",
-                            "Listen to emergency broadcasts",
+                            languageManager.localize("Move to higher ground immediately"),
+                            languageManager.localize(
+                                "Avoid walking or driving through flood waters"),
+                            languageManager.localize("Stay away from downed power lines"),
+                            languageManager.localize("Listen to emergency broadcasts"),
                         ]
                     )
                     .padding(.horizontal)
@@ -164,14 +169,15 @@ struct SafetyView: View {
                     SafetySection(
                         icon: "doc.text.fill",
                         iconColor: .green,
-                        title: "After a Flood",
-                        tag: "Medium",
+                        title: languageManager.localize("After a Flood"),
+                        tag: languageManager.localize("Medium"),
                         tagColor: .blue,
                         steps: [
-                            "Return home only when authorities say it's safe",
-                            "Document damage with photos",
-                            "Clean and disinfect everything that got wet",
-                            "Watch for structural damage",
+                            languageManager.localize(
+                                "Return home only when authorities say it's safe"),
+                            languageManager.localize("Document damage with photos"),
+                            languageManager.localize("Clean and disinfect everything that got wet"),
+                            languageManager.localize("Watch for structural damage"),
                         ]
                     )
                     .padding(.horizontal)
@@ -179,12 +185,12 @@ struct SafetyView: View {
                     SafetySection(
                         icon: "car.fill",
                         iconColor: .purple,
-                        title: "Vehicle Safety",
-                        tag: "High",
+                        title: languageManager.localize("Vehicle Safety"),
+                        tag: languageManager.localize("High"),
                         tagColor: .orange,
                         steps: [
-                            "Never drive through flooded roads",
-                            "Turn around if water is rising",
+                            languageManager.localize("Never drive through flooded roads"),
+                            languageManager.localize("Turn around if water is rising"),
                         ]
                     )
                     .padding(.horizontal)

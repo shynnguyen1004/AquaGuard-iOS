@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ReportView: View {
     @StateObject var viewModel: ReportViewModel
+    @EnvironmentObject var languageManager: LanguageManager
 
     init(locationService: LocationService) {
         _viewModel = StateObject(wrappedValue: ReportViewModel(locationService: locationService))
@@ -36,14 +37,15 @@ struct ReportView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         // Location Field
                         VStack(alignment: .leading) {
-                            Text("Location")
+                            Text(languageManager.localize("Location"))
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
 
                             // Location Input Row
                             HStack {
                                 TextField(
-                                    "Enter location or pin on map", text: $viewModel.locationName
+                                    languageManager.localize("Enter location or pin on map"),
+                                    text: $viewModel.locationName
                                 )
                                 //.textFieldStyle(RoundedBorderTextFieldStyle())
                                 //.disabled(true)
@@ -71,7 +73,7 @@ struct ReportView: View {
                         // Water Level Slider
                         VStack(alignment: .leading) {
                             HStack {
-                                Text("Water Level")
+                                Text(languageManager.localize("Water Level"))
                                     .font(.headline)
                                     .foregroundColor(.aquaNavy)
                                 Spacer()
@@ -84,15 +86,17 @@ struct ReportView: View {
                                 .tint(.aquaPrimary)
 
                             HStack {
-                                Text("Low").font(.caption).foregroundColor(.gray)
+                                Text(languageManager.localize("Low")).font(.caption)
+                                    .foregroundColor(.gray)
                                 Spacer()
-                                Text("High").font(.caption).foregroundColor(.gray)
+                                Text(languageManager.localize("High")).font(.caption)
+                                    .foregroundColor(.gray)
                             }
                         }
 
                         // Description
                         VStack(alignment: .leading) {
-                            Text("Description")
+                            Text(languageManager.localize("Description"))
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
 
@@ -110,7 +114,8 @@ struct ReportView: View {
 
                         // Photo Upload
                         VStack(alignment: .leading) {
-                            Text("Add Photo (Optional)").font(.headline).foregroundColor(.aquaNavy)
+                            Text(languageManager.localize("Add Photo (Optional)")).font(.headline)
+                                .foregroundColor(.aquaNavy)
 
                             Button(action: { showActionSheet = true }) {
                                 ZStack {
@@ -133,7 +138,9 @@ struct ReportView: View {
                                         VStack {
                                             Image(systemName: "camera.fill").font(.title)
                                                 .foregroundColor(.gray)
-                                            Text("Tap to upload").font(.caption).foregroundColor(
+                                            Text(languageManager.localize("Tap to upload")).font(
+                                                .caption
+                                            ).foregroundColor(
                                                 .gray)
                                         }
                                     }
@@ -149,7 +156,7 @@ struct ReportView: View {
                             if viewModel.isSubmitting {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("Submit Report").bold()
+                                Text(languageManager.localize("Submit Report")).bold()
                             }
                         }
                         .frame(maxWidth: .infinity).padding()
@@ -163,28 +170,30 @@ struct ReportView: View {
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
             // Success alert
-            .alert("Success", isPresented: $viewModel.showSuccessAlert) {
-                Button("OK", role: .cancel) {}
+            .alert(languageManager.localize("Success"), isPresented: $viewModel.showSuccessAlert) {
+                Button(languageManager.localize("OK"), role: .cancel) {}
             } message: {
-                Text("Your report has been submitted successfully.")
+                Text(languageManager.localize("Your report has been submitted successfully."))
             }
             // Error alert
-            .alert("Error", isPresented: $viewModel.showErrorAlert) {
-                Button("OK", role: .cancel) {}
+            .alert(languageManager.localize("Error"), isPresented: $viewModel.showErrorAlert) {
+                Button(languageManager.localize("OK"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage)
             }
             // Camera/Library action sheet
-            .confirmationDialog("Select Photo", isPresented: $showActionSheet) {
-                Button("Camera") {
+            .confirmationDialog(
+                languageManager.localize("Select Photo"), isPresented: $showActionSheet
+            ) {
+                Button(languageManager.localize("Camera")) {
                     sourceType = .camera
                     showImagePicker = true
                 }
-                Button("Photo Library") {
+                Button(languageManager.localize("Photo Library")) {
                     sourceType = .photoLibrary
                     showImagePicker = true
                 }
-                Button("Cancel", role: .cancel) {}
+                Button(languageManager.localize("Cancel"), role: .cancel) {}
             }
             // Present ImagePicker
             .sheet(isPresented: $showImagePicker) {
@@ -195,7 +204,7 @@ struct ReportView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done") {
+                    Button(languageManager.localize("Done")) {
                         isInputActive = false
                     }
                     .fontWeight(.bold)

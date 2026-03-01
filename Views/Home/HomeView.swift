@@ -28,13 +28,16 @@ struct HomeView: View {
 
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("Welcome back,")
+                            Text(languageManager.localize("Welcome back,"))
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
-                            Text(Auth.auth().currentUser?.displayName ?? "Responder Alpha")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.aquaNavy)
+                            Text(
+                                Auth.auth().currentUser?.displayName
+                                    ?? languageManager.localize("Responder Alpha")
+                            )
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.aquaNavy)
                         }
                         Spacer()
                         /*Image(systemName: "person.crop.circle.fill")
@@ -62,7 +65,9 @@ struct HomeView: View {
                             Button(role: .destructive) {
                                 viewModel.signOut()
                             } label: {
-                                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                                Label(
+                                    languageManager.localize("Sign Out"),
+                                    systemImage: "rectangle.portrait.and.arrow.right")
                             }
                         } label: {
                             if let photoURL = Auth.auth().currentUser?.photoURL {
@@ -103,7 +108,7 @@ struct HomeView: View {
 
                     // --- QUICK ACTIONS (PHẦN CHỈNH SỬA CHÍNH) ---
                     VStack(alignment: .leading) {
-                        Text("Quick Actions")
+                        Text(languageManager.localize("Quick Actions"))
                             .font(.headline)
                             .foregroundColor(.aquaNavy)
                             .padding(.horizontal)
@@ -111,7 +116,8 @@ struct HomeView: View {
                         HStack(spacing: 15) {
                             // Shelter button -> navigate to Rescue tab
                             QuickActionButton(
-                                icon: "house.fill", label: "Shelter", color: .aquaPrimary
+                                icon: "house.fill", label: languageManager.localize("Shelter"),
+                                color: .aquaPrimary
                             ) {
                                 selectedTab = 4
                             }
@@ -144,7 +150,8 @@ struct HomeView: View {
 
                             // Family button -> navigate to Rescue tab
                             QuickActionButton(
-                                icon: "person.2.fill", label: "Family", color: .orange
+                                icon: "person.2.fill", label: languageManager.localize("Family"),
+                                color: .orange
                             ) {
                                 selectedTab = 4
                             }
@@ -155,15 +162,17 @@ struct HomeView: View {
                     // Active Alerts
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text("Active Alerts")
+                            Text(languageManager.localize("Active Alerts"))
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
                             Spacer()
-                            Text("\(viewModel.activeAlerts.count) Active")
-                                .font(.caption)
-                                .padding(6)
-                                .background(Color.yellow.opacity(0.2))
-                                .cornerRadius(8)
+                            Text(
+                                "\(viewModel.activeAlerts.count) \(languageManager.localize("Active"))"
+                            )
+                            .font(.caption)
+                            .padding(6)
+                            .background(Color.yellow.opacity(0.2))
+                            .cornerRadius(8)
                         }
                         .padding(.horizontal)
 
@@ -178,13 +187,13 @@ struct HomeView: View {
             .background(Color.aquaBackground)
             .navigationTitle("AquaGuard")
             .navigationBarHidden(true)
-            .alert("SOS Sent", isPresented: $showSOSAlert) {
+            .alert(languageManager.localize("SOS Sent"), isPresented: $showSOSAlert) {
                 Button("OK") {
                     // Navigate to Safety tab on dismiss
                     selectedTab = 3
                 }
             } message: {
-                Text("Your information is sent! Stay at your current position and wait for help")
+                Text(languageManager.localize("SOS Message"))
             }
         }
     }
@@ -227,10 +236,10 @@ struct StatusCard: View {
     // Status title based on severity level
     private var statusTitle: String {
         switch level {
-        case .low: return "Safe"
-        case .moderate: return "Caution"
-        case .severe: return "Danger"
-        case .critical: return "Critical"
+        case .low: return "Safe".localized
+        case .moderate: return "Caution".localized
+        case .severe: return "Danger".localized
+        case .critical: return "Critical".localized
         }
     }
 
@@ -252,7 +261,7 @@ struct StatusCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
-                    Text("Current Status")
+                    Text("Current Risk Level".localized)
                 }
                 .font(.caption)
                 .fontWeight(.bold)
