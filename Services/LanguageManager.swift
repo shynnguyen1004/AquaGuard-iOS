@@ -46,9 +46,7 @@ class LanguageManager: ObservableObject {
         current = (current == .english) ? .vietnamese : .english
     }
 
-    // MARK: - Translations Dictionary
-
-    nonisolated static let translations: [String: [AppLanguage: String]] = AppStrings.translations
+    // MARK: - Localize
 
     func localize(_ key: String) -> String {
         AppStrings.translations[key]?[current] ?? key
