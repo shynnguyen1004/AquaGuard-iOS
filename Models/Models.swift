@@ -136,6 +136,70 @@ class MockData {
             address: "789 Nguyen Tri Phuong", people: 6, time: "45 min ago",
             status: "Completed", team: "Team Bravo", severityColor: .orange),
     ]
+
+    static let sosRequests = [
+        SOSRequest(
+            address: "12 Nguyen Hue, District 1",
+            description: "Water flooding into first floor, family of 4 needs help",
+            photoURL: nil,
+            status: .pending,
+            timestamp: Date().addingTimeInterval(-300)  // 5 min ago
+        ),
+        SOSRequest(
+            address: "456 Le Loi, District 5",
+            description: "Elderly person stranded on rooftop due to rising water",
+            photoURL: nil,
+            status: .inProgress,
+            timestamp: Date().addingTimeInterval(-1800)  // 30 min ago
+        ),
+        SOSRequest(
+            address: "78 Tran Hung Dao, District 1",
+            description: "Road completely flooded, car stuck and cannot move",
+            photoURL: nil,
+            status: .resolved,
+            timestamp: Date().addingTimeInterval(-7200)  // 2 hours ago
+        ),
+    ]
+}
+
+// MARK: - SOS Request
+enum SOSStatus: String {
+    case pending = "Pending"
+    case inProgress = "In Progress"
+    case resolved = "Resolved"
+
+    var color: Color {
+        switch self {
+        case .pending: return .aquaWarning
+        case .inProgress: return .aquaPrimary
+        case .resolved: return .aquaSafe
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .pending: return "clock.fill"
+        case .inProgress: return "arrow.triangle.2.circlepath"
+        case .resolved: return "checkmark.circle.fill"
+        }
+    }
+}
+
+struct SOSRequest: Identifiable {
+    let id = UUID()
+    let address: String
+    let description: String
+    let photoURL: String?
+    let status: SOSStatus
+    let timestamp: Date
+
+    var timeAgoString: String {
+        let interval = Date().timeIntervalSince(timestamp)
+        if interval < 60 { return "Just now" }
+        if interval < 3600 { return "\(Int(interval / 60)) min ago" }
+        if interval < 86400 { return "\(Int(interval / 3600))h ago" }
+        return "\(Int(interval / 86400))d ago"
+    }
 }
 
 struct DataPackage {

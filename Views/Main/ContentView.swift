@@ -30,11 +30,11 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            ReportView(locationService: locationService)
+            SOSView(locationService: locationService)
                 .tabItem {
                     Label(
-                        languageManager.localize("Report"),
-                        systemImage: "exclamationmark.bubble.fill")
+                        languageManager.localize("SOS"),
+                        systemImage: "sos")
                 }
                 .tag(2)
 
