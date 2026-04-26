@@ -25,6 +25,9 @@
 		3A94DFE82F2AF52B00CDF258 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFE72F2AF52B00CDF258 /* FirebaseStorageCombine-Community */; };
 		3A94DFEB2F2AF5A100CDF258 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFEA2F2AF5A100CDF258 /* GoogleSignIn */; };
 		3A94DFED2F2AF5A100CDF258 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFEC2F2AF5A100CDF258 /* GoogleSignInSwift */; };
+		BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
+		BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
+		BBB304AA2F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +56,7 @@
 		3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AquaGuardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9F39422F03FA88001F31D5 /* sydney.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = sydney.gpx; path = ../../../../truongsonnguyen/Downloads/sydney.gpx; sourceTree = "<group>"; };
 		3A9F39442F041FA4001F31D5 /* hcmc.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = hcmc.gpx; path = ../../../../truongsonnguyen/Downloads/hcmc.gpx; sourceTree = "<group>"; };
+		BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -168,6 +172,7 @@
 		3A41D3912F4F226E00355F07 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */,
 				3A41D39F2F4F32E000355F07 /* LanguageManager.swift */,
 				3A41D39B2F4F2E0C00355F07 /* SMSHelper.swift */,
 				3A41D3902F4F226E00355F07 /* LocationService.swift */,
@@ -365,6 +370,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A41D39C2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
+				BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
 				3A41D3922F4F226E00355F07 /* LocationService.swift in Sources */,
 				3A41D3A12F4F32E000355F07 /* LanguageManager.swift in Sources */,
 			);
@@ -376,6 +382,7 @@
 			files = (
 				3A41D3A22F4F32E000355F07 /* LanguageManager.swift in Sources */,
 				3A41D39E2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
+				BBB304AA2F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,6 +393,7 @@
 				3A41D39D2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
 				3A41D3932F4F226E00355F07 /* LocationService.swift in Sources */,
 				3A41D3A02F4F32E000355F07 /* LanguageManager.swift in Sources */,
+				BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

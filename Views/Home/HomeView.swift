@@ -19,6 +19,9 @@ struct HomeView: View {
     // SOS alert state
     @State private var showSOSAlert = false
 
+    // Settings sheet
+    @State private var showSettings = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -45,31 +48,8 @@ struct HomeView: View {
                             .frame(width: 40, height: 40)
                             .foregroundColor(.gray)
                          */
-                        // Avatar with settings menu
-                        Menu {
-                            // Language toggle
-                            Button {
-                                languageManager.toggle()
-                            } label: {
-                                Label(
-                                    languageManager.current == .english
-                                        ? "🇻🇳 Tiếng Việt"
-                                        : "🇺🇸 English",
-                                    systemImage: "globe"
-                                )
-                            }
-
-                            Divider()
-
-                            // Sign out
-                            Button(role: .destructive) {
-                                viewModel.signOut()
-                            } label: {
-                                Label(
-                                    languageManager.localize("Sign Out"),
-                                    systemImage: "rectangle.portrait.and.arrow.right")
-                            }
-                        } label: {
+                        // Avatar → opens Settings
+                        Button(action: { showSettings = true }) {
                             if let photoURL = Auth.auth().currentUser?.photoURL {
                                 AsyncImage(url: photoURL) { phase in
                                     switch phase {
@@ -194,6 +174,10 @@ struct HomeView: View {
                 }
             } message: {
                 Text(languageManager.localize("SOS Message"))
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+                    .environmentObject(languageManager)
             }
         }
     }

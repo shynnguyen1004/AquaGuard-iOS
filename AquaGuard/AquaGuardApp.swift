@@ -41,6 +41,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct AquaGuardApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var languageManager = LanguageManager.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var userID: String? = nil
     @State private var authHandle: AuthStateDidChangeListenerHandle?
 
@@ -57,6 +58,7 @@ struct AquaGuardApp: App {
                 }
             }
             .environmentObject(languageManager)
+            .preferredColorScheme(themeManager.colorScheme)
             .onAppear {
                 authHandle = Auth.auth().addStateDidChangeListener { auth, user in
                     if let user = user {
