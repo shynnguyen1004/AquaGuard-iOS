@@ -206,6 +206,7 @@ struct SOSFormSheet: View {
     @ObservedObject var viewModel: ReportViewModel
     @Binding var isPresented: Bool
     @EnvironmentObject var languageManager: LanguageManager
+    @Environment(\.colorScheme) var colorScheme
 
     @FocusState private var isInputActive: Bool
 
@@ -232,9 +233,15 @@ struct SOSFormSheet: View {
                     VStack(alignment: .leading, spacing: 20) {
                         // Location Field
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(languageManager.localize("Location"))
-                                .font(.headline)
-                                .foregroundColor(.aquaNavy)
+                            Label {
+                                Text(languageManager.localize("Current Location"))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.aquaNavy)
+                            } icon: {
+                                Image(systemName: "mappin.and.ellipse")
+                                    .foregroundColor(.aquaDanger)
+                            }
 
                             HStack {
                                 TextField(
@@ -254,45 +261,67 @@ struct SOSFormSheet: View {
                                 }
                             }
                             .padding()
-                            .background(Color.aquaCard)
+                            .background(Color.aquaInputBg)
                             .cornerRadius(12)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.gray.opacity(0.3))
+                                    .stroke(Color.aquaInputBorder)
                             )
                         }
 
                         // Description
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(languageManager.localize("Description"))
-                                .font(.headline)
-                                .foregroundColor(.aquaNavy)
+                            Label {
+                                Text(languageManager.localize("Situation Description"))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.aquaNavy)
+                            } icon: {
+                                Image(systemName: "doc.text.fill")
+                                    .foregroundColor(.aquaPrimary)
+                            }
 
                             TextEditor(text: $viewModel.reportDescription)
                                 .focused($isInputActive)
                                 .scrollContentBackground(.hidden)
                                 .frame(height: 100)
                                 .padding(8)
-                                .background(Color.aquaCard)
+                                .background(Color.aquaInputBg)
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.gray.opacity(0.3))
+                                        .stroke(Color.aquaInputBorder)
                                 )
+                                .overlay(alignment: .topLeading) {
+                                    if viewModel.reportDescription.isEmpty {
+                                        Text(languageManager.localize("Describe the current situation: water level, number of people needing rescue, health conditions..."))
+                                            .font(.body)
+                                            .foregroundColor(.secondary.opacity(0.6))
+                                            .padding(.horizontal, 13)
+                                            .padding(.vertical, 16)
+                                            .allowsHitTesting(false)
+                                    }
+                                }
                         }
 
                         // Photo Upload
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(languageManager.localize("Add Photo (Optional)"))
-                                .font(.headline)
-                                .foregroundColor(.aquaNavy)
+                            Label {
+                                Text(languageManager.localize("Add Photo (Optional)"))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.aquaNavy)
+                            } icon: {
+                                Image(systemName: "camera.fill")
+                                    .foregroundColor(.orange)
+                            }
 
                             Button(action: { showActionSheet = true }) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                        .foregroundColor(.gray.opacity(0.5))
-                                        .background(Color.aquaCard.opacity(0.3))
+                                        .foregroundColor(Color.aquaInputBorder)
+                                        .background(Color.aquaInputBg.opacity(0.5))
                                         .frame(height: 150)
 
                                     if let image = viewModel.selectedImage {
@@ -306,10 +335,10 @@ struct SOSFormSheet: View {
                                         VStack {
                                             Image(systemName: "camera.fill")
                                                 .font(.title)
-                                                .foregroundColor(.gray)
+                                                .foregroundColor(.secondary)
                                             Text(languageManager.localize("Tap to upload"))
                                                 .font(.caption)
-                                                .foregroundColor(.gray)
+                                                .foregroundColor(.secondary)
                                         }
                                     }
                                 }
@@ -349,7 +378,7 @@ struct SOSFormSheet: View {
                     .padding(.bottom, 30)
                 }
             }
-            .background(Color.aquaBackground)
+            .background(Color.aquaModalBg)
             .navigationTitle(languageManager.localize("SOS Request"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -357,6 +386,7 @@ struct SOSFormSheet: View {
                     Button(languageManager.localize("Cancel")) {
                         isPresented = false
                     }
+                    .foregroundColor(.aquaPrimary)
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -364,7 +394,7 @@ struct SOSFormSheet: View {
                         isInputActive = false
                     }
                     .fontWeight(.bold)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.aquaPrimary)
                 }
             }
             .confirmationDialog(
@@ -386,3 +416,4 @@ struct SOSFormSheet: View {
         }
     }
 }
+
