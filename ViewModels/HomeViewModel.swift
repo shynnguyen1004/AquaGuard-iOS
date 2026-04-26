@@ -23,5 +23,7 @@ class HomeViewModel: ObservableObject {
         } catch {
             signOutError = error.localizedDescription
         }
+        // Also reset dev skip flag
+        UserDefaults.standard.set(false, forKey: "devSkipLogin")
     }
 }

@@ -44,10 +44,13 @@ struct AquaGuardApp: App {
     @State private var userID: String? = nil
     @State private var authHandle: AuthStateDidChangeListenerHandle?
 
+    // DEV: set to true to skip login
+    @AppStorage("devSkipLogin") private var devSkipLogin: Bool = false
+
     var body: some Scene {
         WindowGroup {
             ZStack {
-                if userID != nil {
+                if userID != nil || devSkipLogin {
                     ContentView()
                 } else {
                     LoginView()
