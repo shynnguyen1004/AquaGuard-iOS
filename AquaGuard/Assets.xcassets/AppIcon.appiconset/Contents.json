@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "Thiết kế chưa có tên-2.png",
+      "filename" : "Logo_WhiteBG.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "AG.png",
+      "filename" : "Logo_Dark.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,7 +25,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "Thiết kế chưa có tên-3 1.png",
+      "filename" : "Logo_Light.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
