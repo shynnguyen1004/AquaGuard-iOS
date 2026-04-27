@@ -22,6 +22,9 @@ struct HomeView: View {
     // Settings sheet
     @State private var showSettings = false
 
+    // Family page
+    @State private var showFamily = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -128,12 +131,12 @@ struct HomeView: View {
                                 .shadow(color: Color.red.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
 
-                            // Family button -> navigate to Rescue tab
+                            // Family button -> navigate to Family page
                             QuickActionButton(
                                 icon: "person.2.fill", label: languageManager.localize("Family"),
                                 color: .orange
                             ) {
-                                selectedTab = 4
+                                showFamily = true
                             }
                         }
                         .padding(.horizontal)
@@ -177,6 +180,10 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+                    .environmentObject(languageManager)
+            }
+            .fullScreenCover(isPresented: $showFamily) {
+                FamilyView()
                     .environmentObject(languageManager)
             }
         }
