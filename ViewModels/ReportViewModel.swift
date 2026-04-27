@@ -156,3 +156,4 @@ class ReportViewModel: ObservableObject {
         selectedImage = nil
     }
 }
+

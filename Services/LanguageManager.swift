@@ -143,7 +143,7 @@ enum AppStrings {
             .english: "Turn around if water is rising", .vietnamese: "Quay đầu nếu nước đang dâng",
         ],
 
-        // MARK: RescueView
+        // MARK: Rescue tab content
         "Resource Availability": [
             .english: "Resource Availability", .vietnamese: "Nguồn lực sẵn có",
         ],

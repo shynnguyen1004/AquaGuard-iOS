@@ -1,5 +1,5 @@
 //
-//  SOSView.swift
+//  RescueTabView.swift
 //  AquaGuard
 //
 //  Created by Shyn Nguyễn on 15/12/25.
@@ -7,19 +7,20 @@
 
 import SwiftUI
 
-struct SOSView: View {
-    @StateObject var viewModel: ReportViewModel
+// Rescue tab content (send rescue request + request history).
+struct RescueTabView: View {
+    @StateObject var viewModel: RescueRequestViewModel
     @EnvironmentObject var languageManager: LanguageManager
 
     init(locationService: LocationService) {
-        _viewModel = StateObject(wrappedValue: ReportViewModel(locationService: locationService))
+        _viewModel = StateObject(wrappedValue: RescueRequestViewModel(locationService: locationService))
     }
 
     // Sheet state
-    @State private var showSOSForm = false
+    @State private var showRescueRequestForm = false
 
     // Dummy history data
-    @State private var sosHistory: [SOSRequest] = MockData.sosRequests
+    @State private var rescueRequestHistory: [SOSRequest] = MockData.sosRequests
 
     var body: some View {
         NavigationStack {
@@ -57,7 +58,7 @@ struct SOSView: View {
                     .padding(.top, 4)
 
                     // MARK: - Send Rescue Request Button
-                    Button(action: { showSOSForm = true }) {
+                    Button(action: { showRescueRequestForm = true }) {
                         HStack(spacing: 12) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
@@ -89,13 +90,13 @@ struct SOSView: View {
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
                             Spacer()
-                            Text("\(sosHistory.count) " + languageManager.localize("requests"))
+                            Text("\(rescueRequestHistory.count) " + languageManager.localize("requests"))
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
                         .padding(.horizontal, 20)
 
-                        if sosHistory.isEmpty {
+                        if rescueRequestHistory.isEmpty {
                             // Empty state
                             VStack(spacing: 12) {
                                 Image(systemName: "tray")
@@ -110,8 +111,8 @@ struct SOSView: View {
                         } else {
                             // Request cards
                             LazyVStack(spacing: 12) {
-                                ForEach(sosHistory) { request in
-                                    SOSHistoryCard(request: request)
+                                ForEach(rescueRequestHistory) { request in
+                                    RescueRequestHistoryCard(request: request)
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -124,8 +125,8 @@ struct SOSView: View {
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
             // Rescue Form Sheet
-            .sheet(isPresented: $showSOSForm) {
-                SOSFormSheet(viewModel: viewModel, isPresented: $showSOSForm)
+            .sheet(isPresented: $showRescueRequestForm) {
+                RescueRequestFormSheet(viewModel: viewModel, isPresented: $showRescueRequestForm)
                     .environmentObject(languageManager)
             }
             // Success alert
@@ -144,8 +145,8 @@ struct SOSView: View {
     }
 }
 
-// MARK: - SOS History Card
-struct SOSHistoryCard: View {
+// MARK: - Rescue Request History Card
+struct RescueRequestHistoryCard: View {
     let request: SOSRequest
 
     var body: some View {
@@ -201,9 +202,9 @@ struct SOSHistoryCard: View {
     }
 }
 
-// MARK: - SOS Form Sheet
-struct SOSFormSheet: View {
-    @ObservedObject var viewModel: ReportViewModel
+// MARK: - Rescue Request Form Sheet
+struct RescueRequestFormSheet: View {
+    @ObservedObject var viewModel: RescueRequestViewModel
     @Binding var isPresented: Bool
     @EnvironmentObject var languageManager: LanguageManager
     @Environment(\.colorScheme) var colorScheme

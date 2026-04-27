@@ -1,8 +1,8 @@
 //
-//  RescueView.swift
+//  SOSTabView.swift
 //  AquaGuard
 //
-//  SOS tab — Locket-style instant flood reporting.
+//  SOS tab content — Locket-style instant flood reporting.
 //  Vertical paging: Camera (first page) → Community reports.
 //  Uses ScrollView + scrollTargetBehavior for native vertical paging.
 //
@@ -13,7 +13,7 @@ import Combine
 import CoreLocation
 import SwiftUI
 
-struct RescueView: View {
+struct SOSTabView: View {
     @EnvironmentObject var languageManager: LanguageManager
     @Environment(\.colorScheme) var colorScheme
 
