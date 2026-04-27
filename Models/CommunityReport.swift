@@ -31,10 +31,24 @@ struct CommunityReport: Identifiable {
 
     var relativeTimeString: String {
         let interval = Date().timeIntervalSince(timestamp)
-        if interval < 60 { return "Vừa xong" }
-        if interval < 3600 { return "\(Int(interval / 60)) phút trước" }
-        if interval < 86400 { return "\(Int(interval / 3600)) giờ trước" }
-        return "\(Int(interval / 86400)) ngày trước"
+        let saved = UserDefaults.standard.string(forKey: "app_language") ?? "en"
+        let isEnglish = (AppLanguage(rawValue: saved) ?? .english) == .english
+
+        if isEnglish {
+            if interval < 60 { return "Just now" }
+            if interval < 3600 { return "\(Int(interval / 60)) min ago" }
+            if interval < 86400 {
+                let hours = Int(interval / 3600)
+                return "\(hours) \(hours == 1 ? "hour" : "hours") ago"
+            }
+            let days = Int(interval / 86400)
+            return "\(days) \(days == 1 ? "day" : "days") ago"
+        } else {
+            if interval < 60 { return "Vừa xong" }
+            if interval < 3600 { return "\(Int(interval / 60)) phút trước" }
+            if interval < 86400 { return "\(Int(interval / 3600)) giờ trước" }
+            return "\(Int(interval / 86400)) ngày trước"
+        }
     }
 
     var severityColor: Color {
