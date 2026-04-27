@@ -27,28 +27,28 @@ struct SOSView: View {
                 VStack(spacing: 24) {
                     LogoHeaderView(topPadding: -3)
 
-                    // MARK: - SOS Header
+                    // MARK: - Rescue Header
                     VStack(spacing: 12) {
-                        Image(systemName: "sos")
+                        Image(systemName: "lifepreserver.fill")
                             .font(.system(size: 44, weight: .bold))
                             .foregroundColor(.white)
                             .frame(width: 80, height: 80)
                             .background(
                                 LinearGradient(
-                                    colors: [Color.aquaDanger, Color.aquaDanger.opacity(0.7)],
+                                    colors: [Color.aquaPrimary, Color.aquaPrimary.opacity(0.7)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                             .clipShape(Circle())
-                            .shadow(color: .aquaDanger.opacity(0.4), radius: 12, x: 0, y: 6)
+                            .shadow(color: .aquaPrimary.opacity(0.4), radius: 12, x: 0, y: 6)
 
-                        Text(languageManager.localize("Emergency SOS"))
+                        Text(languageManager.localize("Rescue Request"))
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.aquaNavy)
 
-                        Text(languageManager.localize("Send an emergency request for flood assistance"))
+                        Text(languageManager.localize("Send a rescue request for flood assistance"))
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -56,12 +56,12 @@ struct SOSView: View {
                     }
                     .padding(.top, 4)
 
-                    // MARK: - SOS Request Button
+                    // MARK: - Send Rescue Request Button
                     Button(action: { showSOSForm = true }) {
                         HStack(spacing: 12) {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            Image(systemName: "plus.circle.fill")
                                 .font(.title2)
-                            Text(languageManager.localize("SOS Request"))
+                            Text(languageManager.localize("Send Rescue Request"))
                                 .font(.title3)
                                 .fontWeight(.bold)
                         }
@@ -70,13 +70,13 @@ struct SOSView: View {
                         .padding(.vertical, 18)
                         .background(
                             LinearGradient(
-                                colors: [Color.aquaDanger, Color(red: 0.85, green: 0.15, blue: 0.15)],
+                                colors: [Color.aquaPrimary, Color(red: 0.28, green: 0.65, blue: 0.68)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                         .cornerRadius(16)
-                        .shadow(color: .aquaDanger.opacity(0.4), radius: 10, x: 0, y: 5)
+                        .shadow(color: .aquaPrimary.opacity(0.4), radius: 10, x: 0, y: 5)
                     }
                     .padding(.horizontal, 20)
 
@@ -101,7 +101,7 @@ struct SOSView: View {
                                 Image(systemName: "tray")
                                     .font(.system(size: 40))
                                     .foregroundColor(.gray.opacity(0.4))
-                                Text(languageManager.localize("No SOS requests yet"))
+                                Text(languageManager.localize("No rescue requests yet"))
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
@@ -123,7 +123,7 @@ struct SOSView: View {
             }
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
-            // SOS Form Sheet
+            // Rescue Form Sheet
             .sheet(isPresented: $showSOSForm) {
                 SOSFormSheet(viewModel: viewModel, isPresented: $showSOSForm)
                     .environmentObject(languageManager)
@@ -132,7 +132,7 @@ struct SOSView: View {
             .alert(languageManager.localize("Success"), isPresented: $viewModel.showSuccessAlert) {
                 Button(languageManager.localize("OK"), role: .cancel) {}
             } message: {
-                Text(languageManager.localize("Your SOS request has been sent successfully."))
+                Text(languageManager.localize("Your rescue request has been sent successfully."))
             }
             // Error alert
             .alert(languageManager.localize("Error"), isPresented: $viewModel.showErrorAlert) {
@@ -219,13 +219,13 @@ struct SOSFormSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // SOS Icon
-                    Image(systemName: "exclamationmark.triangle.fill")
+                    // Rescue Icon
+                    Image(systemName: "lifepreserver.fill")
                         .font(.system(size: 40))
-                        .foregroundColor(.aquaDanger)
+                        .foregroundColor(.aquaPrimary)
                         .padding(.top, 8)
 
-                    Text(languageManager.localize("New SOS Request"))
+                    Text(languageManager.localize("New Rescue Request"))
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.aquaNavy)
@@ -357,7 +357,7 @@ struct SOSFormSheet: View {
                                 ProgressView().tint(.white)
                             } else {
                                 Image(systemName: "paperplane.fill")
-                                Text(languageManager.localize("Send SOS"))
+                                Text(languageManager.localize("Send Request"))
                                     .bold()
                             }
                         }
@@ -365,7 +365,7 @@ struct SOSFormSheet: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [Color.aquaDanger, Color(red: 0.85, green: 0.15, blue: 0.15)],
+                                colors: [Color.aquaPrimary, Color(red: 0.28, green: 0.65, blue: 0.68)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -379,7 +379,7 @@ struct SOSFormSheet: View {
                 }
             }
             .background(Color.aquaModalBg)
-            .navigationTitle(languageManager.localize("SOS Request"))
+            .navigationTitle(languageManager.localize("Rescue Request"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

@@ -30,7 +30,7 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            SOSView(locationService: locationService)
+            RescueView(locationService: locationService)
                 .tabItem {
                     Label(
                         languageManager.localize("SOS"),
@@ -44,7 +44,7 @@ struct ContentView: View {
                 }
                 .tag(3)
 
-            RescueView()
+            SOSView(locationService: locationService)
                 .tabItem {
                     Label(
                         languageManager.localize("Rescue"),
