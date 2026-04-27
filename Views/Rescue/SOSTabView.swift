@@ -2,9 +2,7 @@
 //  SOSTabView.swift
 //  AquaGuard
 //
-//  SOS tab content — Locket-style instant flood reporting.
-//  Vertical paging: Camera (first page) → Community reports.
-//  Uses ScrollView + scrollTargetBehavior for native vertical paging.
+//  SOS tab content — instant flood reporting from camera.
 //
 //  Created by Shyn Nguyễn on 16/12/25.
 //
@@ -29,9 +27,6 @@ struct SOSTabView: View {
     // History sheet
     @State private var showHistory = false
 
-    // Community reports
-    let communityReports = CommunityReport.dummyReports
-
     init(locationService: LocationService = LocationService()) {
         _reportVM = StateObject(wrappedValue: FloodReportViewModel(locationService: locationService))
     }
@@ -43,21 +38,10 @@ struct SOSTabView: View {
     }
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 0) {
-                // PAGE 0: Camera
-                cameraPage
-                    .containerRelativeFrame(.vertical)
-
-                // PAGE 1+: Community reports
-                ForEach(communityReports) { report in
-                    communityPage(report: report)
-                        .containerRelativeFrame(.vertical)
-                }
-            }
-            .scrollTargetLayout()
+        GeometryReader { _ in
+            cameraPage
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .scrollTargetBehavior(.paging)
         .background(bgColor.ignoresSafeArea())
         .onAppear {
             cameraService.startSession()
@@ -214,6 +198,8 @@ struct SOSTabView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
+            .padding(.bottom, 50)
+            //.frame(height: UIScreen.main.bounds.height * 0.6)
 
             Spacer(minLength: 12)
 
@@ -267,208 +253,11 @@ struct SOSTabView: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 30)
-            .padding(.bottom, 4)
+            .padding(.bottom, 60)
 
-            // Swipe hint
-            VStack(spacing: 3) {
-                Image(systemName: "chevron.compact.down")
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundColor(.aquaPrimary.opacity(0.5))
-                Text(languageManager.localize("Community Reports"))
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.bottom, 8)
         }
     }
 
-    // MARK: - Community Report Page
-
-    private func communityPage(report: CommunityReport) -> some View {
-        VStack(spacing: 0) {
-            // Top: user info
-            HStack(spacing: 10) {
-                // Avatar
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.aquaPrimary, Color.aquaPrimary.opacity(0.6)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text(String(report.userName.prefix(1)))
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(.white)
-                    )
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(report.userName)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(colorScheme == .dark ? .white : .primary)
-                    Text(report.relativeTimeString)
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-
-                // Severity badge
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(report.severityColor)
-                        .frame(width: 7, height: 7)
-                    Text(report.severity.capitalized)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(colorScheme == .dark ? .white : .primary)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.06))
-                )
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-
-            // Photo card
-            ZStack {
-                // Gradient placeholder
-                communityGradient(for: report)
-                    .overlay(
-                        Image(systemName: communityFloodIcon(for: report))
-                            .font(.system(size: 60, weight: .ultraLight))
-                            .foregroundColor(.white.opacity(0.15))
-                    )
-                    .cornerRadius(28)
-
-                // Bottom gradient
-                VStack {
-                    Spacer()
-                    LinearGradient(
-                        colors: [.clear, .black.opacity(0.65)],
-                        startPoint: .center,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 160)
-                    .cornerRadius(28)
-                }
-
-                // Location badge + caption at bottom
-                VStack(alignment: .leading) {
-                    Spacer()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Location
-                        HStack(spacing: 6) {
-                            Image(systemName: "mappin.circle.fill")
-                                .font(.system(size: 13))
-                                .foregroundColor(.aquaPrimary)
-                            Text(report.locationName)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.white)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.black.opacity(0.35))
-                        .cornerRadius(16)
-
-                        // Caption
-                        Text(report.caption)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.95))
-                            .lineLimit(3)
-                    }
-                    .padding(16)
-                }
-            }
-            .padding(.horizontal, 16)
-
-            Spacer(minLength: 12)
-
-            // Bottom: reactions
-            HStack(spacing: 16) {
-                // Verified badge (admin-approved)
-                HStack(spacing: 6) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 16))
-                    Text(languageManager.localize("Verified"))
-                        .font(.system(size: 13, weight: .semibold))
-                }
-                .foregroundColor(.aquaPrimary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(colorScheme == .dark ? Color.aquaPrimary.opacity(0.15) : Color.aquaPrimary.opacity(0.1))
-                )
-
-                // Report count
-                HStack(spacing: 5) {
-                    Image(systemName: "eye.fill")
-                        .font(.system(size: 12))
-                    Text("\(report.reactions)")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .foregroundColor(.secondary)
-
-                Spacer()
-
-                // Share
-                Button {} label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 16))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 8)
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func communityGradient(for report: CommunityReport) -> LinearGradient {
-        switch report.imageName {
-        case "flood_street":
-            return LinearGradient(
-                colors: [Color(red: 0.15, green: 0.25, blue: 0.45), Color(red: 0.3, green: 0.5, blue: 0.7)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-        case "flood_rain":
-            return LinearGradient(
-                colors: [Color(red: 0.1, green: 0.15, blue: 0.3), Color(red: 0.2, green: 0.35, blue: 0.55)],
-                startPoint: .top, endPoint: .bottom
-            )
-        case "flood_market":
-            return LinearGradient(
-                colors: [Color(red: 0.2, green: 0.32, blue: 0.22), Color(red: 0.35, green: 0.5, blue: 0.35)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-        case "flood_school":
-            return LinearGradient(
-                colors: [Color(red: 0.35, green: 0.25, blue: 0.15), Color(red: 0.55, green: 0.42, blue: 0.28)],
-                startPoint: .top, endPoint: .bottom
-            )
-        default:
-            return LinearGradient(
-                colors: [Color(red: 0.15, green: 0.35, blue: 0.35), Color(red: 0.25, green: 0.55, blue: 0.5)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-        }
-    }
-
-    private func communityFloodIcon(for report: CommunityReport) -> String {
-        switch report.severity {
-        case "critical": return "exclamationmark.triangle.fill"
-        case "severe": return "cloud.heavyrain.fill"
-        case "moderate": return "cloud.rain.fill"
-        default: return "checkmark.circle.fill"
-        }
-    }
 }
 
 // MARK: - History Sheet

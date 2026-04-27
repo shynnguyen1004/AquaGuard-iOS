@@ -11,7 +11,7 @@ import Foundation
 
 @MainActor
 class HomeViewModel: ObservableObject {
-    @Published var activeAlerts: [FloodAlert] = MockData.alerts
+    @Published var activeAlerts: [CommunityReport] = CommunityReport.dummyReports
     @Published var currentRiskLocation: String =
         "Ho Chi Minh city University of Technology, Dien Hong Ward"
     @Published var currentRiskLevel: SeverityLevel = .severe

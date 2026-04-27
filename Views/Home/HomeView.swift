@@ -9,6 +9,11 @@ import FirebaseAuth
 import SwiftUI
 
 struct HomeView: View {
+    private enum TabIndex {
+        static let sos = 2
+        static let rescue = 4
+    }
+
     @StateObject var viewModel = HomeViewModel()
     @EnvironmentObject var languageManager: LanguageManager
     @State private var showLogoutAlert = false
@@ -16,14 +21,12 @@ struct HomeView: View {
     // Binding to control TabView from parent
     @Binding var selectedTab: Int
 
-    // SOS alert state
-    @State private var showSOSAlert = false
-
     // Settings sheet
     @State private var showSettings = false
 
     // Family page
     @State private var showFamily = false
+    @State private var expandedAlertID: UUID?
 
     var body: some View {
         NavigationStack {
@@ -102,12 +105,12 @@ struct HomeView: View {
                                 icon: "house.fill", label: languageManager.localize("Shelter"),
                                 color: .aquaPrimary
                             ) {
-                                selectedTab = 4
+                                selectedTab = TabIndex.rescue
                             }
 
-                            // SOS button -> show alert
+                            // SOS button -> navigate directly to SOS tab
                             Button(action: {
-                                showSOSAlert = true
+                                selectedTab = TabIndex.sos
                             }) {
                                 VStack(spacing: 10) {
                                     Circle()
@@ -160,7 +163,24 @@ struct HomeView: View {
                         .padding(.horizontal)
 
                         ForEach(viewModel.activeAlerts) { alert in
-                            AlertRow(alert: alert)
+                            VStack(spacing: 10) {
+                                CommunityAlertRow(
+                                    alert: alert,
+                                    isExpanded: expandedAlertID == alert.id
+                                ) {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                                        expandedAlertID = expandedAlertID == alert.id ? nil : alert.id
+                                    }
+                                }
+
+                                if expandedAlertID == alert.id {
+                                    CommunityAlertExpandedCard(alert: alert)
+                                        .transition(.asymmetric(
+                                            insertion: .opacity.combined(with: .move(edge: .top)),
+                                            removal: .opacity
+                                        ))
+                                }
+                            }
                         }
                         .padding(.horizontal)
                     }
@@ -170,14 +190,6 @@ struct HomeView: View {
             .background(Color.aquaBackground)
             .navigationTitle("AquaGuard")
             .navigationBarHidden(true)
-            .alert(languageManager.localize("SOS Sent"), isPresented: $showSOSAlert) {
-                Button("OK") {
-                    // Navigate to Safety tab on dismiss
-                    selectedTab = 3
-                }
-            } message: {
-                Text(languageManager.localize("SOS Message"))
-            }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
                     .environmentObject(languageManager)
@@ -286,43 +298,184 @@ struct StatusCard: View {
     }
 }
 
-struct AlertRow: View {
-    let alert: FloodAlert
+struct CommunityAlertRow: View {
+    let alert: CommunityReport
+    let isExpanded: Bool
+    var onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 15) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        alert.severity == .severe
-                            ? Color.red.opacity(0.1) : Color.orange.opacity(0.1)
+        Button(action: onTap) {
+            HStack(spacing: 15) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(alert.severityColor.opacity(0.14))
+                        .frame(width: 50, height: 50)
+                    Image(systemName: communityFloodIcon(for: alert))
+                        .foregroundColor(alert.severityColor)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(alert.locationName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.aquaNavy)
+                        .lineLimit(1)
+                    Text(alert.caption)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .lineLimit(1)
+                }
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(alert.relativeTimeString)
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
+            }
+            .padding()
+            .background(Color.aquaCard)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(alert.severityColor, lineWidth: 1)
+                    .opacity(0.25)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func communityFloodIcon(for report: CommunityReport) -> String {
+        switch report.severity {
+        case "critical": return "exclamationmark.triangle.fill"
+        case "severe": return "cloud.heavyrain.fill"
+        case "moderate": return "cloud.rain.fill"
+        default: return "checkmark.circle.fill"
+        }
+    }
+}
+
+struct CommunityAlertExpandedCard: View {
+    let alert: CommunityReport
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .bottom) {
+                communityGradient(for: alert)
+                    .overlay(
+                        Image(systemName: communityFloodIcon(for: alert))
+                            .font(.system(size: 54, weight: .thin))
+                            .foregroundColor(.white.opacity(0.2))
                     )
-                    .frame(width: 50, height: 50)
-                Image(systemName: alert.iconName)
-                    .foregroundColor(alert.severity == .severe ? .red : .orange)
+                    .frame(height: 250)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.65)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 110)
+
+                HStack {
+                    HStack(spacing: 5) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.system(size: 10))
+                        Text(alert.locationName)
+                            .font(.system(size: 11, weight: .semibold))
+                            .lineLimit(1)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial.opacity(0.55))
+                    .cornerRadius(18)
+
+                    Spacer()
+
+                    HStack(spacing: 5) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 10))
+                        Text(alert.timeString)
+                            .font(.system(size: 11))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial.opacity(0.55))
+                    .cornerRadius(18)
+                }
+                .padding(12)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(alert.title)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(alert.userName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.aquaNavy)
+                    Spacer()
+                    Text(alert.severity.capitalized)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(alert.severityColor.opacity(0.16))
+                        .foregroundColor(alert.severityColor)
+                        .cornerRadius(10)
+                }
+
+                Text(alert.caption)
                     .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.aquaNavy)
-                Text(alert.location)
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer()
-            Text(alert.timeAgo)
-                .font(.caption2)
-                .foregroundColor(.gray)
+            .padding(14)
+            .background(Color.aquaCard)
         }
-        .padding()
-        .background(Color.aquaCard)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(alert.severity == .severe ? Color.red : Color.orange, lineWidth: 1)
-                .opacity(0.3)
-        )
+        .cornerRadius(20)
+        .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 5)
+    }
+
+    private func communityFloodIcon(for report: CommunityReport) -> String {
+        switch report.severity {
+        case "critical": return "exclamationmark.triangle.fill"
+        case "severe": return "cloud.heavyrain.fill"
+        case "moderate": return "cloud.rain.fill"
+        default: return "checkmark.circle.fill"
+        }
+    }
+
+    private func communityGradient(for report: CommunityReport) -> LinearGradient {
+        switch report.imageName {
+        case "flood_street":
+            return LinearGradient(
+                colors: [Color(red: 0.15, green: 0.25, blue: 0.45), Color(red: 0.3, green: 0.5, blue: 0.7)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+        case "flood_rain":
+            return LinearGradient(
+                colors: [Color(red: 0.1, green: 0.15, blue: 0.3), Color(red: 0.2, green: 0.35, blue: 0.55)],
+                startPoint: .top, endPoint: .bottom
+            )
+        case "flood_market":
+            return LinearGradient(
+                colors: [Color(red: 0.2, green: 0.32, blue: 0.22), Color(red: 0.35, green: 0.5, blue: 0.35)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+        case "flood_school":
+            return LinearGradient(
+                colors: [Color(red: 0.35, green: 0.25, blue: 0.15), Color(red: 0.55, green: 0.42, blue: 0.28)],
+                startPoint: .top, endPoint: .bottom
+            )
+        default:
+            return LinearGradient(
+                colors: [Color(red: 0.15, green: 0.35, blue: 0.35), Color(red: 0.25, green: 0.55, blue: 0.5)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+        }
     }
 }
