@@ -127,7 +127,7 @@ struct FloodMapView: View {
                         }
                     }
                     .padding(.trailing, 16)
-                    .padding(.top, 100)
+                    .padding(.top, 120)
                 }
                 Spacer()
             }
@@ -149,7 +149,7 @@ struct FloodMapView: View {
                         )
                         // 16 (button trailing) + 48 (button size) + 8 (gap) = 72
                         .padding(.trailing, 72)
-                        .padding(.top, 100)
+                        .padding(.top, 120)
                     }
                     Spacer()
                 }
@@ -181,7 +181,7 @@ struct FloodMapView: View {
                     .cornerRadius(20)
                     Spacer()
                 }
-                .padding(.top, 65)
+                .padding(.top, 80)
                 .transition(.opacity)
             }
         }
