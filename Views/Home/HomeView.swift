@@ -195,7 +195,7 @@ struct HomeView: View {
                     .environmentObject(languageManager)
             }
             .fullScreenCover(isPresented: $showFamily) {
-                FamilyView()
+                FamilyView(selectedTab: $selectedTab)
                     .environmentObject(languageManager)
             }
         }

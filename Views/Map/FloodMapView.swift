@@ -125,6 +125,24 @@ struct FloodMapView: View {
                             }
                             .transition(.scale.combined(with: .opacity))
                         }
+
+                        // Flood zone pins toggle (only in Apple Maps mode)
+                        if viewModel.mapMode == .apple {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    viewModel.showFloodZones.toggle()
+                                }
+                            }) {
+                                Image(systemName: viewModel.showFloodZones ? "mappin.circle.fill" : "mappin.slash")
+                                    .font(.title2)
+                                    .foregroundColor(viewModel.showFloodZones ? .aquaPrimary : .gray)
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .shadow(radius: 3, x: 0, y: 2)
+                            }
+                            .transition(.scale.combined(with: .opacity))
+                        }
                     }
                     .padding(.trailing, 16)
                     .padding(.top, 120)
@@ -159,8 +177,8 @@ struct FloodMapView: View {
                 ))
             }
 
-            // MARK: - Map Legend (Apple Maps only)
-            if viewModel.mapMode == .apple {
+            // MARK: - Map Legend (Apple Maps only, when pins visible)
+            if viewModel.mapMode == .apple && viewModel.showFloodZones {
                 VStack {
                     HStack(spacing: 12) {
                         Label("Safe", systemImage: "circle.fill")
@@ -200,11 +218,13 @@ struct FloodMapView: View {
             // User Location
             UserAnnotation()
 
-            // Flood Zones Pins
-            ForEach(viewModel.zones) { zone in
-                Marker(zone.name, coordinate: zone.coordinate)
-                    .tint(zone.severity.color)
-                    .tag(zone)
+            // Flood Zones Pins (conditionally shown)
+            if viewModel.showFloodZones {
+                ForEach(viewModel.zones) { zone in
+                    Marker(zone.name, coordinate: zone.coordinate)
+                        .tint(zone.severity.color)
+                        .tag(zone)
+                }
             }
 
             // Draw route polyline if available

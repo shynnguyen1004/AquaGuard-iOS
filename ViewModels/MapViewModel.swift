@@ -65,6 +65,7 @@ class MapViewModel: ObservableObject {
 
     // MARK: - Apple Map State
 
+    @Published var showFloodZones: Bool = true
     @Published var zones: [FloodZone] = []
     @Published var selectedZone: FloodZone?
     @Published var cameraPosition: MapCameraPosition = .region(
