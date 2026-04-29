@@ -5,8 +5,65 @@ import Foundation
 import MapKit
 import SwiftUI
 
+// MARK: - Map Mode
+
+enum MapMode {
+    case apple
+    case windy
+}
+
+// MARK: - Weather Layer
+
+enum WeatherLayer: String, CaseIterable {
+    case rain
+    case wind
+    case clouds
+    case temp
+    case pressure
+    case waves
+
+    var displayName: String {
+        switch self {
+        case .rain: return "Rain"
+        case .wind: return "Wind"
+        case .clouds: return "Clouds"
+        case .temp: return "Temperature"
+        case .pressure: return "Pressure"
+        case .waves: return "Waves"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .rain: return "cloud.rain.fill"
+        case .wind: return "wind"
+        case .clouds: return "cloud.fill"
+        case .temp: return "thermometer.medium"
+        case .pressure: return "gauge.with.dots.needle.bottom.50percent"
+        case .waves: return "water.waves"
+        }
+    }
+
+    /// The key used by Windy's store.set('overlay', key)
+    var windyKey: String {
+        return rawValue
+    }
+}
+
 @MainActor
 class MapViewModel: ObservableObject {
+
+    // MARK: - Windy Map State
+
+    @Published var mapMode: MapMode = .apple
+    @Published var selectedWeatherLayer: WeatherLayer = .wind
+    @Published var showWeatherPanel: Bool = false
+
+    /// Windy API key — UPDATE THIS with your iOS-specific key
+    /// See: https://api.windy.com/keys
+    let windyAPIKey = "8IgvuJIwk3CicS5sVMk2CHI2Ar2FaUoF"
+
+    // MARK: - Apple Map State
 
     @Published var zones: [FloodZone] = []
     @Published var selectedZone: FloodZone?

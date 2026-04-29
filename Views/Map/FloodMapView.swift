@@ -17,32 +17,31 @@ struct FloodMapView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // 1. MAP VIEW
-            Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedZone) {
-                // User Location
-                UserAnnotation()
-
-                // Flood Zones Pins
-                ForEach(viewModel.zones) { zone in
-                    Marker(zone.name, coordinate: zone.coordinate)
-                        .tint(zone.severity.color)
-                        .tag(zone)
-                }
-
-                // Draw route polyline if available
-                if let route = viewModel.route {
-                    MapPolyline(route)
-                        .stroke(.blue, lineWidth: 5)
+            // MARK: - Map Content (Apple or Windy)
+            Group {
+                if viewModel.mapMode == .apple {
+                    appleMapView
+                        .transition(.opacity)
+                } else {
+                    WindyMapView(
+                        apiKey: viewModel.windyAPIKey,
+                        overlay: viewModel.selectedWeatherLayer.windyKey,
+                        centerLat: 16.352147,
+                        centerLon: 107.016871,
+                        zoom: 6,
+                        currentOverlay: Binding(
+                            get: { viewModel.selectedWeatherLayer.windyKey },
+                            set: { _ in }
+                        )
+                    )
+                    .transition(.opacity)
                 }
             }
-            .mapControls {
-                // Use custom locate button instead of default MapUserLocationButton
-                MapCompass()
-                MapScaleView()
-            }
+            .ignoresSafeArea(edges: .all)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.mapMode)
 
-            // Clear route button (visible when navigating)
-            if viewModel.route != nil {
+            // Clear route button (visible when navigating on Apple Maps)
+            if viewModel.route != nil && viewModel.mapMode == .apple {
                 VStack {
                     HStack {
                         Button(action: {
@@ -62,54 +61,162 @@ struct FloodMapView: View {
                 }
             }
 
-            // Custom locate button (top-right corner)
+            // MARK: - Right Side Floating Buttons
             VStack {
                 HStack {
                     Spacer()
-                    Button(action: {
-                        viewModel.checkLocationPermission()
-                    }) {
-                        Image(systemName: "location.fill")
+                    VStack(spacing: 12) {
+                        // Location button
+                        Button(action: {
+                            viewModel.checkLocationPermission()
+                        }) {
+                            Image(systemName: "location.fill")
+                                .font(.title2)
+                                .foregroundColor(.aquaPrimary)
+                                .padding(12)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(radius: 3, x: 0, y: 2)
+                        }
+
+                        // Layer toggle button (Apple ↔ Windy)
+                        Button(action: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                if viewModel.mapMode == .apple {
+                                    viewModel.mapMode = .windy
+                                    viewModel.showWeatherPanel = true
+                                } else {
+                                    viewModel.mapMode = .apple
+                                    viewModel.showWeatherPanel = false
+                                }
+                            }
+                        }) {
+                            Image(
+                                systemName: viewModel.mapMode == .apple
+                                    ? "globe.americas.fill" : "map.fill"
+                            )
                             .font(.title2)
-                            .foregroundColor(.aquaPrimary)
+                            .foregroundColor(
+                                viewModel.mapMode == .windy ? .white : .aquaPrimary
+                            )
                             .padding(12)
-                            .background(Color.white)
+                            .background(
+                                viewModel.mapMode == .windy
+                                    ? Color.aquaPrimary : Color.white
+                            )
                             .clipShape(Circle())
                             .shadow(radius: 3, x: 0, y: 2)
+                        }
+
+                        // Weather panel toggle (only in Windy mode)
+                        if viewModel.mapMode == .windy {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    viewModel.showWeatherPanel.toggle()
+                                }
+                            }) {
+                                Image(systemName: "cloud.sun.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.orange)
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .shadow(radius: 3, x: 0, y: 2)
+                            }
+                            .transition(.scale.combined(with: .opacity))
+                        }
                     }
                     .padding(.trailing, 16)
-                    .padding(.top, 70)
+                    .padding(.top, 100)
                 }
                 Spacer()
             }
 
-            // 3. MAP LEGEND (CODE CŨ GIỮ NGUYÊN)
-            VStack {
-                HStack(spacing: 12) {
-                    Label("Safe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaSafe)  
-                        .font(.caption)
-                    Label("Moderate", systemImage: "circle.fill")
-                        .foregroundColor(.aquaWarning)  
-                        .font(.caption)
-                    Label("Severe", systemImage: "circle.fill")
-                        .foregroundColor(.aquaDanger)  
-                        .font(.caption)
-                    Label("Critical", systemImage: "circle.fill")
-                        .foregroundColor(.aquaCritical)  
-                        .font(.caption)
+            // MARK: - Weather Layer Panel (Windy mode only)
+            if viewModel.mapMode == .windy && viewModel.showWeatherPanel {
+                VStack {
+                    HStack(spacing: 0) {
+                        Spacer()
+                        WeatherLayerPanel(
+                            selectedLayer: $viewModel.selectedWeatherLayer,
+                            isVisible: $viewModel.showWeatherPanel,
+                            onHideWeatherMap: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    viewModel.mapMode = .apple
+                                    viewModel.showWeatherPanel = false
+                                }
+                            }
+                        )
+                        // 16 (button trailing) + 48 (button size) + 8 (gap) = 72
+                        .padding(.trailing, 72)
+                        .padding(.top, 100)
+                    }
+                    Spacer()
                 }
-                .padding(8)
-                .background(.thinMaterial)
-                .cornerRadius(20)
-                Spacer()
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.8, anchor: .topTrailing).combined(with: .opacity),
+                    removal: .scale(scale: 0.9, anchor: .topTrailing).combined(with: .opacity)
+                ))
             }
-            .padding(.top, 30)
+
+            // MARK: - Map Legend (Apple Maps only)
+            if viewModel.mapMode == .apple {
+                VStack {
+                    HStack(spacing: 12) {
+                        Label("Safe", systemImage: "circle.fill")
+                            .foregroundColor(.aquaSafe)
+                            .font(.caption)
+                        Label("Moderate", systemImage: "circle.fill")
+                            .foregroundColor(.aquaWarning)
+                            .font(.caption)
+                        Label("Severe", systemImage: "circle.fill")
+                            .foregroundColor(.aquaDanger)
+                            .font(.caption)
+                        Label("Critical", systemImage: "circle.fill")
+                            .foregroundColor(.aquaCritical)
+                            .font(.caption)
+                    }
+                    .padding(8)
+                    .background(.thinMaterial)
+                    .cornerRadius(20)
+                    Spacer()
+                }
+                .padding(.top, 65)
+                .transition(.opacity)
+            }
         }
+        .ignoresSafeArea(edges: .all)
         .sheet(item: $viewModel.selectedZone) { zone in
             ZoneDetailSheet(zone: zone, viewModel: viewModel)
                 .presentationDetents([.height(250)])
                 .presentationDragIndicator(.visible)
+        }
+    }
+
+    // MARK: - Apple Map View (extracted)
+
+    private var appleMapView: some View {
+        Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedZone) {
+            // User Location
+            UserAnnotation()
+
+            // Flood Zones Pins
+            ForEach(viewModel.zones) { zone in
+                Marker(zone.name, coordinate: zone.coordinate)
+                    .tint(zone.severity.color)
+                    .tag(zone)
+            }
+
+            // Draw route polyline if available
+            if let route = viewModel.route {
+                MapPolyline(route)
+                    .stroke(.blue, lineWidth: 5)
+            }
+        }
+        .mapControls {
+            // Use custom locate button instead of default MapUserLocationButton
+            MapCompass()
+            MapScaleView()
         }
     }
 }
