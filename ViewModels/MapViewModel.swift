@@ -76,6 +76,12 @@ class MapViewModel: ObservableObject {
 
     @Published var route: MKRoute?
 
+    // MARK: - Family on Map State
+
+    @Published var showFamilyOnMap: Bool = false
+    @Published var familyMembers: [FamilyMember] = FamilyMember.dummyMembers
+    @Published var selectedFamilyMember: FamilyMember?
+
     let locationService: LocationService
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?

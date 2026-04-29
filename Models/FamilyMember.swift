@@ -6,6 +6,7 @@
 //  Users connect via phone number and track each other's safety status.
 //
 
+import CoreLocation
 import Foundation
 import SwiftUI
 
@@ -41,7 +42,7 @@ enum SafetyStatus: String, CaseIterable {
 
 // MARK: - Family Member
 
-struct FamilyMember: Identifiable {
+struct FamilyMember: Identifiable, Hashable {
     let id = UUID()
     let name: String
     let phone: String
@@ -49,8 +50,14 @@ struct FamilyMember: Identifiable {
     let avatarColor: Color
     let status: SafetyStatus
     let location: String
+    let latitude: Double
+    let longitude: Double
     let lastSeen: Date
     let relationship: String
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
 
     var lastSeenString: String {
         let interval = Date().timeIntervalSince(lastSeen)
@@ -58,6 +65,20 @@ struct FamilyMember: Identifiable {
         if interval < 3600 { return "\(Int(interval / 60)) phút trước" }
         if interval < 86400 { return "\(Int(interval / 3600)) giờ trước" }
         return "\(Int(interval / 86400)) ngày trước"
+    }
+
+    /// Short display name (relationship only, e.g. "Mẹ", "Ba")
+    var shortName: String {
+        relationship
+    }
+
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: FamilyMember, rhs: FamilyMember) -> Bool {
+        lhs.id == rhs.id
     }
 }
 
@@ -90,6 +111,8 @@ extension FamilyMember {
             avatarColor: Color(red: 0.9, green: 0.4, blue: 0.5),
             status: .safe,
             location: "Quận 1, TP.HCM",
+            latitude: 10.7769,
+            longitude: 106.7009,
             lastSeen: Date().addingTimeInterval(-300),
             relationship: "Mẹ"
         ),
@@ -100,6 +123,8 @@ extension FamilyMember {
             avatarColor: Color(red: 0.3, green: 0.5, blue: 0.8),
             status: .warning,
             location: "Quận Bình Thạnh, TP.HCM",
+            latitude: 10.8105,
+            longitude: 106.7091,
             lastSeen: Date().addingTimeInterval(-1800),
             relationship: "Ba"
         ),
@@ -110,6 +135,8 @@ extension FamilyMember {
             avatarColor: Color(red: 0.6, green: 0.4, blue: 0.8),
             status: .safe,
             location: "ĐHBK TP.HCM, Quận 10",
+            latitude: 10.7725,
+            longitude: 106.6581,
             lastSeen: Date().addingTimeInterval(-600),
             relationship: "Em gái"
         ),
@@ -120,6 +147,8 @@ extension FamilyMember {
             avatarColor: Color(red: 0.2, green: 0.7, blue: 0.6),
             status: .danger,
             location: "Quận 7, TP.HCM",
+            latitude: 10.7340,
+            longitude: 106.7218,
             lastSeen: Date().addingTimeInterval(-120),
             relationship: "Bạn thân"
         ),

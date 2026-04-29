@@ -142,6 +142,22 @@ struct FloodMapView: View {
                                     .shadow(radius: 3, x: 0, y: 2)
                             }
                             .transition(.scale.combined(with: .opacity))
+
+                            // Family members toggle
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    viewModel.showFamilyOnMap.toggle()
+                                }
+                            }) {
+                                Image(systemName: viewModel.showFamilyOnMap ? "person.2.fill" : "person.2.slash")
+                                    .font(.title3)
+                                    .foregroundColor(viewModel.showFamilyOnMap ? .orange : .gray)
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .shadow(radius: 3, x: 0, y: 2)
+                            }
+                            .transition(.scale.combined(with: .opacity))
                         }
                     }
                     .padding(.trailing, 16)
@@ -209,6 +225,11 @@ struct FloodMapView: View {
                 .presentationDetents([.height(250)])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(item: $viewModel.selectedFamilyMember) { member in
+            FamilyMemberMapSheet(member: member)
+                .presentationDetents([.height(280)])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     // MARK: - Apple Map View (extracted)
@@ -227,6 +248,21 @@ struct FloodMapView: View {
                 }
             }
 
+            // Family Members (conditionally shown)
+            if viewModel.showFamilyOnMap {
+                ForEach(viewModel.familyMembers) { member in
+                    Annotation(
+                        member.shortName,
+                        coordinate: member.coordinate,
+                        anchor: .bottom
+                    ) {
+                        FamilyMapPin(member: member) {
+                            viewModel.selectedFamilyMember = member
+                        }
+                    }
+                }
+            }
+
             // Draw route polyline if available
             if let route = viewModel.route {
                 MapPolyline(route)
@@ -234,10 +270,168 @@ struct FloodMapView: View {
             }
         }
         .mapControls {
-            // Use custom locate button instead of default MapUserLocationButton
             MapCompass()
             MapScaleView()
         }
+    }
+}
+
+// MARK: - Family Map Pin
+
+struct FamilyMapPin: View {
+    let member: FamilyMember
+    var onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 2) {
+                ZStack {
+                    // Status ring
+                    Circle()
+                        .stroke(member.status.color, lineWidth: 3)
+                        .frame(width: 40, height: 40)
+                    // Avatar
+                    Circle()
+                        .fill(member.avatarColor)
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Text(member.avatarInitial)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                    // Status dot
+                    Circle()
+                        .fill(member.status.color)
+                        .frame(width: 12, height: 12)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .offset(x: 14, y: 14)
+                }
+                // Triangle pointer
+                Image(systemName: "triangle.fill")
+                    .font(.system(size: 8))
+                    .foregroundColor(member.avatarColor)
+                    .rotationEffect(.degrees(180))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Family Member Map Sheet
+
+struct FamilyMemberMapSheet: View {
+    let member: FamilyMember
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Avatar + Name
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .stroke(member.status.color, lineWidth: 3)
+                        .frame(width: 56, height: 56)
+                    Circle()
+                        .fill(member.avatarColor)
+                        .frame(width: 48, height: 48)
+                        .overlay(
+                            Text(member.avatarInitial)
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(member.name)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.aquaNavy)
+                    HStack(spacing: 4) {
+                        Image(systemName: member.status.icon)
+                            .font(.system(size: 12))
+                            .foregroundColor(member.status.color)
+                        Text(member.status.rawValue)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(member.status.color)
+                    }
+                }
+                Spacer()
+
+                Text(member.relationship)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.aquaPrimary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.aquaPrimary.opacity(0.1))
+                    .cornerRadius(10)
+            }
+            .padding(.top)
+
+            // Details
+            HStack(spacing: 30) {
+                VStack(spacing: 4) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(.title3)
+                        .foregroundColor(.aquaPrimary)
+                    Text(member.location)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.2))
+                    .frame(width: 1, height: 40)
+
+                VStack(spacing: 4) {
+                    Image(systemName: "clock.fill")
+                        .font(.title3)
+                        .foregroundColor(.aquaPrimary)
+                    Text(member.lastSeenString)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.2))
+                    .frame(width: 1, height: 40)
+
+                VStack(spacing: 4) {
+                    Image(systemName: "phone.fill")
+                        .font(.title3)
+                        .foregroundColor(.aquaPrimary)
+                    Text(member.phone)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            // Call button
+            Button(action: {
+                if let url = URL(string: "tel://\(member.phone.replacingOccurrences(of: " ", with: ""))") {
+                    UIApplication.shared.open(url)
+                }
+            }) {
+                HStack {
+                    Image(systemName: "phone.fill")
+                    Text("Call")
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.aquaPrimary)
+                .cornerRadius(12)
+            }
+            .padding(.horizontal)
+        }
+        .padding(.horizontal)
+        .padding(.bottom)
     }
 }
 

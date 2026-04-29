@@ -221,6 +221,8 @@ struct FamilyView: View {
                                 avatarColor: request.avatarColor,
                                 status: .safe,
                                 location: "Đang cập nhật...",
+                                latitude: 10.7800,
+                                longitude: 106.6950,
                                 lastSeen: Date(),
                                 relationship: "Bạn"
                             )
@@ -277,55 +279,60 @@ struct FamilyView: View {
             }
             .padding(.horizontal, 20)
 
-            // MARK: - View on Map Banner
-            Button(action: {
-                dismiss()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    selectedTab = 1
-                }
-            }) {
-                HStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.aquaPrimary.opacity(0.15))
-                            .frame(width: 44, height: 44)
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.aquaPrimary)
-                    }
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(languageManager.localize("View on Map"))
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.aquaNavy)
-                        Text(languageManager.localize("Track your family members' locations in real-time"))
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.aquaPrimary)
-                }
-                .padding(14)
-                .background(Color.aquaCard)
-                .cornerRadius(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.aquaPrimary.opacity(0.3), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 16)
+            viewOnMapBanner
 
             ForEach(familyMembers) { member in
                 FamilyMemberRow(member: member)
                     .padding(.horizontal, 16)
             }
         }
+    }
+
+    // MARK: - View on Map Banner
+
+    private var viewOnMapBanner: some View {
+        Button(action: {
+            dismiss()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                selectedTab = 1
+            }
+        }) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.aquaPrimary.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "map.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.aquaPrimary)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(languageManager.localize("View on Map"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.aquaNavy)
+                    Text(languageManager.localize("Track your family members' locations in real-time"))
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.aquaPrimary)
+            }
+            .padding(14)
+            .background(Color.aquaCard)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.aquaPrimary.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
     }
 }
 
