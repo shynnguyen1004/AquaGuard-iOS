@@ -37,8 +37,11 @@ class EmergencyViewModel: ObservableObject {
 
     // MARK: - Detailed Mode
 
-    /// Location name (auto-filled or typed)
-    @Published var locationName: String = ""
+    /// GPS coordinates as readable string (e.g. "10.7769, 106.7009")
+    @Published var gpsString: String = ""
+
+    /// Human-readable address from reverse geocoding
+    @Published var resolvedAddress: String = ""
 
     /// Situation description
     @Published var reportDescription: String = ""
@@ -60,25 +63,95 @@ class EmergencyViewModel: ObservableObject {
     // MARK: - Dependencies
 
     let locationService: LocationService
+    private let geocoder = CLGeocoder()
     private var cancellables = Set<AnyCancellable>()
 
     init(locationService: LocationService) {
         self.locationService = locationService
 
-        // Subscribe to location updates for the detailed form
+        // Subscribe to location updates → update GPS string + reverse geocode
         locationService.$currentLocation
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] coordinate in
-                self?.locationName = String(
-                    format: "Lat: %.4f, Long: %.4f",
+                self?.gpsString = String(
+                    format: "%.5f, %.5f",
                     coordinate.latitude, coordinate.longitude
                 )
+                self?.reverseGeocode(coordinate: coordinate)
             }
             .store(in: &cancellables)
 
         // Load mock history
         loadMockData()
+    }
+
+    // MARK: - Reverse Geocoding
+
+    /// Convert GPS coordinates to human-readable address
+    private func reverseGeocode(coordinate: CLLocationCoordinate2D) {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        geocoder.cancelGeocode()
+
+        // Use Vietnamese locale for best local address formatting
+        geocoder.reverseGeocodeLocation(
+            location,
+            preferredLocale: Locale(identifier: "vi_VN")
+        ) { [weak self] placemarks, error in
+            Task { @MainActor in
+                guard let self = self else { return }
+                if let placemark = placemarks?.first {
+                    // Strategy: build the most detailed address possible
+                    // 1. Try combining specific fields for maximum detail
+                    var streetParts: [String] = []
+
+                    // House number + Street (e.g. "192 Nguyễn Đình Chiểu")
+                    if let number = placemark.subThoroughfare {
+                        streetParts.append(number)
+                    }
+                    if let street = placemark.thoroughfare {
+                        streetParts.append(street)
+                    }
+
+                    var fullParts: [String] = []
+
+                    // Street address
+                    if !streetParts.isEmpty {
+                        fullParts.append(streetParts.joined(separator: " "))
+                    }
+
+                    // Ward/Phường
+                    if let ward = placemark.subLocality {
+                        fullParts.append(ward)
+                    }
+
+                    // District/Quận
+                    if let district = placemark.subAdministrativeArea {
+                        fullParts.append(district)
+                    }
+
+                    // City
+                    if let city = placemark.locality {
+                        fullParts.append(city)
+                    }
+
+                    // 2. If we got a detailed address, use it
+                    if fullParts.count >= 2 {
+                        self.resolvedAddress = fullParts.joined(separator: ", ")
+                    }
+                    // 3. Fallback: use placemark.name (often the most complete)
+                    else if let name = placemark.name, !name.isEmpty {
+                        self.resolvedAddress = name
+                    }
+                    // 4. Last resort
+                    else {
+                        self.resolvedAddress = fullParts.joined(separator: ", ")
+                    }
+                } else {
+                    self.resolvedAddress = "Unable to resolve address"
+                }
+            }
+        }
     }
 
     // MARK: - Quick SOS Actions
@@ -110,9 +183,9 @@ class EmergencyViewModel: ObservableObject {
                 photoURL: nil,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                address: self.locationName.isEmpty
-                    ? String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
-                    : self.locationName,
+                address: self.resolvedAddress.isEmpty
+                    ? self.gpsString
+                    : self.resolvedAddress,
                 description: self.caption,
                 requestType: .quickSOS,
                 status: .pending,
@@ -142,7 +215,7 @@ class EmergencyViewModel: ObservableObject {
         case .notDetermined:
             locationService.requestPermission()
         case .restricted, .denied:
-            locationName = "Permission Denied"
+            resolvedAddress = "Permission Denied"
         case .authorizedAlways, .authorizedWhenInUse:
             locationService.requestCurrentLocation()
         @unknown default:
@@ -169,9 +242,9 @@ class EmergencyViewModel: ObservableObject {
                 photoURL: nil,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                address: self.locationName.isEmpty
-                    ? String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
-                    : self.locationName,
+                address: self.resolvedAddress.isEmpty
+                    ? self.gpsString
+                    : self.resolvedAddress,
                 description: self.reportDescription,
                 requestType: .detailed,
                 status: .pending,
@@ -253,8 +326,9 @@ class EmergencyViewModel: ObservableObject {
         // Detailed
         reportDescription = ""
         selectedImage = nil
-        locationName = ""
         showDetailedForm = false
+        // Note: gpsString and resolvedAddress are NOT reset
+        // (they come from GPS and should persist)
     }
 
     var requestCount: Int {

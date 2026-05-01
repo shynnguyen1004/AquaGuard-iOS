@@ -138,29 +138,49 @@ struct EmergencyTabView: View {
     // MARK: - Top Bar
 
     private var topBar: some View {
-        HStack {
-            // GPS badge
-            HStack(spacing: 5) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.aquaPrimary)
-                if let coord = viewModel.locationService.currentLocation {
-                    Text(String(format: "%.4f, %.4f", coord.latitude, coord.longitude))
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(.secondary)
-                } else {
-                    Text(languageManager.localize("Getting GPS..."))
+        HStack(alignment: .top) {
+            // Location info (address + GPS)
+            VStack(alignment: .leading, spacing: 3) {
+                // Resolved address
+                HStack(spacing: 5) {
+                    Image(systemName: "mappin.circle.fill")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.aquaPrimary)
+                    if !viewModel.resolvedAddress.isEmpty {
+                        Text(viewModel.resolvedAddress)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.aquaNavy)
+                            .lineLimit(1)
+                    } else {
+                        Text(languageManager.localize("Resolving address..."))
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                // GPS coordinates
+                HStack(spacing: 5) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.aquaPrimary.opacity(0.6))
+                    if !viewModel.gpsString.isEmpty {
+                        Text(viewModel.gpsString)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text(languageManager.localize("Getting GPS..."))
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 14)
                     .fill(
                         colorScheme == .dark
-                            ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
+                            ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
             )
 
             Spacer()

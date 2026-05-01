@@ -53,7 +53,7 @@ struct DetailedRequestSheet: View {
                             HStack {
                                 TextField(
                                     languageManager.localize("Enter location or pin on map"),
-                                    text: $viewModel.locationName
+                                    text: $viewModel.resolvedAddress
                                 )
                                 .focused($isInputActive)
 

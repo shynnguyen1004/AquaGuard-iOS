@@ -41,50 +41,63 @@ struct QuickSOSPreview: View {
                                 .frame(height: 120)
                                 .cornerRadius(20)
 
-                                // GPS + Time badges
-                                HStack {
-                                    // GPS
-                                    HStack(spacing: 5) {
-                                        Image(systemName: "location.fill")
-                                            .font(.system(size: 11))
-                                        if let coord = viewModel.locationService.currentLocation {
-                                            Text(
-                                                String(
-                                                    format: "%.5f, %.5f", coord.latitude,
-                                                    coord.longitude)
-                                            )
-                                            .font(.system(size: 12, design: .monospaced))
-                                        } else {
-                                            Text(languageManager.localize("Locating..."))
-                                                .font(.system(size: 12))
-                                        }
-                                    }
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(.ultraThinMaterial.opacity(0.7))
-                                    .cornerRadius(20)
-
+                                // Address + GPS + Time overlay
+                                VStack(alignment: .leading, spacing: 6) {
                                     Spacer()
 
-                                    // Timestamp
-                                    HStack(spacing: 5) {
-                                        Image(systemName: "clock.fill")
+                                    HStack {
+                                        // Address + GPS stacked
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            if !viewModel.resolvedAddress.isEmpty {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "mappin.circle.fill")
+                                                        .font(.system(size: 10))
+                                                    Text(viewModel.resolvedAddress)
+                                                        .font(.system(size: 11, weight: .semibold))
+                                                        .lineLimit(1)
+                                                }
+                                            }
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "location.fill")
+                                                    .font(.system(size: 9))
+                                                if !viewModel.gpsString.isEmpty {
+                                                    Text(viewModel.gpsString)
+                                                        .font(.system(size: 10, design: .monospaced))
+                                                } else {
+                                                    Text(languageManager.localize("Locating..."))
+                                                        .font(.system(size: 10))
+                                                }
+                                            }
+                                            .opacity(0.8)
+                                        }
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(.ultraThinMaterial.opacity(0.55))
+                                        .cornerRadius(12)
+
+                                        Spacer()
+
+                                        // Timestamp
+                                        HStack(spacing: 5) {
+                                            Image(systemName: "clock.fill")
+                                                .font(.system(size: 10))
+                                            Text({
+                                                let f = DateFormatter()
+                                                f.dateFormat = "HH:mm · dd/MM"
+                                                return f.string(from: Date())
+                                            }())
                                             .font(.system(size: 11))
-                                        Text({
-                                            let f = DateFormatter()
-                                            f.dateFormat = "HH:mm · dd/MM/yyyy"
-                                            return f.string(from: Date())
-                                        }())
-                                        .font(.system(size: 12))
+                                        }
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(.ultraThinMaterial.opacity(0.55))
+                                        .cornerRadius(12)
                                     }
-                                    .foregroundColor(.white)
                                     .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(.ultraThinMaterial.opacity(0.7))
-                                    .cornerRadius(20)
+                                    .padding(.bottom, 12)
                                 }
-                                .padding(16)
                             }
                             .padding(.horizontal)
                         }

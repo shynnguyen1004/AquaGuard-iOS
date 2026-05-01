@@ -43,6 +43,12 @@ struct ContentView: View {
                     Label(languageManager.localize("Safety"), systemImage: "shield.fill")
                 }
                 .tag(3)
+
+            ProfileView(locationService: locationService)
+                .tabItem {
+                    Label(languageManager.localize("Profile"), systemImage: "person.crop.circle.fill")
+                }
+                .tag(4)
         }
         .tint(Color.aquaPrimary)
     }

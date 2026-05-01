@@ -20,11 +20,17 @@ struct RequestHistoryCard: View {
                     Image(systemName: "mappin.circle.fill")
                         .foregroundColor(.aquaPrimary)
                         .font(.title3)
-                    Text(request.address)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.aquaNavy)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(request.address)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.aquaNavy)
+                            .lineLimit(1)
+                        // GPS coordinates
+                        Text(request.locationString)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(.secondary.opacity(0.7))
+                    }
                 }
                 Spacer()
                 // Status badge
