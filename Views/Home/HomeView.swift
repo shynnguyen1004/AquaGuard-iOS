@@ -10,8 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     private enum TabIndex {
-        static let sos = 2
-        static let rescue = 4
+        static let emergency = 2
     }
 
     @StateObject var viewModel = HomeViewModel()
@@ -105,12 +104,12 @@ struct HomeView: View {
                                 icon: "house.fill", label: languageManager.localize("Shelter"),
                                 color: .aquaPrimary
                             ) {
-                                selectedTab = TabIndex.rescue
+                                selectedTab = TabIndex.emergency
                             }
 
                             // SOS button -> navigate directly to SOS tab
                             Button(action: {
-                                selectedTab = TabIndex.sos
+                                selectedTab = TabIndex.emergency
                             }) {
                                 VStack(spacing: 10) {
                                     Circle()

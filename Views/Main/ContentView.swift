@@ -30,10 +30,10 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            SOSTabView(locationService: locationService)
+            EmergencyTabView(locationService: locationService)
                 .tabItem {
                     Label(
-                        languageManager.localize("SOS"),
+                        languageManager.localize("Emergency"),
                         systemImage: "sos")
                 }
                 .tag(2)
@@ -43,14 +43,6 @@ struct ContentView: View {
                     Label(languageManager.localize("Safety"), systemImage: "shield.fill")
                 }
                 .tag(3)
-
-            RescueTabView(locationService: locationService)
-                .tabItem {
-                    Label(
-                        languageManager.localize("Rescue"),
-                        systemImage: "dot.radiowaves.left.and.right")
-                }
-                .tag(4)
         }
         .tint(Color.aquaPrimary)
     }

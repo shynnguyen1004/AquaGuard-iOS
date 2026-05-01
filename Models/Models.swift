@@ -162,8 +162,8 @@ class MockData {
     ]
 }
 
-// MARK: - SOS Request
-enum SOSStatus: String {
+// MARK: - SOS Request Status
+enum SOSStatus: String, Codable {
     case pending = "Pending"
     case inProgress = "In Progress"
     case resolved = "Resolved"
@@ -185,6 +185,53 @@ enum SOSStatus: String {
     }
 }
 
+// MARK: - Emergency Request Type
+enum RequestType: String, Codable {
+    case quickSOS = "quick_sos"
+    case detailed = "detailed"
+}
+
+// MARK: - Unified Emergency Request
+/// Unified model for both Quick SOS and Detailed Rescue requests.
+/// Replaces the old separate SOSRequest and FloodReport models.
+struct EmergencyRequest: Identifiable {
+    let id: String
+    let userId: String
+    let localImage: UIImage?     // Local only (not persisted to Firestore)
+    let photoURL: String?
+    let latitude: Double
+    let longitude: Double
+    let address: String
+    let description: String
+    let requestType: RequestType
+    let status: SOSStatus
+    let timestamp: Date
+    let rescuerId: String?       // Assigned rescuer (for tracking)
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    var locationString: String {
+        String(format: "%.5f, %.5f", latitude, longitude)
+    }
+
+    var timeString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm · dd/MM/yyyy"
+        return formatter.string(from: timestamp)
+    }
+
+    var timeAgoString: String {
+        let interval = Date().timeIntervalSince(timestamp)
+        if interval < 60 { return "Just now" }
+        if interval < 3600 { return "\(Int(interval / 60)) min ago" }
+        if interval < 86400 { return "\(Int(interval / 3600))h ago" }
+        return "\(Int(interval / 86400))d ago"
+    }
+}
+
+// Legacy model — kept for backward compat with RescueRequestHistoryCard mock data
 struct SOSRequest: Identifiable {
     let id = UUID()
     let address: String
