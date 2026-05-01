@@ -25,7 +25,6 @@ struct HomeView: View {
 
     // Family page
     @State private var showFamily = false
-    @State private var expandedAlertID: UUID?
 
     var body: some View {
         NavigationStack {
@@ -144,42 +143,25 @@ struct HomeView: View {
                         .padding(.horizontal)
                     }
 
-                    // Active Alerts
+                    // --- FAMILY SAFETY ---
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text(languageManager.localize("Active Alerts"))
+                            Text(languageManager.localize("Family Safety"))
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
                             Spacer()
-                            Text(
-                                "\(viewModel.activeAlerts.count) \(languageManager.localize("Active"))"
-                            )
-                            .font(.caption)
-                            .padding(6)
-                            .background(Color.yellow.opacity(0.2))
-                            .cornerRadius(8)
+                            Button(action: { showFamily = true }) {
+                                Text(languageManager.localize("See All"))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.aquaPrimary)
+                            }
                         }
                         .padding(.horizontal)
 
-                        ForEach(viewModel.activeAlerts) { alert in
-                            VStack(spacing: 10) {
-                                CommunityAlertRow(
-                                    alert: alert,
-                                    isExpanded: expandedAlertID == alert.id
-                                ) {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-                                        expandedAlertID = expandedAlertID == alert.id ? nil : alert.id
-                                    }
-                                }
-
-                                if expandedAlertID == alert.id {
-                                    CommunityAlertExpandedCard(alert: alert)
-                                        .transition(.asymmetric(
-                                            insertion: .opacity.combined(with: .move(edge: .top)),
-                                            removal: .opacity
-                                        ))
-                                }
-                            }
+                        ForEach(FamilyMember.dummyMembers) { member in
+                            FamilySafetyRow(member: member)
+                                .onTapGesture { showFamily = true }
                         }
                         .padding(.horizontal)
                     }
@@ -476,5 +458,88 @@ struct CommunityAlertExpandedCard: View {
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
         }
+    }
+}
+
+// MARK: - Family Safety Row
+struct FamilySafetyRow: View {
+    let member: FamilyMember
+
+    var body: some View {
+        HStack(spacing: 14) {
+            // Avatar
+            ZStack {
+                Circle()
+                    .fill(member.avatarColor.opacity(0.2))
+                    .frame(width: 48, height: 48)
+                Text(member.avatarInitial)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(member.avatarColor)
+
+                // Status dot (bottom-right)
+                Circle()
+                    .fill(member.status.color)
+                    .frame(width: 14, height: 14)
+                    .overlay(
+                        Circle().stroke(Color.aquaCard, lineWidth: 2)
+                    )
+                    .offset(x: 16, y: 16)
+            }
+
+            // Info
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(member.name)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.aquaNavy)
+                        .lineLimit(1)
+                    Spacer()
+                    // Status badge
+                    HStack(spacing: 4) {
+                        Image(systemName: member.status.icon)
+                            .font(.system(size: 9))
+                        Text(member.status.rawValue)
+                            .font(.system(size: 10, weight: .medium))
+                    }
+                    .foregroundColor(member.status.color)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(member.status.color.opacity(0.12))
+                    .cornerRadius(10)
+                }
+
+                HStack(spacing: 12) {
+                    // Location
+                    HStack(spacing: 3) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.aquaPrimary)
+                        Text(member.location)
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    // Last seen
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                        Text(member.lastSeenString)
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.gray.opacity(0.7))
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.aquaCard)
+        .cornerRadius(14)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(member.status.color.opacity(0.2), lineWidth: 1)
+        )
     }
 }
