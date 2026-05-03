@@ -163,17 +163,57 @@ struct LoginView: View {
                     }
                     .padding(.horizontal)
 
-                    // ── Dev: Skip Login ──────────────────────────────
-                    Button(action: {
-                        UserDefaults.standard.set(true, forKey: "devSkipLogin")
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "forward.fill")
-                            Text("Skip Login (Dev)")
+                    // ── Dev: Role Picker ─────────────────────────────
+                    VStack(spacing: 10) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "hammer.fill")
+                                .font(.caption2)
+                            Text("DEV — Login as Role")
+                                .font(.caption)
+                                .fontWeight(.semibold)
                         }
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
+
+                        ForEach(UserRole.allCases) { role in
+                            Button(action: {
+                                AppState.shared.selectRole(role)
+                                UserDefaults.standard.set(true, forKey: "devSkipLogin")
+                            }) {
+                                HStack(spacing: 14) {
+                                    Image(systemName: role.icon)
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 36, height: 36)
+                                        .background(role.color)
+                                        .cornerRadius(10)
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(role.displayName)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.aquaNavy)
+                                        Text(role.description)
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .foregroundColor(role.color.opacity(0.6))
+                                        .font(.title3)
+                                }
+                                .padding(12)
+                                .background(Color.aquaCard)
+                                .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(role.color.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                        }
                     }
+                    .padding(.horizontal)
 
                     Spacer(minLength: 40)
                 }

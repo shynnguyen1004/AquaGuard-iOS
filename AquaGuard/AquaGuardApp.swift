@@ -52,7 +52,14 @@ struct AquaGuardApp: App {
         WindowGroup {
             ZStack {
                 if userID != nil || devSkipLogin {
-                    ContentView()
+                    switch AppState.shared.currentRole {
+                    case .citizen:
+                        ContentView()
+                    case .rescuer:
+                        RescuerContentView()
+                    case .admin:
+                        AdminContentView()
+                    }
                 } else {
                     LoginView()
                 }

@@ -14,3 +14,7 @@
 project.xcworkspace/
 xcuserdata/
 DerivedData/
+
+# Project folders to ignore
+docs/
+aquaguard-backend/
