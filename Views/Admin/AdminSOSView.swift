@@ -72,10 +72,10 @@ struct AdminSOSView: View {
                         VStack(spacing: 10) {
                             Image(systemName: "checkmark.seal.fill")
                                 .font(.system(size: 40))
-                                .foregroundColor(.secondary.opacity(0.3))
+                                .foregroundColor(.aquaSubtitle.opacity(0.3))
                             Text("Không có yêu cầu nào")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.aquaSubtitle)
                         }
                         .padding(.vertical, 60)
                     } else {
@@ -99,7 +99,7 @@ struct AdminSOSView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(Color.purple)
+                        .background(Color.aquaPrimary)
                         .cornerRadius(25)
                         .shadow(color: .black.opacity(0.15), radius: 10)
                         .padding(.bottom, 30)
@@ -116,14 +116,14 @@ struct AdminSOSView: View {
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 18))
-                    .foregroundColor(.red)
+                    .foregroundColor(.aquaPrimary)
                 Text("Quản lý SOS")
                     .font(.headline)
                     .foregroundColor(.aquaNavy)
             }
             Text("Quản lý tất cả yêu cầu cứu hộ trong hệ thống")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -148,7 +148,7 @@ struct AdminSOSView: View {
                 .foregroundColor(color)
             Text(label)
                 .font(.system(size: 9, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
@@ -192,14 +192,14 @@ struct AdminSOSView: View {
 
             // Description
             if let desc = request.description {
-                Text(desc).font(.caption).foregroundColor(.secondary).lineLimit(2)
+                Text(desc).font(.caption).foregroundColor(.aquaSubtitle).lineLimit(2)
             }
 
             // Location
             if let loc = request.location {
                 HStack(spacing: 5) {
-                    Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(.secondary.opacity(0.6))
-                    Text(loc).font(.caption).foregroundColor(.secondary.opacity(0.7)).lineLimit(1)
+                    Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(.aquaSubtitle.opacity(0.6))
+                    Text(loc).font(.caption).foregroundColor(.aquaSubtitle.opacity(0.7)).lineLimit(1)
                 }
             }
 
@@ -212,7 +212,7 @@ struct AdminSOSView: View {
             } else if request.status == "pending" {
                 Text("Chưa phân công")
                     .font(.caption)
-                    .foregroundColor(.secondary.opacity(0.6))
+                    .foregroundColor(.aquaSubtitle.opacity(0.6))
             }
 
             // Admin actions
@@ -226,7 +226,7 @@ struct AdminSOSView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "lifepreserver.fill")
                                     .font(.system(size: 11))
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(.aquaPrimary)
                                 Text(group.name)
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -234,10 +234,10 @@ struct AdminSOSView: View {
                                 Spacer()
                                 Text("\(group.memberCount) người")
                                     .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.aquaSubtitle)
                                 Image(systemName: "arrow.right.circle")
                                     .font(.system(size: 12))
-                                    .foregroundColor(.purple.opacity(0.5))
+                                    .foregroundColor(.aquaPrimary.opacity(0.5))
                             }
                             .padding(10)
                             .background(Color.aquaBackground)
@@ -266,7 +266,7 @@ struct AdminSOSView: View {
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.aquaCard)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
         )
     }
 

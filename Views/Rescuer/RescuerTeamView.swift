@@ -200,7 +200,7 @@ struct RescuerTeamView: View {
 
             Image(systemName: "person.3.fill")
                 .font(.system(size: 40))
-                .foregroundColor(.secondary.opacity(0.3))
+                .foregroundColor(.aquaSubtitle.opacity(0.4))
 
             Text("Bạn chưa có đội cứu hộ")
                 .font(.headline)
@@ -250,7 +250,7 @@ struct RescuerTeamView: View {
 
                     Text(group.description)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.aquaSubtitle)
                 }
 
                 Spacer()
@@ -312,14 +312,14 @@ struct RescuerTeamView: View {
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.aquaCard)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
         )
         .padding(.horizontal, 16)
     }
 
     private var teamStatsRow: some View {
         HStack(spacing: 10) {
-            miniStat(label: "Nhiệm vụ đang làm", value: "2", color: .orange)
+            miniStat(label: "Nhiệm vụ đang làm", value: "2", color: .aquaPrimary)
             miniStat(label: "Đã hoàn thành", value: "15", color: .green)
             miniStat(label: "Thành viên", value: "\(group.members.count)", color: .aquaPrimary)
         }
@@ -333,12 +333,12 @@ struct RescuerTeamView: View {
                 .foregroundColor(color)
             Text(label)
                 .font(.system(size: 9, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(color.opacity(0.08))
+        .background(color.opacity(0.12))
         .cornerRadius(12)
     }
 
@@ -377,7 +377,7 @@ struct RescuerTeamView: View {
             Text("Lời mời đã gửi")
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
                 .padding(.horizontal, 20)
 
             ForEach(group.pendingInvites) { invite in
@@ -388,11 +388,11 @@ struct RescuerTeamView: View {
                         .overlay(
                             Text(String(invite.displayName.prefix(1)))
                                 .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.secondary.opacity(0.2))
                         )
                     VStack(alignment: .leading, spacing: 1) {
                         Text(invite.displayName).font(.caption).fontWeight(.medium).foregroundColor(.aquaNavy)
-                        Text(invite.phoneNumber).font(.caption2).foregroundColor(.secondary)
+                        Text(invite.phoneNumber).font(.caption2).foregroundColor(.aquaSubtitle)
                     }
                     Spacer()
                     Button(action: {
@@ -436,7 +436,7 @@ struct RescuerTeamView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(member.displayName).font(.subheadline).fontWeight(.medium).foregroundColor(.aquaNavy)
-                            Text(member.phoneNumber).font(.caption).foregroundColor(.secondary)
+                            Text(member.phoneNumber).font(.caption).foregroundColor(.aquaSubtitle)
                         }
 
                         Spacer()
@@ -477,7 +477,7 @@ struct RescuerTeamView: View {
             .background(
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.aquaCard)
-                    .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 2)
+                    .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
             )
             .padding(.horizontal, 16)
         }
@@ -490,17 +490,17 @@ struct RescuerTeamView: View {
             ForEach(allRescuers) { rescuer in
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(Color.orange.opacity(0.15))
+                        .fill(Color.aquaPrimary.opacity(0.15))
                         .frame(width: 40, height: 40)
                         .overlay(
                             Text(String(rescuer.displayName.prefix(1)))
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.orange)
+                                .foregroundColor(.aquaPrimary)
                         )
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(rescuer.displayName).font(.subheadline).fontWeight(.medium).foregroundColor(.aquaNavy)
-                        Text(rescuer.phoneNumber).font(.caption).foregroundColor(.secondary)
+                        Text(rescuer.phoneNumber).font(.caption).foregroundColor(.aquaSubtitle)
                     }
 
                     Spacer()
@@ -542,7 +542,7 @@ struct RescuerTeamView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 14)
                         .fill(Color.aquaCard)
-                        .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 2)
+                        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
                 )
             }
             .padding(.horizontal, 16)
@@ -560,10 +560,10 @@ struct RescuerTeamView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "envelope.open.fill")
                         .font(.system(size: 36))
-                        .foregroundColor(.secondary.opacity(0.3))
+                        .foregroundColor(.aquaSubtitle.opacity(0.4))
                     Text("Không có lời mời nào")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.aquaSubtitle)
                 }
                 .padding(.vertical, 80)
             } else {
@@ -572,11 +572,11 @@ struct RescuerTeamView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "person.3.fill")
                                 .font(.system(size: 14))
-                                .foregroundColor(.orange)
+                                .foregroundColor(.aquaPrimary)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(invite.groupName).font(.subheadline).fontWeight(.bold).foregroundColor(.aquaNavy)
-                                Text("Người mời: \(invite.inviterName)").font(.caption).foregroundColor(.secondary)
+                                Text("Người mời: \(invite.inviterName)").font(.caption).foregroundColor(.aquaSubtitle)
                             }
                             Spacer()
                         }
@@ -614,7 +614,7 @@ struct RescuerTeamView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(Color.aquaCard)
-                            .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 2)
+                            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
                     )
                     .padding(.horizontal, 16)
                 }

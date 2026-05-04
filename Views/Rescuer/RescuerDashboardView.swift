@@ -166,7 +166,7 @@ struct RescuerDashboardView: View {
             HStack(spacing: 10) {
                 Image(systemName: "flame.fill")
                     .font(.system(size: 22))
-                    .foregroundColor(.orange)
+                    .foregroundColor(.aquaPrimary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Xin chào 🚒")
@@ -174,7 +174,7 @@ struct RescuerDashboardView: View {
                         .foregroundColor(.aquaNavy)
                     Text("Nguyễn Bảo Khang")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.aquaSubtitle)
                 }
             }
 
@@ -183,21 +183,21 @@ struct RescuerDashboardView: View {
             // Badge
             Text("CỨU HỘ")
                 .font(.system(size: 10, weight: .heavy))
-                .foregroundColor(.orange)
+                .foregroundColor(.aquaPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Color.orange.opacity(0.1))
+                .background(Color.aquaPrimary.opacity(0.1))
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.aquaPrimary.opacity(0.2), lineWidth: 1)
                 )
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.aquaCard)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
         )
         .padding(.horizontal, 16)
     }
@@ -223,14 +223,14 @@ struct RescuerDashboardView: View {
                 .foregroundColor(.aquaNavy)
             Text(label)
                 .font(.system(size: 9, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(color.opacity(0.08))
+                    .fill(color.opacity(0.12))
         )
     }
 
@@ -278,7 +278,7 @@ struct RescuerDashboardView: View {
             if let desc = request.description {
                 Text(desc)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.aquaSubtitle)
                     .lineLimit(2)
             }
 
@@ -287,10 +287,10 @@ struct RescuerDashboardView: View {
                 HStack(spacing: 5) {
                     Image(systemName: "mappin.circle.fill")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary.opacity(0.6))
+                        .foregroundColor(.aquaSubtitle.opacity(0.7))
                     Text(loc)
                         .font(.caption)
-                        .foregroundColor(.secondary.opacity(0.7))
+                        .foregroundColor(.aquaSubtitle)
                         .lineLimit(1)
                 }
             }
@@ -316,7 +316,7 @@ struct RescuerDashboardView: View {
                 // Active: "Hoàn thành" + "Huỷ"
                 HStack(spacing: 10) {
                     Button(action: { completeRequest(request) }) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 5) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 12))
                             Text("Hoàn thành")
@@ -326,26 +326,26 @@ struct RescuerDashboardView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(Color.green)
+                        .background(Color.aquaPrimary)
                         .cornerRadius(10)
                     }
 
                     Button(action: { cancelRequest(request) }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "xmark.circle")
-                                .font(.system(size: 12))
+                        HStack(spacing: 5) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .semibold))
                             Text("Huỷ")
                                 .font(.caption)
                                 .fontWeight(.bold)
                         }
-                        .foregroundColor(.red)
+                        .foregroundColor(.aquaSubtitle)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(Color.clear)
+                        .background(Color.aquaInputBg)
                         .cornerRadius(10)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.aquaInputBorder, lineWidth: 1)
                         )
                     }
                 }
@@ -356,7 +356,7 @@ struct RescuerDashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.aquaCard)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
         )
     }
 
@@ -366,10 +366,10 @@ struct RescuerDashboardView: View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 40))
-                .foregroundColor(.secondary.opacity(0.3))
+                .foregroundColor(.aquaSubtitle.opacity(0.4))
             Text("Không có yêu cầu nào")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)

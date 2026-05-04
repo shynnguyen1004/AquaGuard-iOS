@@ -46,7 +46,7 @@ struct RoleDistribution {
     static let data: [RoleDistribution] = [
         RoleDistribution(role: "citizen", count: 120, label: "Công dân", color: .green),
         RoleDistribution(role: "rescuer", count: 28, label: "Cứu hộ", color: .orange),
-        RoleDistribution(role: "admin", count: 8, label: "Quản trị", color: .red),
+        RoleDistribution(role: "admin", count: 8, label: "Quản trị", color: .aquaPrimary),
     ]
 }
 
@@ -132,20 +132,20 @@ struct AdminAnalyticsView: View {
                 if let sub = subtitle {
                     Text(sub)
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.aquaSubtitle)
                 }
             }
 
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.aquaCard)
-                .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 2)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
         )
     }
 
@@ -185,7 +185,7 @@ struct AdminAnalyticsView: View {
                             .foregroundColor(.aquaNavy)
                         Text("(\(Int(Double(dist.count) / Double(max(totalRoleCount, 1)) * 100))%)")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.aquaSubtitle)
                     }
                 }
             }
@@ -230,7 +230,7 @@ struct AdminAnalyticsView: View {
                 Spacer()
                 Text("\(count)").font(.caption).fontWeight(.bold).foregroundColor(color)
                 Text("(\(total > 0 ? Int(Double(count) / Double(total) * 100) : 0)%)")
-                    .font(.caption2).foregroundColor(.secondary)
+                    .font(.caption2).foregroundColor(.aquaSubtitle)
             }
 
             GeometryReader { geo in
@@ -294,7 +294,7 @@ struct AdminAnalyticsView: View {
                 .foregroundColor(color)
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)

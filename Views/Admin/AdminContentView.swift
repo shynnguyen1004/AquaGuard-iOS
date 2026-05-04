@@ -12,6 +12,10 @@ struct AdminContentView: View {
     @State private var selectedTab = 0
     @EnvironmentObject var languageManager: LanguageManager
 
+    init() {
+        UITabBar.appearance().unselectedItemTintColor = UIColor.systemGray
+    }
+
     var body: some View {
         TabView(selection: $selectedTab) {
             AdminDashboardView()
@@ -38,6 +42,6 @@ struct AdminContentView: View {
                 }
                 .tag(3)
         }
-        .tint(.purple)
+        .tint(Color.aquaPrimary)
     }
 }

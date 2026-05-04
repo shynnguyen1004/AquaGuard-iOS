@@ -3,7 +3,7 @@
 //  AquaGuard
 //
 //  Main tab view for the Rescuer role.
-//  5 tabs: Nhiệm vụ, Yêu cầu, Bản đồ, Đội, Cài đặt
+//  5 tabs: Bản đồ, Yêu cầu, Nhiệm vụ, Đội, Cài đặt
 //
 
 import SwiftUI
@@ -13,11 +13,15 @@ struct RescuerContentView: View {
     @StateObject private var locationService = LocationService()
     @EnvironmentObject var languageManager: LanguageManager
 
+    init() {
+        UITabBar.appearance().unselectedItemTintColor = UIColor.systemGray
+    }
+
     var body: some View {
         TabView(selection: $selectedTab) {
-            RescuerDashboardView()
+            FloodMapView(locationService: locationService)
                 .tabItem {
-                    Label(languageManager.localize("Nhiệm vụ"), systemImage: "doc.text.fill")
+                    Label(languageManager.localize("Bản đồ"), systemImage: "map.fill")
                 }
                 .tag(0)
 
@@ -27,9 +31,9 @@ struct RescuerContentView: View {
                 }
                 .tag(1)
 
-            FloodMapView(locationService: locationService)
+            RescuerDashboardView()
                 .tabItem {
-                    Label(languageManager.localize("Bản đồ"), systemImage: "map.fill")
+                    Label(languageManager.localize("Nhiệm vụ"), systemImage: "doc.text.fill")
                 }
                 .tag(2)
 
@@ -45,6 +49,6 @@ struct RescuerContentView: View {
                 }
                 .tag(4)
         }
-        .tint(.orange)
+        .tint(Color.aquaPrimary)
     }
 }

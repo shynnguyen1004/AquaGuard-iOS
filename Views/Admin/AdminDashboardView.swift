@@ -83,7 +83,7 @@ struct AdminDashboardView: View {
             HStack(spacing: 10) {
                 Image(systemName: "gearshape.2.fill")
                     .font(.system(size: 22))
-                    .foregroundColor(.red)
+                    .foregroundColor(.aquaPrimary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Quản trị viên ⚙️")
@@ -91,7 +91,7 @@ struct AdminDashboardView: View {
                         .foregroundColor(.aquaNavy)
                     Text("Admin Chính")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.aquaSubtitle)
                 }
             }
 
@@ -99,21 +99,21 @@ struct AdminDashboardView: View {
 
             Text("ADMIN")
                 .font(.system(size: 10, weight: .heavy))
-                .foregroundColor(.red)
+                .foregroundColor(.aquaPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Color.red.opacity(0.1))
+                .background(Color.aquaPrimary.opacity(0.1))
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.red.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.aquaPrimary.opacity(0.2), lineWidth: 1)
                 )
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.aquaCard)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
         )
         .padding(.horizontal, 16)
     }
@@ -148,7 +148,7 @@ struct AdminDashboardView: View {
 
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.aquaSubtitle)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -220,7 +220,7 @@ struct AdminDashboardView: View {
 
                 Text("(\(rescuers.count))")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.aquaSubtitle)
             }
             .padding(.horizontal, 20)
 
@@ -228,17 +228,17 @@ struct AdminDashboardView: View {
                 ForEach(Array(rescuers.prefix(5).enumerated()), id: \.element.id) { index, rescuer in
                     HStack(spacing: 12) {
                         Circle()
-                            .fill(Color.orange.opacity(0.15))
+                            .fill(Color.aquaPrimary.opacity(0.15))
                             .frame(width: 38, height: 38)
                             .overlay(
                                 Text(String(rescuer.displayName.prefix(1)))
                                     .font(.system(size: 15, weight: .bold))
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(.aquaPrimary)
                             )
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(rescuer.displayName).font(.subheadline).fontWeight(.medium).foregroundColor(.aquaNavy)
-                            Text(rescuer.phoneNumber).font(.caption).foregroundColor(.secondary)
+                            Text(rescuer.phoneNumber).font(.caption).foregroundColor(.aquaSubtitle)
                         }
 
                         Spacer()
@@ -248,7 +248,7 @@ struct AdminDashboardView: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.orange)
+                            .background(Color.aquaPrimary)
                             .cornerRadius(6)
                     }
                     .padding(.horizontal, 16)

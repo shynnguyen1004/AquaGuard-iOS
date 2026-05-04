@@ -9,13 +9,19 @@ import SwiftUI
 
 // MARK: - Design System
 extension Color {
-    static let aquaPrimary = Color(red: 0.41, green: 0.77, blue: 0.80)  // #68C5CB
+    // Stronger teal — bolder in light mode, still vibrant in dark
+    static let aquaPrimary = Color(
+        UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 0.41, green: 0.77, blue: 0.80, alpha: 1)  // #68C5CB (dark)
+                : UIColor(red: 0.18, green: 0.67, blue: 0.70, alpha: 1)  // #2EAAB3 (light)
+        })
 
     // Adaptive text color: Navy in Light mode, White in Dark mode
     static let aquaNavy = Color(
         UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark
-                ? .white : UIColor(red: 0.11, green: 0.23, blue: 0.31, alpha: 1)
+                ? .white : UIColor(red: 0.08, green: 0.16, blue: 0.24, alpha: 1)  // #142840 deeper navy
         })
 
     static let aquaSafe = Color.green  //
@@ -36,7 +42,7 @@ extension Color {
         UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark
                 ? UIColor(red: 0.086, green: 0.145, blue: 0.208, alpha: 1)  // #162535
-                : .secondarySystemGroupedBackground
+                : .white
         })
 
     // Input/Textarea background (white / slate-800)
@@ -69,5 +75,13 @@ extension Color {
             return traitCollection.userInterfaceStyle == .dark
                 ? UIColor(red: 0.118, green: 0.161, blue: 0.231, alpha: 1)  // #1e293b
                 : UIColor.separator
+        })
+
+    // Subtitle text — stronger than .secondary in light mode
+    static let aquaSubtitle = Color(
+        UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark
+                ? UIColor.secondaryLabel
+                : UIColor(red: 0.35, green: 0.40, blue: 0.45, alpha: 1)  // #596673
         })
 }
