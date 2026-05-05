@@ -4,7 +4,7 @@
 //
 //  Map sheet showing real-time tracking between
 //  the rescuer and the citizen (victim).
-//  Follows same pattern as citizen's LiveTrackingSheet.
+//  Includes MKDirections route polyline drawing.
 //
 
 import MapKit
@@ -16,8 +16,10 @@ struct RescuerLiveTrackingSheet: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
 
-    // Camera position for the map
+    // Map state
     @State private var cameraPosition: MapCameraPosition
+    @State private var route: MKRoute?
+    @State private var isLoadingRoute = true
 
     // Citizen coordinate (victim location)
     private var citizenCoord: CLLocationCoordinate2D {
@@ -30,9 +32,26 @@ struct RescuerLiveTrackingSheet: View {
     // Simulated rescuer coordinate (offset from citizen)
     private var rescuerCoord: CLLocationCoordinate2D {
         CLLocationCoordinate2D(
-            latitude: (request.latitude ?? 10.7769) + 0.003,
-            longitude: (request.longitude ?? 106.7009) + 0.002
+            latitude: (request.latitude ?? 10.7769) + 0.004,
+            longitude: (request.longitude ?? 106.7009) + 0.003
         )
+    }
+
+    // Computed from real route data
+    private var distanceText: String {
+        guard let route = route else { return "~1.2 km" }
+        let km = route.distance / 1000
+        if km < 1 {
+            return String(format: "%.0f m", route.distance)
+        }
+        return String(format: "%.1f km", km)
+    }
+
+    private var etaText: String {
+        guard let route = route else { return "~8 min" }
+        let minutes = Int(route.expectedTravelTime / 60)
+        if minutes < 1 { return "<1 min" }
+        return "~\(minutes) min"
     }
 
     init(request: SosRequest) {
@@ -41,10 +60,10 @@ struct RescuerLiveTrackingSheet: View {
             initialValue: .region(
                 MKCoordinateRegion(
                     center: CLLocationCoordinate2D(
-                        latitude: (request.latitude ?? 10.7769) + 0.0015,
-                        longitude: (request.longitude ?? 106.7009) + 0.001
+                        latitude: (request.latitude ?? 10.7769) + 0.002,
+                        longitude: (request.longitude ?? 106.7009) + 0.0015
                     ),
-                    span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015)
+                    span: MKCoordinateSpan(latitudeDelta: 0.018, longitudeDelta: 0.018)
                 )
             )
         )
@@ -56,38 +75,64 @@ struct RescuerLiveTrackingSheet: View {
                 // Status header
                 statusHeader
 
-                // Map — takes all available space
-                Map(position: $cameraPosition) {
-                    // Citizen (victim) pin — red
-                    Annotation(
-                        "Nạn nhân",
-                        coordinate: citizenCoord
-                    ) {
-                        VStack(spacing: 2) {
-                            Image(systemName: "person.circle.fill")
-                                .font(.title)
-                                .foregroundColor(.red)
-                                .background(Circle().fill(.white).padding(-2))
+                // Map with route + pins
+                ZStack(alignment: .topTrailing) {
+                    Map(position: $cameraPosition) {
+                        // Route polyline
+                        if let route = route {
+                            MapPolyline(route)
+                                .stroke(Color.aquaPrimary, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
                         }
+
+                        // Citizen (victim) pin — red
+                        Annotation(
+                            "Nạn nhân",
+                            coordinate: citizenCoord
+                        ) {
+                            VStack(spacing: 0) {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(.red)
+                                    .background(Circle().fill(.white).padding(-3))
+                                    .shadow(color: .red.opacity(0.3), radius: 4, y: 2)
+                            }
+                        }
+
+                        // Rescuer pin — teal
+                        Annotation(
+                            "Bạn (Rescuer)",
+                            coordinate: rescuerCoord
+                        ) {
+                            VStack(spacing: 0) {
+                                Image(systemName: "figure.wave")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(.aquaPrimary)
+                                    .background(Circle().fill(.white).padding(-3))
+                                    .shadow(color: .aquaPrimary.opacity(0.3), radius: 4, y: 2)
+                            }
+                        }
+                    }
+                    .mapStyle(.standard)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
                     }
 
-                    // Rescuer pin — teal
-                    Annotation(
-                        "Bạn (Rescuer)",
-                        coordinate: rescuerCoord
-                    ) {
-                        VStack(spacing: 2) {
-                            Image(systemName: "figure.wave")
-                                .font(.title)
-                                .foregroundColor(.aquaPrimary)
-                                .background(Circle().fill(.white).padding(-2))
+                    // Loading indicator
+                    if isLoadingRoute {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text("Đang tải lộ trình...")
+                                .font(.caption2)
+                                .foregroundColor(.aquaSubtitle)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(20)
+                        .padding(12)
                     }
-                }
-                .mapStyle(.standard)
-                .mapControls {
-                    MapCompass()
-                    MapScaleView()
                 }
 
                 // Request info bar at bottom
@@ -104,6 +149,39 @@ struct RescuerLiveTrackingSheet: View {
                     .foregroundColor(.aquaPrimary)
                 }
             }
+            .task {
+                await calculateRoute()
+            }
+        }
+    }
+
+    // MARK: - Route Calculation
+
+    private func calculateRoute() async {
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: rescuerCoord))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: citizenCoord))
+        request.transportType = .automobile
+
+        let directions = MKDirections(request: request)
+
+        do {
+            let response = try await directions.calculate()
+            if let firstRoute = response.routes.first {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    self.route = firstRoute
+                    self.isLoadingRoute = false
+
+                    // Fit camera to show the entire route
+                    let routeRect = firstRoute.polyline.boundingMapRect
+                    let padding = routeRect.size.width * 0.3
+                    let paddedRect = routeRect.insetBy(dx: -padding, dy: -padding)
+                    self.cameraPosition = .rect(paddedRect)
+                }
+            }
+        } catch {
+            print("Route calculation error: \(error.localizedDescription)")
+            self.isLoadingRoute = false
         }
     }
 
@@ -155,7 +233,7 @@ struct RescuerLiveTrackingSheet: View {
 
     private var requestInfoBar: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Route indicator
+            // Route indicator with real data
             HStack(spacing: 12) {
                 // Rescuer icon
                 VStack(spacing: 3) {
@@ -167,13 +245,18 @@ struct RescuerLiveTrackingSheet: View {
                         .foregroundColor(.aquaSubtitle)
                 }
 
-                // Dotted route line
-                HStack(spacing: 3) {
-                    ForEach(0..<6, id: \.self) { _ in
-                        Circle()
-                            .fill(Color.aquaPrimary.opacity(0.4))
-                            .frame(width: 4, height: 4)
+                // Dotted route line + distance
+                VStack(spacing: 2) {
+                    HStack(spacing: 3) {
+                        ForEach(0..<6, id: \.self) { _ in
+                            Circle()
+                                .fill(Color.aquaPrimary.opacity(0.4))
+                                .frame(width: 4, height: 4)
+                        }
                     }
+                    Text(distanceText)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.aquaPrimary)
                 }
 
                 // Citizen icon
@@ -188,12 +271,12 @@ struct RescuerLiveTrackingSheet: View {
 
                 Spacer()
 
-                // ETA
+                // ETA from real route
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("ETA")
                         .font(.system(size: 8, weight: .medium))
                         .foregroundColor(.aquaSubtitle)
-                    Text("~8 min")
+                    Text(etaText)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.aquaPrimary)
                 }
@@ -232,7 +315,7 @@ struct RescuerLiveTrackingSheet: View {
             if let desc = request.description {
                 Text(desc)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.aquaSubtitle)
                     .lineLimit(2)
             }
 
