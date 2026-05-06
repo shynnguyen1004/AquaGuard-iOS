@@ -44,7 +44,7 @@ struct AquaGuardApp: App {
     @ObservedObject private var themeManager = ThemeManager.shared
     @State private var userID: String? = nil
     @State private var authHandle: AuthStateDidChangeListenerHandle?
-    @State private var showIntro: Bool = true
+    @State private var showSplash: Bool = true
 
     // DEV: set to true to skip login
     @AppStorage("devSkipLogin") private var devSkipLogin: Bool = false
@@ -52,48 +52,52 @@ struct AquaGuardApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // Main app content
-                Group {
-                    if userID != nil || devSkipLogin {
-                        switch AppState.shared.currentRole {
-                        case .citizen:
-                            ContentView()
-                        case .rescuer:
-                            RescuerContentView()
-                        case .admin:
-                            AdminContentView()
-                        }
-                    } else {
-                        LoginView()
-                    }
-                }
-                .environmentObject(languageManager)
-                .preferredColorScheme(themeManager.colorScheme)
-                .onAppear {
-                    authHandle = Auth.auth().addStateDidChangeListener { auth, user in
-                        if let user = user {
-                            self.userID = user.uid
-                            print("App: User is signed in: \(user.uid)")
+                if showSplash {
+                    SplashScreenView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                } else {
+                    Group {
+                        if userID != nil || devSkipLogin {
+                            switch AppState.shared.currentRole {
+                            case .citizen:
+                                ContentView()
+                            case .rescuer:
+                                RescuerContentView()
+                            case .admin:
+                                AdminContentView()
+                            }
                         } else {
-                            self.userID = nil
-                            print("App: User is signed out")
+                            LoginView()
                         }
                     }
+                    .transition(.opacity)
                 }
-                .onDisappear {
-                    if let handle = authHandle {
-                        Auth.auth().removeStateDidChangeListener(handle)
-                        authHandle = nil
+            }
+            .environmentObject(languageManager)
+            .preferredColorScheme(themeManager.colorScheme)
+            .onAppear {
+                authHandle = Auth.auth().addStateDidChangeListener { auth, user in
+                    if let user = user {
+                        self.userID = user.uid
+                        print("App: User is signed in: \(user.uid)")
+                    } else {
+                        self.userID = nil
+                        print("App: User is signed out")
                     }
                 }
 
-                // Intro video overlay
-                if showIntro {
-                    IntroVideoView(onFinished: {
-                        showIntro = false
-                    })
-                    .transition(.opacity)
-                    .zIndex(1)
+                // Dismiss splash after 2 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showSplash = false
+                    }
+                }
+            }
+            .onDisappear {
+                if let handle = authHandle {
+                    Auth.auth().removeStateDidChangeListener(handle)
+                    authHandle = nil
                 }
             }
         }
