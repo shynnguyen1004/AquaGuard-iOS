@@ -3,7 +3,7 @@
 //  AquaGuard
 //
 //  Card component displaying an emergency request
-//  with address, status badge, description, and timestamp.
+//  with address, status badge, description, images, and timestamp.
 //
 
 import SwiftUI
@@ -11,6 +11,7 @@ import SwiftUI
 struct RequestHistoryCard: View {
     let request: EmergencyRequest
     @Environment(\.colorScheme) var colorScheme
+    @State private var fullscreenImageURL: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -54,6 +55,53 @@ struct RequestHistoryCard: View {
                     .font(.caption)
                     .foregroundColor(.gray)
                     .lineLimit(2)
+            }
+
+            // MARK: - Images Section
+            if !request.imageURLs.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(request.imageURLs, id: \.self) { urlString in
+                            AsyncImage(url: URL(string: urlString)) { phase in
+                                switch phase {
+                                case .empty:
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.gray.opacity(0.15))
+                                        .frame(width: 90, height: 90)
+                                        .overlay(
+                                            ProgressView()
+                                                .scaleEffect(0.7)
+                                        )
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 90, height: 90)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .onTapGesture {
+                                            fullscreenImageURL = urlString
+                                        }
+                                case .failure:
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.gray.opacity(0.15))
+                                        .frame(width: 90, height: 90)
+                                        .overlay(
+                                            Image(systemName: "photo.fill")
+                                                .foregroundColor(.gray.opacity(0.4))
+                                        )
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if let localImage = request.localImage {
+                Image(uiImage: localImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 90)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
             // Bottom: Type badge + Timestamp
@@ -109,5 +157,75 @@ struct RequestHistoryCard: View {
         .background(Color.aquaCard)
         .cornerRadius(14)
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 3)
+        .fullScreenCover(item: Binding<FullscreenImage?>(
+            get: { fullscreenImageURL.map { FullscreenImage(url: $0) } },
+            set: { fullscreenImageURL = $0?.url }
+        )) { item in
+            FullscreenImageView(urlString: item.url)
+        }
+    }
+}
+
+// MARK: - Fullscreen Image Viewer
+
+private struct FullscreenImage: Identifiable {
+    let url: String
+    var id: String { url }
+}
+
+private struct FullscreenImageView: View {
+    let urlString: String
+    @Environment(\.dismiss) var dismiss
+    @State private var scale: CGFloat = 1.0
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            AsyncImage(url: URL(string: urlString)) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView().tint(.white)
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .scaleEffect(scale)
+                        .gesture(
+                            MagnifyGesture()
+                                .onChanged { value in
+                                    scale = value.magnification
+                                }
+                                .onEnded { _ in
+                                    withAnimation { scale = 1.0 }
+                                }
+                        )
+                case .failure:
+                    VStack(spacing: 12) {
+                        Image(systemName: "photo.fill")
+                            .font(.largeTitle)
+                            .foregroundColor(.gray)
+                        Text("Không tải được ảnh")
+                            .foregroundColor(.gray)
+                    }
+                @unknown default:
+                    EmptyView()
+                }
+            }
+
+            // Close button
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.white.opacity(0.8))
+                            .padding(16)
+                    }
+                }
+                Spacer()
+            }
+        }
     }
 }

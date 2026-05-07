@@ -216,6 +216,7 @@ struct EmergencyRequest: Identifiable {
     let userId: String
     let localImage: UIImage?     // Local only (not persisted to Firestore)
     let photoURL: String?
+    let imageURLs: [String]      // All image URLs from backend
     let latitude: Double
     let longitude: Double
     let address: String

@@ -105,6 +105,7 @@ class EmergencyViewModel: ObservableObject {
                             userId: "\(r.userId ?? 0)",
                             localImage: nil,
                             photoURL: r.images?.first,
+                            imageURLs: r.images ?? [],
                             latitude: r.latitude ?? 0,
                             longitude: r.longitude ?? 0,
                             address: r.location ?? "",
