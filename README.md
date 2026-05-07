@@ -5,7 +5,10 @@
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-2.0-007AFF.svg?style=for-the-badge&logo=swift)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
 
-**AquaGuard** is a native iOS application designed to protect communities during flood disasters. It provides real-time alerts, safety guides, and a crowdsourced reporting system to coordinate rescue efforts effectively.
+**AquaGuard** is a native iOS application built to help communities prepare for and respond to flood emergencies. The app combines live risk visibility, emergency tools, practical safety guidance, and community-driven incident reports in one place.
+
+This repository contains the **iOS app**.  
+We also maintain a **Web App version** here: [AquaGuard Web App Repository](https://github.com/your-org/AquaGuard-Web)
 
 > **Status:** 🚧 MVP / Beta Development
 
@@ -13,102 +16,111 @@
 
 ## 📱 Screenshots
 
-| Home Dashboard | Flood Map | Incident Report | Safety Guides | Rescue Ops |
-|:---:|:---:|:---:|:---:|:---:|
-| <img src="Captures/home.PNG" width="200"/> | <img src="Captures/map.PNG" width="200"/> | <img src="Captures/report.PNG" width="200"/> | <img src="Captures/safety.PNG" width="200"/> | <img src="Captures/rescue.PNG" width="200"/> |
+| Home | Map | Report |
+|:---:|:---:|:---:|
+| <img src="Captures/home.PNG" width="220"/> | <img src="Captures/map.PNG" width="220"/> | <img src="Captures/report.PNG" width="220"/> |
+
+| Safety | Rescue | Settings |
+|:---:|:---:|:---:|
+| <img src="Captures/safety.PNG" width="220"/> | <img src="Captures/rescue.PNG" width="220"/> | <img src="Captures/setting.png" width="220"/> |
+
+| Family | Family Info | Windy Map |
+|:---:|:---:|:---:|
+| <img src="Captures/family.png" width="220"/> | <img src="Captures/family_info.png" width="220"/> | <img src="Captures/windy_map.png" width="220"/> |
 
 ---
 
 ## ✨ Key Features
 
-### 🚨 Real-time Alerts
-- **Risk Status Card:** Visual indicators (Safe/Warning/Danger) based on current location.
-- **Active Alerts:** Receive instant updates on heavy rainfall and rising water levels.
+### 🚨 Real-Time Alerts
+- **Risk Status Card:** Clear status levels (Safe / Warning / Danger) based on user context.
+- **Live Notifications:** Receive rapid updates on heavy rain and flood-risk escalation.
 
 ### 🗺️ Interactive Flood Map
-- **Live Tracking:** Integrated **CoreLocation** ("Locate Me" button) to instantly zoom to user's position.
-- **Severity Pins:** Flood zones are visualized with 4 distinct color codes for quick assessment:
-    - 🟣 **Purple:** Critical (Emergency)
-    - 🔴 **Red:** Severe (High Risk)
-    - 🟠 **Orange:** Moderate (Caution)
-    - 🟢 **Green:** Safe (Low Risk)
-- **Zone Details:** Tap on any pin to view water depth (meters) and specific location data.
+- **Location-Aware View:** Instantly jump to the current location using `CoreLocation`.
+- **Severity Visualization:** Flood zones are color-coded for fast risk assessment:
+  - 🟣 **Purple:** Critical (Emergency)
+  - 🔴 **Red:** Severe (High Risk)
+  - 🟠 **Orange:** Moderate (Caution)
+  - 🟢 **Green:** Safe (Low Risk)
+- **Zone Insights:** Tap a marker to inspect local flood depth and area details.
 
-### 🆘 Safety & Connectivity (New)
-- **One-Tap SMS:** Smart "4G SOS" button allows users to instantly register for emergency data packages (Viettel, Vinaphone, Mobifone) with a single tap, ensuring connectivity when it matters most.
-- **Emergency Contacts:** Direct dial shortcuts for Police (113), Fire Station (114) or Ambulance (115).
-- **Survival Guides:** Offline-accessible safety instructions for flood scenarios.
+### 🆘 Safety & Emergency Connectivity
+- **One-Tap 4G SOS:** Quickly activate emergency data package registration for major Vietnamese carriers.
+- **Emergency Hotline Shortcuts:** Call Police (`113`), Fire Department (`114`), and Ambulance (`115`) directly.
+- **Safety Guides:** Access concise flood survival instructions when every second matters.
 
-### 📝 Crowdsourced Reporting
-- **Quick Report:** Submit flood incidents with location, water level slider, and photos.
-- **Geolocation:** Auto-detect user coordinates for precise rescue targeting.
+### 📝 Community Reporting
+- **Quick Incident Report:** Submit reports with location, water level, and photos.
+- **Automatic Geolocation:** Capture coordinates automatically for better rescue coordination.
 
-### ⛑️ Rescue Dashboard
-- **Resource Management:** Track available rescue boats, shelters, and medical teams.
-- **Mission Control:** View pending rescue requests and assign teams efficiently.
+### ⛑️ Rescue Operations Dashboard
+- **Resource Tracking:** Monitor rescue boats, shelters, and medical support capacity.
+- **Mission Prioritization:** Review active requests and improve response allocation.
 
 ---
 
 ## 🛠 Tech Stack
 
-* **Language:** Swift 5.9
-* **UI Framework:** SwiftUI (MVVM Architecture)
-* **Maps:** MapKit & CoreLocation
-* **Compatibility:** iOS 26.0+
-* **Tools:** Xcode 16
+- **Language:** Swift 5.9
+- **UI Framework:** SwiftUI (MVVM Architecture)
+- **Mapping:** MapKit + CoreLocation
+- **Minimum iOS Version:** iOS 26.0+
+- **Development Tools:** Xcode 16
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-* Mac with macOS Sonoma or later.
-* Xcode 15/16 installed.
+- macOS Sonoma or later.
+- Xcode 15 or newer.
 
 ### Installation
-1.  Clone the repository:
-    ```bash
-    git clone [https://github.com/shynnguyen1004/AquaGuard-iOS.git](https://github.com/shynnguyen1004/AquaGuard-iOS.git)
-    ```
-2.  Open the project in Xcode:
-    ```bash
-    cd AquaGuard-iOS
-    open AquaGuard.xcodeproj
-    ```
-3.  Select your Development Team in **Signing & Capabilities**.
-4.  Build and Run (⌘+R) on a Simulator or Real Device.
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/shynnguyen1004/AquaGuard-iOS.git
+   ```
+2. Open the project in Xcode:
+   ```bash
+   cd AquaGuard-iOS
+   open AquaGuard.xcodeproj
+   ```
+3. Select your Development Team in **Signing & Capabilities**.
+4. Build and run (`⌘ + R`) on Simulator or a real device.
 
 ---
 
 ## 🔮 Roadmap
 
-- [x] UI/UX Implementation (SwiftUI)
-- [x] Map Interface with 4-Level Severity Pins
-- [x] User Location Tracking (CoreLocation)
-- [x] One-Tap SMS Registration Logic
-- [x] Reporting Form Logic
-- [ ] **Backend Integration:** Connect with Supabase/Firebase.
-- [ ] **Offline Mode:** Local database for reporting without internet.
-- [ ] **Push Notifications:** Alert users when entering danger zones.
-- [ ] **AI Analysis:** Predict flood trends using NASA/NOAA data.
+- [x] SwiftUI MVP interface
+- [x] Flood map with 4-level severity markers
+- [x] Real-time location support
+- [x] One-tap emergency connectivity flow
+- [x] Community report form
+- [ ] Backend integration (Supabase / Firebase)
+- [ ] Offline-first reporting mode
+- [ ] Push alerts for nearby danger zones
+- [ ] AI-based flood trend prediction (NASA / NOAA data)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are always welcome! Please follow these steps:
-1.  Fork the project.
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the Branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+Contributions are welcome.
+
+1. Fork the project.
+2. Create your feature branch (`git checkout -b feature/your-feature`).
+3. Commit your changes (`git commit -m "Add your feature"`).
+4. Push to your branch (`git push origin feature/your-feature`).
+5. Open a Pull Request.
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See `LICENSE` for details.
 
 ---
 
-**Built with ❤️ for a safer community.**
+**Built with care for safer communities.**
