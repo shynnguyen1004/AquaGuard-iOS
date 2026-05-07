@@ -57,16 +57,33 @@ enum UserRole: String, CaseIterable, Identifiable {
 class AppState: ObservableObject {
     static let shared = AppState()
 
-    /// Current active role (persisted for dev testing)
+    /// Current active role (persisted)
     @Published var currentRole: UserRole
 
-    /// Whether user has explicitly selected a role
+    /// Whether user has explicitly selected a role (true after login or dev role pick)
     @Published var hasSelectedRole: Bool
 
+    /// Convenience: true when a valid JWT session exists
+    var isAuthenticated: Bool {
+        TokenManager.shared.isAuthenticated
+    }
+
+    /// The logged-in user (nil if not authenticated)
+    var currentUser: APIUser? {
+        TokenManager.shared.currentUser
+    }
+
     private init() {
+        // Restore role from last session
         let saved = UserDefaults.standard.string(forKey: "selectedRole") ?? "citizen"
         self.currentRole = UserRole(rawValue: saved) ?? .citizen
         self.hasSelectedRole = UserDefaults.standard.bool(forKey: "hasSelectedRole")
+
+        // If we have a saved JWT session, sync role from it
+        if let user = TokenManager.shared.currentUser {
+            self.currentRole = user.userRole
+            self.hasSelectedRole = true
+        }
     }
 
     func selectRole(_ role: UserRole) {
@@ -78,6 +95,9 @@ class AppState: ObservableObject {
 
     func logout() {
         hasSelectedRole = false
+        currentRole = .citizen
         UserDefaults.standard.set(false, forKey: "hasSelectedRole")
+        UserDefaults.standard.set(false, forKey: "devSkipLogin")
+        TokenManager.shared.clearSession()
     }
 }

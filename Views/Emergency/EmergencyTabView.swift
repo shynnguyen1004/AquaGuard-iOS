@@ -85,6 +85,8 @@ struct EmergencyTabView: View {
                     cameraService.startSession()
                 } else {
                     cameraService.stopSession()
+                    // Refresh history from backend when switching to History tab
+                    viewModel.fetchMyRequests()
                 }
             }
             .onChange(of: cameraService.capturedImage) { _, newImage in
@@ -358,7 +360,17 @@ struct EmergencyTabView: View {
     private var historySection: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if viewModel.requests.isEmpty {
+                if viewModel.isLoadingHistory {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text(languageManager.localize("Loading requests..."))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                } else if viewModel.requests.isEmpty {
                     // Empty state
                     VStack(spacing: 16) {
                         Image(systemName: "tray")

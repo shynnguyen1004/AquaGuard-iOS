@@ -4,7 +4,7 @@
 //
 //  User profile tab — displays user info, editable personal
 //  information, activity stats, and quick access to settings.
-//  Currently uses dummy data for testing.
+//  Now uses backend data via TokenManager + API.
 //
 
 import CoreLocation
@@ -22,15 +22,27 @@ struct ProfileView: View {
     @State private var showSettings = false
     @State private var isEditing = false
 
-    // Editable personal info (pre-filled with dummy data)
-    @State private var fullName = "Nguyễn Bảo Khang"
-    @State private var phone = "+84901234567"
-    @State private var emergencyContact = "+84912345678"
+    // Editable personal info — loaded from backend on appear
+    @State private var fullName = ""
+    @State private var phone = ""
+    @State private var emergencyContact = ""
     @State private var selectedGender: Gender = .male
-    @State private var dateOfBirth = Calendar.current.date(
-        from: DateComponents(year: 2004, month: 1, day: 15))!
-    @State private var address = "268 Lý Thường Kiệt, Phường 14, Quận 10, TP. Hồ Chí Minh"
-    @State private var gpsCoordinates = "10.77269, 106.65781"
+    @State private var dateOfBirth = Date()
+    @State private var address = ""
+    @State private var gpsCoordinates = ""
+
+    // Stats from backend
+    @State private var sosSentCount: Int = 0
+    @State private var sosResolvedCount: Int = 0
+    @State private var familyCount: Int = 0
+    @State private var memberSince: String = ""
+    @State private var recentRequests: [APIRescueRequest] = []
+    @State private var isSaving: Bool = false
+
+    // User role from TokenManager
+    private var userRole: String {
+        TokenManager.shared.currentUser?.role.capitalized ?? "Citizen"
+    }
 
     // UI states
     @State private var showSaveSuccess = false
@@ -47,9 +59,6 @@ struct ProfileView: View {
         case female = "Nữ"
         case other = "Khác"
     }
-
-    // Dummy user data
-    private let user = DummyUser.current
 
     var body: some View {
         NavigationStack {
@@ -139,7 +148,87 @@ struct ProfileView: View {
             } message: {
                 Text(languageManager.localize("Your profile has been updated successfully."))
             }
+            .onAppear {
+                loadProfileFromBackend()
+            }
         }
+    }
+
+    // MARK: - Load Profile from Backend
+
+    private func loadProfileFromBackend() {
+        // Pre-fill from TokenManager (instant, no network)
+        if let user = TokenManager.shared.currentUser {
+            if fullName.isEmpty { fullName = user.displayName }
+            if phone.isEmpty { phone = user.phoneNumber }
+            if let ec = user.emergencyContact, !ec.isEmpty { emergencyContact = ec }
+            if let g = user.gender, !g.isEmpty {
+                selectedGender = Gender.allCases.first(where: { $0.rawValue.lowercased() == g.lowercased() }) ?? .male
+            }
+            if let addr = user.address, !addr.isEmpty { address = addr }
+            if let createdAt = user.createdAt {
+                let year = String(createdAt.prefix(4))
+                memberSince = year
+            }
+        }
+
+        // Fetch fresh profile from backend
+        Task {
+            do {
+                let response: APIResponse<APIUser> = try await APIService.shared.getRaw("/auth/profile")
+                if let profile = response.data {
+                    fullName = profile.displayName
+                    phone = profile.phoneNumber
+                    if let ec = profile.emergencyContact, !ec.isEmpty { emergencyContact = ec }
+                    if let g = profile.gender, !g.isEmpty {
+                        selectedGender = Gender.allCases.first(where: { $0.rawValue.lowercased() == g.lowercased() }) ?? .male
+                    }
+                    if let dobStr = profile.dateOfBirth, !dobStr.isEmpty {
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "yyyy-MM-dd"
+                        if let dob = formatter.date(from: String(dobStr.prefix(10))) {
+                            dateOfBirth = dob
+                        }
+                    }
+                    if let addr = profile.address, !addr.isEmpty { address = addr }
+                    if let lat = profile.latitude, let lng = profile.longitude {
+                        gpsCoordinates = String(format: "%.5f, %.5f", lat, lng)
+                    }
+                    if let createdAt = profile.createdAt {
+                        memberSince = String(createdAt.prefix(4))
+                    }
+                }
+            } catch {
+                print("[Profile] Failed to load profile: \(error.localizedDescription)")
+            }
+        }
+
+        // Fetch SOS stats
+        Task {
+            do {
+                let response: APIResponse<[APIRescueRequest]> = try await APIService.shared.getRaw("/sos/my")
+                if let requests = response.data {
+                    sosSentCount = requests.count
+                    sosResolvedCount = requests.filter { $0.status == "resolved" }.count
+                    recentRequests = Array(requests.prefix(4))
+                }
+            } catch {
+                print("[Profile] Failed to load SOS stats: \(error.localizedDescription)")
+            }
+        }
+
+        // Fetch family count
+        Task {
+            do {
+                let response: APIResponse<[APIFamilyMember]> = try await APIService.shared.getRaw("/family/members")
+                if let members = response.data {
+                    familyCount = members.count
+                }
+            } catch {
+                print("[Profile] Failed to load family count: \(error.localizedDescription)")
+            }
+        }
+
     }
 
     // MARK: - Profile Header (compact card like reference)
@@ -182,7 +271,7 @@ struct ProfileView: View {
                     .foregroundColor(.secondary)
 
                 // Role badge
-                Text(user.role)
+                Text(userRole)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
@@ -578,11 +667,40 @@ struct ProfileView: View {
 
     private func saveChanges() {
         focusedField = nil
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-            isEditing = false
+        isSaving = true
+
+        Task {
+            do {
+                let dobFormatter = DateFormatter()
+                dobFormatter.dateFormat = "yyyy-MM-dd"
+                let dobString = dobFormatter.string(from: dateOfBirth)
+
+                // Map gender to backend format
+                let genderMap: [Gender: String] = [.male: "male", .female: "female", .other: "other"]
+
+                let body: [String: Any] = [
+                    "displayName": fullName,
+                    "emergencyContact": emergencyContact,
+                    "gender": genderMap[selectedGender] ?? "male",
+                    "dateOfBirth": dobString,
+                    "address": address,
+                ]
+
+                let _: APIResponse<APIUser> = try await APIService.shared.putRaw("/auth/profile", body: body)
+
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    isEditing = false
+                }
+                isSaving = false
+                showSaveSuccess = true
+            } catch {
+                print("[Profile] Save failed: \(error.localizedDescription)")
+                isSaving = false
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    isEditing = false
+                }
+            }
         }
-        // In dummy mode, just show success
-        showSaveSuccess = true
     }
 
     private func cancelEditing() {
@@ -590,6 +708,8 @@ struct ProfileView: View {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
             isEditing = false
         }
+        // Reload from backend to discard changes
+        loadProfileFromBackend()
     }
 
     // MARK: - Stats Grid
@@ -608,28 +728,28 @@ struct ProfileView: View {
                 StatCard(
                     icon: "exclamationmark.triangle.fill",
                     iconColor: .aquaDanger,
-                    value: "\(user.stats.sosRequests)",
+                    value: "\(sosSentCount)",
                     label: languageManager.localize("SOS Sent"),
                     trend: nil
                 )
                 StatCard(
                     icon: "checkmark.shield.fill",
                     iconColor: .aquaSafe,
-                    value: "\(user.stats.resolved)",
+                    value: "\(sosResolvedCount)",
                     label: languageManager.localize("Resolved"),
                     trend: nil
                 )
                 StatCard(
                     icon: "person.2.fill",
                     iconColor: .aquaPrimary,
-                    value: "\(user.stats.familyMembers)",
+                    value: "\(familyCount)",
                     label: languageManager.localize("Family"),
                     trend: nil
                 )
                 StatCard(
                     icon: "calendar",
                     iconColor: .orange,
-                    value: user.stats.memberSince,
+                    value: memberSince.isEmpty ? "-" : memberSince,
                     label: languageManager.localize("Member Since"),
                     trend: nil
                 )
@@ -650,49 +770,91 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 20)
 
-            VStack(spacing: 0) {
-                ForEach(Array(user.recentActivities.enumerated()), id: \.offset) { index, activity in
-                    HStack(spacing: 14) {
-                        // Icon
-                        Image(systemName: activity.icon)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(activity.color)
-                            .frame(width: 34, height: 34)
-                            .background(activity.color.opacity(0.12))
-                            .cornerRadius(10)
-
-                        // Info
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(activity.title)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.aquaNavy)
-                            Text(activity.subtitle)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        Text(activity.timeAgo)
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
+            if recentRequests.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "tray")
+                            .font(.system(size: 28))
+                            .foregroundColor(.secondary.opacity(0.4))
+                        Text(languageManager.localize("No recent activity"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 24)
+                    Spacer()
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(Color.aquaCard)
+                        .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
+                )
+                .padding(.horizontal, 16)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(recentRequests.enumerated()), id: \.element.id) { index, request in
+                        let statusIcon: String = {
+                            switch request.status {
+                            case "resolved": return "checkmark.circle.fill"
+                            case "in_progress": return "arrow.triangle.2.circlepath"
+                            case "assigned": return "person.badge.clock"
+                            default: return "exclamationmark.triangle.fill"
+                            }
+                        }()
+                        let statusColor: Color = {
+                            switch request.status {
+                            case "resolved": return .green
+                            case "in_progress": return .aquaPrimary
+                            case "assigned": return .orange
+                            default: return .red
+                            }
+                        }()
 
-                    if index < user.recentActivities.count - 1 {
-                        Divider()
-                            .padding(.leading, 64)
+                        HStack(spacing: 14) {
+                            Image(systemName: statusIcon)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(statusColor)
+                                .frame(width: 34, height: 34)
+                                .background(statusColor.opacity(0.12))
+                                .cornerRadius(10)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("SOS Request")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.aquaNavy)
+                                Text(request.location ?? "")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer()
+
+                            Text(request.sosStatus.displayName)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(statusColor)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(statusColor.opacity(0.12))
+                                .cornerRadius(8)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+
+                        if index < recentRequests.count - 1 {
+                            Divider()
+                                .padding(.leading, 64)
+                        }
                     }
                 }
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(Color.aquaCard)
+                        .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
+                )
+                .padding(.horizontal, 16)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(Color.aquaCard)
-                    .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
-            )
-            .padding(.horizontal, 16)
         }
     }
 
@@ -794,75 +956,3 @@ struct StatCard: View {
     }
 }
 
-// MARK: - Dummy User Data
-
-struct DummyUser {
-    let fullName: String
-    let avatarInitial: String
-    let email: String
-    let phone: String
-    let role: String
-    let location: String
-    let stats: UserStats
-    let recentActivities: [ActivityItem]
-
-    struct UserStats {
-        let sosRequests: Int
-        let resolved: Int
-        let familyMembers: Int
-        let memberSince: String
-    }
-
-    struct ActivityItem {
-        let icon: String
-        let color: Color
-        let title: String
-        let subtitle: String
-        let timeAgo: String
-    }
-
-    static let current = DummyUser(
-        fullName: "Nguyễn Bảo Khang",
-        avatarInitial: "K",
-        email: "khang@aquaguard.app",
-        phone: "0901 234 567",
-        role: "Citizen",
-        location: "Quận 10, TP. Hồ Chí Minh",
-        stats: UserStats(
-            sosRequests: 5,
-            resolved: 3,
-            familyMembers: 4,
-            memberSince: "2025"
-        ),
-        recentActivities: [
-            ActivityItem(
-                icon: "exclamationmark.triangle.fill",
-                color: .red,
-                title: "SOS Request Sent",
-                subtitle: "12 Nguyễn Huệ, Quận 1",
-                timeAgo: "7 phút trước"
-            ),
-            ActivityItem(
-                icon: "person.badge.plus",
-                color: .blue,
-                title: "Family Member Added",
-                subtitle: "Trần Minh Đức joined your circle",
-                timeAgo: "2 giờ trước"
-            ),
-            ActivityItem(
-                icon: "checkmark.circle.fill",
-                color: .green,
-                title: "Request Resolved",
-                subtitle: "78 Trần Hưng Đạo, Quận 1",
-                timeAgo: "5 giờ trước"
-            ),
-            ActivityItem(
-                icon: "mappin.and.ellipse",
-                color: .orange,
-                title: "Location Updated",
-                subtitle: "ĐHBK TP.HCM, Quận 10",
-                timeAgo: "1 ngày trước"
-            ),
-        ]
-    )
-}

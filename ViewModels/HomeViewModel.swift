@@ -6,7 +6,6 @@
 //
 
 import Combine
-import FirebaseAuth
 import Foundation
 
 @MainActor
@@ -18,12 +17,6 @@ class HomeViewModel: ObservableObject {
     @Published var signOutError: String?
 
     func signOut() {
-        do {
-            try Auth.auth().signOut()
-        } catch {
-            signOutError = error.localizedDescription
-        }
-        // Also reset dev skip flag
-        UserDefaults.standard.set(false, forKey: "devSkipLogin")
+        AppState.shared.logout()
     }
 }

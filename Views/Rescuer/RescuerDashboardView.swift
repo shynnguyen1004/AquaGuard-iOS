@@ -4,7 +4,7 @@
 //
 //  Rescuer Dashboard — main mission view.
 //  Header, stats row, 3-tab request list.
-//  Uses dummy data matching guide.md spec.
+//  Connected to backend via RescuerViewModel.
 //
 
 import SwiftUI
@@ -69,36 +69,26 @@ struct SosRequest: Identifiable {
         default: return .green
         }
     }
-
-    // Dummy data
-    static var dummyRequests: [SosRequest] = [
-        SosRequest(id: 1, userName: "Nguyễn Văn Minh", description: "Nước dâng cao 1m, gia đình 4 người cần giải cứu khẩn cấp", location: "123 Nguyễn Huệ, Quận 1, TP.HCM", latitude: 10.7769, longitude: 106.7009, urgency: "critical", status: "pending", assignedName: nil, createdAt: "2025-05-03T08:30:00Z"),
-        SosRequest(id: 2, userName: "Trần Thị Lan", description: "Bị kẹt trên tầng 2, cần ca nô cứu hộ", location: "45 Lê Lợi, Quận 5, TP.HCM", latitude: 10.7540, longitude: 106.6633, urgency: "high", status: "pending", assignedName: nil, createdAt: "2025-05-03T09:15:00Z"),
-        SosRequest(id: 3, userName: "Phạm Văn Đức", description: "Người già cần di chuyển đến nơi an toàn", location: "78 Trần Hưng Đạo, Quận 10", latitude: 10.7628, longitude: 106.6714, urgency: "medium", status: "assigned", assignedName: "Đội Alpha", createdAt: "2025-05-03T07:00:00Z"),
-        SosRequest(id: 4, userName: "Lê Thị Hồng", description: "Đã được cứu, đang ở điểm tập kết", location: "Trường THPT Nguyễn Du", latitude: 10.7865, longitude: 106.6950, urgency: "low", status: "resolved", assignedName: "Đội Alpha", createdAt: "2025-05-02T14:00:00Z"),
-        SosRequest(id: 5, userName: "Hoàng Minh Tuấn", description: "Xe bị ngập, cần hỗ trợ kéo xe và di chuyển", location: "Đường Võ Văn Kiệt, Quận 6", latitude: 10.7481, longitude: 106.6350, urgency: "high", status: "in_progress", assignedName: "Tôi", createdAt: "2025-05-03T06:45:00Z"),
-        SosRequest(id: 6, userName: "Võ Thị Mai", description: "Trẻ em 2 tuổi bị sốt cao, cần y tế khẩn", location: "Hẻm 220 Lý Thường Kiệt, Quận 11", latitude: 10.7700, longitude: 106.6500, urgency: "critical", status: "pending", assignedName: nil, createdAt: "2025-05-03T10:00:00Z"),
-    ]
 }
 
 // MARK: - Rescuer Dashboard View
 
 struct RescuerDashboardView: View {
     @EnvironmentObject var languageManager: LanguageManager
+    @StateObject private var viewModel = RescuerViewModel()
     @State private var selectedTab = 0
-    @State private var requests = SosRequest.dummyRequests
     @State private var toastMessage: String?
 
     private var pendingRequests: [SosRequest] {
-        requests.filter { $0.status == "pending" }
+        viewModel.pendingRequests
     }
 
     private var myMissions: [SosRequest] {
-        requests.filter { $0.status == "assigned" || $0.status == "in_progress" }
+        viewModel.inProgressRequests
     }
 
     private var completedRequests: [SosRequest] {
-        requests.filter { $0.status == "resolved" }
+        viewModel.resolvedRequests
     }
 
     var body: some View {
@@ -123,26 +113,32 @@ struct RescuerDashboardView: View {
                         .pickerStyle(.segmented)
                         .padding(.horizontal, 16)
 
-                        // 4. Request list
-                        let currentList: [SosRequest] = {
-                            switch selectedTab {
-                            case 0: return pendingRequests
-                            case 1: return myMissions
-                            default: return completedRequests
-                            }
-                        }()
-
-                        if currentList.isEmpty {
-                            emptyState
+                        // Loading indicator
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .padding(.vertical, 30)
                         } else {
-                            LazyVStack(spacing: 12) {
-                                ForEach(Array(currentList.enumerated()), id: \.element.id) { index, req in
-                                    rescuerRequestCard(req)
-                                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                                        .animation(.easeOut(duration: 0.3).delay(Double(index) * 0.08), value: selectedTab)
+                            // 4. Request list
+                            let currentList: [SosRequest] = {
+                                switch selectedTab {
+                                case 0: return pendingRequests
+                                case 1: return myMissions
+                                default: return completedRequests
                                 }
+                            }()
+
+                            if currentList.isEmpty {
+                                emptyState
+                            } else {
+                                LazyVStack(spacing: 12) {
+                                    ForEach(Array(currentList.enumerated()), id: \.element.id) { index, req in
+                                        rescuerRequestCard(req)
+                                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                                            .animation(.easeOut(duration: 0.3).delay(Double(index) * 0.08), value: selectedTab)
+                                    }
+                                }
+                                .padding(.horizontal, 16)
                             }
-                            .padding(.horizontal, 16)
                         }
 
                         Spacer(minLength: 30)
@@ -155,6 +151,12 @@ struct RescuerDashboardView: View {
                 if let msg = toastMessage {
                     toastView(msg)
                 }
+            }
+            .onAppear {
+                viewModel.fetchAllRequests()
+            }
+            .refreshable {
+                viewModel.fetchAllRequests()
             }
         }
     }
@@ -172,7 +174,7 @@ struct RescuerDashboardView: View {
                     Text("Xin chào 🚒")
                         .font(.headline)
                         .foregroundColor(.aquaNavy)
-                    Text("Nguyễn Bảo Khang")
+                    Text(viewModel.rescuerDisplayName)
                         .font(.caption)
                         .foregroundColor(.aquaSubtitle)
                 }
@@ -298,13 +300,20 @@ struct RescuerDashboardView: View {
             // Actions
             if selectedTab == 0 {
                 // Pending: "Nhận nhiệm vụ"
-                Button(action: { acceptRequest(request) }) {
+                Button(action: {
+                    viewModel.acceptRequest(request)
+                    showToast("Đã nhận nhiệm vụ")
+                }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "hand.raised.fill")
-                            .font(.system(size: 12))
-                        Text("Nhận nhiệm vụ")
-                            .font(.caption)
-                            .fontWeight(.bold)
+                        if viewModel.isActioning {
+                            ProgressView().scaleEffect(0.7).tint(.white)
+                        } else {
+                            Image(systemName: "hand.raised.fill")
+                                .font(.system(size: 12))
+                            Text("Nhận nhiệm vụ")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                        }
                     }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -312,10 +321,14 @@ struct RescuerDashboardView: View {
                     .background(Color.aquaPrimary)
                     .cornerRadius(10)
                 }
+                .disabled(viewModel.isActioning)
             } else if selectedTab == 1 {
                 // Active: "Hoàn thành" + "Huỷ"
                 HStack(spacing: 10) {
-                    Button(action: { completeRequest(request) }) {
+                    Button(action: {
+                        viewModel.completeRequest(request)
+                        showToast("Hoàn thành")
+                    }) {
                         HStack(spacing: 5) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 12))
@@ -329,8 +342,12 @@ struct RescuerDashboardView: View {
                         .background(Color.aquaPrimary)
                         .cornerRadius(10)
                     }
+                    .disabled(viewModel.isActioning)
 
-                    Button(action: { cancelRequest(request) }) {
+                    Button(action: {
+                        viewModel.cancelRequest(request)
+                        showToast("Đã huỷ")
+                    }) {
                         HStack(spacing: 5) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 10, weight: .semibold))
@@ -348,6 +365,7 @@ struct RescuerDashboardView: View {
                                 .stroke(Color.aquaInputBorder, lineWidth: 1)
                         )
                     }
+                    .disabled(viewModel.isActioning)
                 }
             }
             // Tab 2 (completed): no actions
@@ -373,29 +391,6 @@ struct RescuerDashboardView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
-    }
-
-    // MARK: - Actions
-
-    private func acceptRequest(_ req: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == req.id }) {
-            requests[idx].status = "in_progress"
-            showToast("Đã nhận nhiệm vụ")
-        }
-    }
-
-    private func completeRequest(_ req: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == req.id }) {
-            requests[idx].status = "resolved"
-            showToast("Hoàn thành")
-        }
-    }
-
-    private func cancelRequest(_ req: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == req.id }) {
-            requests[idx].status = "pending"
-            showToast("Đã huỷ")
-        }
     }
 
     // MARK: - Toast

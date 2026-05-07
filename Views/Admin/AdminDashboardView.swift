@@ -38,17 +38,17 @@ extension GuideAdminUser {
 
 struct AdminDashboardView: View {
     @EnvironmentObject var languageManager: LanguageManager
+    @StateObject private var viewModel = RescuerViewModel()
 
     private let users = GuideAdminUser.dummyUsers
-    private let requests = SosRequest.dummyRequests
 
     private var totalUsers: Int { users.count }
     private var citizenCount: Int { users.filter { $0.role == "citizen" }.count }
     private var rescuerCount: Int { users.filter { $0.role == "rescuer" }.count }
     private var adminCount: Int { users.filter { $0.role == "admin" }.count }
-    private var pendingCount: Int { requests.filter { $0.status == "pending" }.count }
-    private var activeCount: Int { requests.filter { $0.status == "in_progress" || $0.status == "assigned" }.count }
-    private var resolvedCount: Int { requests.filter { $0.status == "resolved" }.count }
+    private var pendingCount: Int { viewModel.pendingRequests.count }
+    private var activeCount: Int { viewModel.inProgressRequests.count }
+    private var resolvedCount: Int { viewModel.resolvedRequests.count }
     private var rescuers: [GuideAdminUser] { users.filter { $0.role == "rescuer" } }
 
     var body: some View {
@@ -73,6 +73,9 @@ struct AdminDashboardView: View {
             }
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
+            .onAppear {
+                viewModel.fetchAllRequests()
+            }
         }
     }
 

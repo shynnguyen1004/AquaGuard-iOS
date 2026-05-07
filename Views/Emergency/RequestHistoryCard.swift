@@ -37,7 +37,7 @@ struct RequestHistoryCard: View {
                 HStack(spacing: 4) {
                     Image(systemName: request.status.icon)
                         .font(.caption2)
-                    Text(request.status.rawValue)
+                    Text(request.status.displayName)
                         .font(.caption)
                         .fontWeight(.medium)
                 }

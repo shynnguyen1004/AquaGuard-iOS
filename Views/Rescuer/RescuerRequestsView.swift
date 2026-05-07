@@ -5,6 +5,7 @@
 //  Rescuer "Yêu cầu" tab — Full rescue request management.
 //  Stats row, 4-tab filter, request cards, detail sheet.
 //  Flow: Pending → Accept → In Progress (Complete/Cancel) → Resolved.
+//  Connected to backend via RescuerViewModel.
 //
 
 import SwiftUI
@@ -24,16 +25,16 @@ enum RescuerSheetType: Identifiable {
 
 struct RescuerRequestsView: View {
     @EnvironmentObject var languageManager: LanguageManager
-    @State private var requests = SosRequest.dummyRequests
+    @StateObject private var viewModel = RescuerViewModel()
     @State private var selectedTab = 0  // 0=All, 1=Pending, 2=InProgress, 3=Resolved
     @State private var activeSheet: RescuerSheetType?
     @State private var toastMessage: String?
 
     // Computed filters
-    private var allRequests: [SosRequest] { requests }
-    private var pendingRequests: [SosRequest] { requests.filter { $0.status == "pending" } }
-    private var inProgressRequests: [SosRequest] { requests.filter { $0.status == "in_progress" || $0.status == "assigned" } }
-    private var resolvedRequests: [SosRequest] { requests.filter { $0.status == "resolved" } }
+    private var allRequests: [SosRequest] { viewModel.allRequests }
+    private var pendingRequests: [SosRequest] { viewModel.pendingRequests }
+    private var inProgressRequests: [SosRequest] { viewModel.inProgressRequests }
+    private var resolvedRequests: [SosRequest] { viewModel.resolvedRequests }
 
     private var currentList: [SosRequest] {
         switch selectedTab {
@@ -76,21 +77,27 @@ struct RescuerRequestsView: View {
                         }
                         .padding(.horizontal, 20)
 
-                        // Request list
-                        if currentList.isEmpty {
-                            emptyState
+                        // Loading indicator
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .padding(.vertical, 30)
                         } else {
-                            LazyVStack(spacing: 12) {
-                                ForEach(Array(currentList.sorted(by: { urgencyPriority($0.urgency) > urgencyPriority($1.urgency) }).enumerated()), id: \.element.id) { index, req in
-                                    requestCard(req)
-                                        .onTapGesture {
-                                            activeSheet = .detail(req)
-                                        }
-                                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                                        .animation(.easeOut(duration: 0.25).delay(Double(index) * 0.06), value: selectedTab)
+                            // Request list
+                            if currentList.isEmpty {
+                                emptyState
+                            } else {
+                                LazyVStack(spacing: 12) {
+                                    ForEach(Array(currentList.sorted(by: { urgencyPriority($0.urgency) > urgencyPriority($1.urgency) }).enumerated()), id: \.element.id) { index, req in
+                                        requestCard(req)
+                                            .onTapGesture {
+                                                activeSheet = .detail(req)
+                                            }
+                                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                                            .animation(.easeOut(duration: 0.25).delay(Double(index) * 0.06), value: selectedTab)
+                                    }
                                 }
+                                .padding(.horizontal, 16)
                             }
-                            .padding(.horizontal, 16)
                         }
 
                         Spacer(minLength: 30)
@@ -112,6 +119,12 @@ struct RescuerRequestsView: View {
                 if let msg = toastMessage {
                     toastBanner(msg)
                 }
+            }
+            .onAppear {
+                viewModel.fetchAllRequests()
+            }
+            .refreshable {
+                viewModel.fetchAllRequests()
             }
         }
     }
@@ -138,14 +151,16 @@ struct RescuerRequestsView: View {
             }
 
             // Team name
-            HStack(spacing: 5) {
-                Text("Team:")
-                    .font(.caption)
-                    .foregroundColor(.aquaSubtitle)
-                Text("Đội Cứu Hộ Alpha")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.aquaPrimary)
+            if let teamName = viewModel.teamName {
+                HStack(spacing: 5) {
+                    Text("Team:")
+                        .font(.caption)
+                        .foregroundColor(.aquaSubtitle)
+                    Text(teamName)
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.aquaPrimary)
+                }
             }
         }
         .padding(16)
@@ -320,13 +335,20 @@ struct RescuerRequestsView: View {
 
             // Action buttons based on status
             if request.status == "pending" {
-                Button(action: { acceptRequest(request) }) {
+                Button(action: {
+                    viewModel.acceptRequest(request)
+                    showToast("Đã nhận nhiệm vụ ✓")
+                }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                        Text("Accept")
-                            .font(.caption)
-                            .fontWeight(.bold)
+                        if viewModel.isActioning {
+                            ProgressView().scaleEffect(0.7).tint(.white)
+                        } else {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                            Text("Accept")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                        }
                     }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -334,6 +356,7 @@ struct RescuerRequestsView: View {
                     .background(Color.aquaPrimary)
                     .cornerRadius(10)
                 }
+                .disabled(viewModel.isActioning)
             }
 
             // In-progress: 3 buttons (Tracking, Complete, Cancel)
@@ -355,7 +378,10 @@ struct RescuerRequestsView: View {
                         .cornerRadius(9)
                     }
 
-                    Button(action: { completeRequest(request) }) {
+                    Button(action: {
+                        viewModel.completeRequest(request)
+                        showToast("Hoàn thành ✓")
+                    }) {
                         HStack(spacing: 4) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 11))
@@ -368,8 +394,12 @@ struct RescuerRequestsView: View {
                         .background(Color.green.opacity(0.85))
                         .cornerRadius(9)
                     }
+                    .disabled(viewModel.isActioning)
 
-                    Button(action: { cancelRequest(request) }) {
+                    Button(action: {
+                        viewModel.cancelRequest(request)
+                        showToast("Đã huỷ nhiệm vụ")
+                    }) {
                         HStack(spacing: 4) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 10, weight: .semibold))
@@ -386,6 +416,7 @@ struct RescuerRequestsView: View {
                                 .stroke(Color.aquaInputBorder, lineWidth: 1)
                         )
                     }
+                    .disabled(viewModel.isActioning)
                 }
             }
         }
@@ -485,8 +516,9 @@ struct RescuerRequestsView: View {
                     // Actions based on status
                     if request.status == "pending" {
                         Button(action: {
-                            acceptRequest(request)
+                            viewModel.acceptRequest(request)
                             activeSheet = nil
+                            showToast("Đã nhận nhiệm vụ ✓")
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "checkmark")
@@ -501,6 +533,7 @@ struct RescuerRequestsView: View {
                             .background(Color.aquaPrimary)
                             .cornerRadius(12)
                         }
+                        .disabled(viewModel.isActioning)
                     }
 
                     if request.status == "in_progress" || request.status == "assigned" {
@@ -530,8 +563,9 @@ struct RescuerRequestsView: View {
                             HStack(spacing: 10) {
                                 // Complete
                                 Button(action: {
-                                    completeRequest(request)
+                                    viewModel.completeRequest(request)
                                     activeSheet = nil
+                                    showToast("Hoàn thành ✓")
                                 }) {
                                     HStack(spacing: 5) {
                                         Image(systemName: "checkmark.circle.fill")
@@ -546,11 +580,13 @@ struct RescuerRequestsView: View {
                                     .background(Color.green.opacity(0.85))
                                     .cornerRadius(10)
                                 }
+                                .disabled(viewModel.isActioning)
 
                                 // Cancel
                                 Button(action: {
-                                    cancelRequest(request)
+                                    viewModel.cancelRequest(request)
                                     activeSheet = nil
+                                    showToast("Đã huỷ nhiệm vụ")
                                 }) {
                                     HStack(spacing: 5) {
                                         Image(systemName: "xmark")
@@ -569,6 +605,7 @@ struct RescuerRequestsView: View {
                                             .stroke(Color.aquaInputBorder, lineWidth: 1)
                                     )
                                 }
+                                .disabled(viewModel.isActioning)
                             }
                         }
                     }
@@ -603,29 +640,6 @@ struct RescuerRequestsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
-    }
-
-    // MARK: - Actions
-
-    private func acceptRequest(_ req: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == req.id }) {
-            withAnimation { requests[idx].status = "in_progress" }
-            showToast("Đã nhận nhiệm vụ ✓")
-        }
-    }
-
-    private func completeRequest(_ req: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == req.id }) {
-            withAnimation { requests[idx].status = "resolved" }
-            showToast("Hoàn thành ✓")
-        }
-    }
-
-    private func cancelRequest(_ req: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == req.id }) {
-            withAnimation { requests[idx].status = "pending" }
-            showToast("Đã huỷ nhiệm vụ")
-        }
     }
 
     // MARK: - Helpers

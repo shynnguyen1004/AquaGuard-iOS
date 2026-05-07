@@ -5,7 +5,7 @@
 //  Created by Shyn Nguyễn on 15/12/25.
 //
 
-import FirebaseAuth
+
 import SwiftUI
 
 struct HomeView: View {
@@ -14,6 +14,7 @@ struct HomeView: View {
     }
 
     @StateObject var viewModel = HomeViewModel()
+    @StateObject var familyVM = FamilyViewModel()
     @EnvironmentObject var languageManager: LanguageManager
     @State private var showLogoutAlert = false
 
@@ -39,7 +40,7 @@ struct HomeView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                             Text(
-                                Auth.auth().currentUser?.displayName
+                                TokenManager.shared.currentUser?.displayName
                                     ?? languageManager.localize("Responder Alpha")
                             )
                             .font(.title2)
@@ -54,8 +55,10 @@ struct HomeView: View {
                          */
                         // Avatar → opens Settings
                         Button(action: { showSettings = true }) {
-                            if let photoURL = Auth.auth().currentUser?.photoURL {
-                                AsyncImage(url: photoURL) { phase in
+                            if let avatarUrl = TokenManager.shared.currentUser?.avatarUrl,
+                               !avatarUrl.isEmpty,
+                               let url = URL(string: avatarUrl) {
+                                AsyncImage(url: url) { phase in
                                     switch phase {
                                     case .success(let image):
                                         image
@@ -159,11 +162,27 @@ struct HomeView: View {
                         }
                         .padding(.horizontal)
 
-                        ForEach(FamilyMember.dummyMembers) { member in
+                        ForEach(familyVM.familyMembers) { member in
                             FamilySafetyRow(member: member)
                                 .onTapGesture { showFamily = true }
                         }
                         .padding(.horizontal)
+
+                        if familyVM.familyMembers.isEmpty && !familyVM.isLoading {
+                            VStack(spacing: 8) {
+                                Image(systemName: "person.2.slash")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.secondary.opacity(0.4))
+                                Text(languageManager.localize("No family members yet"))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text(languageManager.localize("Add family members to track their safety"))
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary.opacity(0.7))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                        }
                     }
                 }
                 .padding(.top)
@@ -171,6 +190,9 @@ struct HomeView: View {
             .background(Color.aquaBackground)
             .navigationTitle("AquaGuard")
             .navigationBarHidden(true)
+            .onAppear {
+                familyVM.fetchMembers()
+            }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
                     .environmentObject(languageManager)

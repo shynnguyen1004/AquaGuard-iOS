@@ -4,6 +4,7 @@
 //
 //  Family safety network — view connected members' safety status,
 //  send friend requests by phone number, accept incoming requests.
+//  Now uses backend API instead of dummy data.
 //
 //  Created by Shyn Nguyễn on 27/04/26.
 //
@@ -16,8 +17,7 @@ struct FamilyView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selectedTab: Int
 
-    @State private var familyMembers = FamilyMember.dummyMembers
-    @State private var pendingRequests = FriendRequest.dummyRequests
+    @StateObject private var viewModel = FamilyViewModel()
     @State private var searchPhone = ""
     @State private var showAddSheet = false
     @State private var showRequestSent = false
@@ -30,7 +30,7 @@ struct FamilyView: View {
                     safetySummaryCard
 
                     // MARK: - Pending Requests
-                    if !pendingRequests.isEmpty {
+                    if !viewModel.pendingRequests.isEmpty {
                         pendingRequestsSection
                     }
 
@@ -67,6 +67,7 @@ struct FamilyView: View {
             }
             .sheet(isPresented: $showAddSheet) {
                 AddFamilySheet(
+                    familyVM: viewModel,
                     searchPhone: $searchPhone,
                     showRequestSent: $showRequestSent
                 )
@@ -77,14 +78,18 @@ struct FamilyView: View {
             } message: {
                 Text(languageManager.localize("Your friend request has been sent. They will appear here once they accept."))
             }
+            .onAppear {
+                viewModel.fetchMembers()
+                viewModel.fetchPendingRequests()
+            }
         }
     }
 
     // MARK: - Safety Summary Card
 
     private var safetySummaryCard: some View {
-        let safeCount = familyMembers.filter { $0.status == .safe }.count
-        let warningCount = familyMembers.filter { $0.status == .warning || $0.status == .danger }.count
+        let safeCount = viewModel.familyMembers.filter { $0.status == .safe }.count
+        let warningCount = viewModel.familyMembers.filter { $0.status == .warning || $0.status == .danger }.count
 
         return VStack(spacing: 12) {
             HStack(spacing: 20) {
@@ -146,7 +151,7 @@ struct FamilyView: View {
                             .font(.system(size: 20))
                             .foregroundColor(.aquaPrimary)
                     }
-                    Text("\(familyMembers.count)")
+                    Text("\(viewModel.familyMembers.count)")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.aquaNavy)
@@ -175,7 +180,7 @@ struct FamilyView: View {
                     .font(.headline)
                     .foregroundColor(.aquaNavy)
                 Spacer()
-                Text("\(pendingRequests.count)")
+                Text("\(viewModel.pendingRequests.count)")
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(.orange)
@@ -186,24 +191,26 @@ struct FamilyView: View {
             }
             .padding(.horizontal, 20)
 
-            ForEach(pendingRequests) { request in
+            ForEach(viewModel.pendingRequests) { request in
+                let initial = String(request.from.displayName.prefix(1)).uppercased()
+
                 HStack(spacing: 12) {
                     // Avatar
                     Circle()
-                        .fill(request.avatarColor)
+                        .fill(Color.aquaPrimary)
                         .frame(width: 44, height: 44)
                         .overlay(
-                            Text(request.avatarInitial)
+                            Text(initial)
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(.white)
                         )
 
                     // Info
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(request.name)
+                        Text(request.from.displayName)
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.aquaNavy)
-                        Text(request.phone + " · " + request.timeString)
+                        Text(request.from.phoneNumber)
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
@@ -213,21 +220,7 @@ struct FamilyView: View {
                     // Accept
                     Button {
                         withAnimation {
-                            // Move to family
-                            let newMember = FamilyMember(
-                                name: request.name,
-                                phone: request.phone,
-                                avatarInitial: request.avatarInitial,
-                                avatarColor: request.avatarColor,
-                                status: .safe,
-                                location: "Đang cập nhật...",
-                                latitude: 10.7800,
-                                longitude: 106.6950,
-                                lastSeen: Date(),
-                                relationship: "Bạn"
-                            )
-                            familyMembers.append(newMember)
-                            pendingRequests.removeAll { $0.id == request.id }
+                            viewModel.acceptRequest(id: request.id)
                         }
                     } label: {
                         Text(languageManager.localize("Accept"))
@@ -242,7 +235,7 @@ struct FamilyView: View {
                     // Decline
                     Button {
                         withAnimation {
-                            pendingRequests.removeAll { $0.id == request.id }
+                            viewModel.rejectRequest(id: request.id)
                         }
                     } label: {
                         Image(systemName: "xmark")
@@ -281,9 +274,34 @@ struct FamilyView: View {
 
             viewOnMapBanner
 
-            ForEach(familyMembers) { member in
-                FamilyMemberRow(member: member)
-                    .padding(.horizontal, 16)
+            if viewModel.isLoading {
+                VStack {
+                    ProgressView()
+                    Text(languageManager.localize("Loading..."))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+            } else if viewModel.familyMembers.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "person.2.slash")
+                        .font(.system(size: 32))
+                        .foregroundColor(.secondary.opacity(0.4))
+                    Text(languageManager.localize("No family members yet"))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text(languageManager.localize("Tap + to add family members"))
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.7))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                ForEach(viewModel.familyMembers) { member in
+                    FamilyMemberRow(member: member)
+                        .padding(.horizontal, 16)
+                }
             }
         }
     }
@@ -421,12 +439,9 @@ struct AddFamilySheet: View {
     @EnvironmentObject var languageManager: LanguageManager
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
+    @ObservedObject var familyVM: FamilyViewModel
     @Binding var searchPhone: String
     @Binding var showRequestSent: Bool
-
-    // Dummy search result
-    @State private var searchResult: (name: String, phone: String)? = nil
-    @State private var isSearching = false
 
     var body: some View {
         NavigationStack {
@@ -471,16 +486,7 @@ struct AddFamilySheet: View {
                     )
 
                     Button {
-                        // Simulate search
-                        isSearching = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            if searchPhone.count >= 9 {
-                                searchResult = (name: "Nguyễn Văn Tùng", phone: searchPhone)
-                            } else {
-                                searchResult = nil
-                            }
-                            isSearching = false
-                        }
+                        familyVM.searchByPhone(searchPhone)
                     } label: {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 16, weight: .semibold))
@@ -493,26 +499,28 @@ struct AddFamilySheet: View {
                 .padding(.horizontal, 20)
 
                 // Search result
-                if isSearching {
+                if familyVM.isSearching {
                     ProgressView()
                         .padding(.top, 20)
-                } else if let result = searchResult {
+                } else if let result = familyVM.searchResult {
                     // Found user
+                    let initial = String(result.displayName.prefix(1)).uppercased()
+
                     HStack(spacing: 14) {
                         Circle()
                             .fill(Color.aquaPrimary)
                             .frame(width: 50, height: 50)
                             .overlay(
-                                Text("T")
+                                Text(initial)
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(.white)
                             )
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(result.name)
+                            Text(result.displayName)
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.aquaNavy)
-                            Text(result.phone)
+                            Text(result.phoneNumber)
                                 .font(.system(size: 13))
                                 .foregroundColor(.secondary)
                         }
@@ -520,9 +528,9 @@ struct AddFamilySheet: View {
                         Spacer()
 
                         Button {
+                            familyVM.sendRequest(receiverId: result.id, relation: "")
                             showRequestSent = true
                             searchPhone = ""
-                            searchResult = nil
                             dismiss()
                         } label: {
                             HStack(spacing: 5) {
@@ -546,7 +554,7 @@ struct AddFamilySheet: View {
                             .stroke(Color.aquaPrimary.opacity(0.3), lineWidth: 1)
                     )
                     .padding(.horizontal, 20)
-                } else if !searchPhone.isEmpty {
+                } else if familyVM.searchError != nil && !searchPhone.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "person.slash.fill")
                             .font(.system(size: 30))

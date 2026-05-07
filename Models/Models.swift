@@ -6,7 +6,6 @@
 //
 
 import CoreLocation
-import FirebaseFirestore
 import Foundation
 import SwiftUI
 
@@ -25,23 +24,25 @@ enum SeverityLevel: String, Codable {
 
 // FloodZone model with Hashable conformance
 struct FloodZone: Identifiable, Codable, Hashable {
-    @DocumentID var id: String?
+    var id: String?
 
     var name: String
-    var location: GeoPoint
+    var latitude: Double
+    var longitude: Double
     var severity: SeverityLevel
     var waterLevel: Double
 
     enum CodingKeys: String, CodingKey {
         case id
         case name
-        case location
+        case latitude
+        case longitude
         case severity
         case waterLevel = "water_level"
     }
 
     var coordinate: CLLocationCoordinate2D {
-        return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
     // MARK: Equatable & Hashable
@@ -71,31 +72,31 @@ class MockData {
     static let floodZones = [
         FloodZone(
             name: "Phu Nhuan",
-            location: GeoPoint(latitude: 10.794211, longitude: 106.677869),
+            latitude: 10.794211, longitude: 106.677869,
             severity: .moderate,
             waterLevel: 0.5),
 
         FloodZone(
             name: "Bui Vien Walking Street",
-            location: GeoPoint(latitude: 10.767308, longitude: 106.693755),
+            latitude: 10.767308, longitude: 106.693755,
             severity: .critical,
             waterLevel: 1.4),
 
         FloodZone(
             name: "An Dong Market",
-            location: GeoPoint(latitude: 10.757304, longitude: 106.672451),
+            latitude: 10.757304, longitude: 106.672451,
             severity: .severe,
             waterLevel: 0.9),
 
         FloodZone(
             name: "HCMUT Football Field",
-            location: GeoPoint(latitude: 10.772741, longitude: 106.659507),
+            latitude: 10.772741, longitude: 106.659507,
             severity: .low,
             waterLevel: 0.1),
 
         FloodZone(
             name: "Nam Ky Khoi Nghia x Dien Bien Phu",
-            location: GeoPoint(latitude: 10.783487, longitude: 106.690790),
+            latitude: 10.783487, longitude: 106.690790,
             severity: .low,
             waterLevel: 0.1),
     ]
@@ -164,15 +165,29 @@ class MockData {
 
 // MARK: - SOS Request Status
 enum SOSStatus: String, Codable {
-    case pending = "Pending"
-    case inProgress = "In Progress"
-    case resolved = "Resolved"
+    case pending = "pending"
+    case inProgress = "in_progress"
+    case resolved = "resolved"
+    case assigned = "assigned"
+    case cancelled = "cancelled"
+
+    var displayName: String {
+        switch self {
+        case .pending: return "Pending"
+        case .inProgress: return "In Progress"
+        case .resolved: return "Resolved"
+        case .assigned: return "Assigned"
+        case .cancelled: return "Cancelled"
+        }
+    }
 
     var color: Color {
         switch self {
         case .pending: return .aquaWarning
         case .inProgress: return .aquaPrimary
         case .resolved: return .aquaSafe
+        case .assigned: return .orange
+        case .cancelled: return .gray
         }
     }
 
@@ -181,6 +196,8 @@ enum SOSStatus: String, Codable {
         case .pending: return "clock.fill"
         case .inProgress: return "arrow.triangle.2.circlepath"
         case .resolved: return "checkmark.circle.fill"
+        case .assigned: return "person.badge.clock"
+        case .cancelled: return "xmark.circle.fill"
         }
     }
 }
@@ -207,9 +224,19 @@ struct EmergencyRequest: Identifiable {
     let status: SOSStatus
     let timestamp: Date
     let rescuerId: String?       // Assigned rescuer (for tracking)
+    let rescuerLatitude: Double? // Real rescuer location from backend
+    let rescuerLongitude: Double? // Real rescuer location from backend
+    let rescuerName: String?     // Rescuer display name
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    /// Real rescuer coordinate (nil if not assigned or no location)
+    var rescuerCoordinate: CLLocationCoordinate2D? {
+        guard let lat = rescuerLatitude, let lng = rescuerLongitude,
+              lat != 0, lng != 0 else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lng)
     }
 
     var locationString: String {
