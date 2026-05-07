@@ -91,6 +91,86 @@ struct APIRescueRequest: Decodable, Identifiable {
     let assignedGroupName: String?
     let lastCancelledByName: String?
 
+    enum CodingKeys: String, CodingKey {
+        case id, location, description, latitude, longitude, images, urgency, status
+        case userId, assignedTo, assignedGroupId, acceptedMode
+        case rescuerLatitude, rescuerLongitude
+        case createdAt, updatedAt, assignedAt, resolvedAt
+        case lastCancelledBy, lastCancelledAt
+        case userName, userPhone, userGender, userDateOfBirth, userAge, userAddress
+        case assignedName, assignedGroupName, lastCancelledByName
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try c.decode(Int.self, forKey: .id)
+        userId = try c.decodeIfPresent(Int.self, forKey: .userId)
+        location = try c.decodeIfPresent(String.self, forKey: .location)
+        description = try c.decodeIfPresent(String.self, forKey: .description)
+        latitude = try c.decodeIfPresent(Double.self, forKey: .latitude)
+        longitude = try c.decodeIfPresent(Double.self, forKey: .longitude)
+        urgency = try c.decodeIfPresent(String.self, forKey: .urgency)
+        status = try c.decode(String.self, forKey: .status)
+        assignedTo = try c.decodeIfPresent(Int.self, forKey: .assignedTo)
+        assignedGroupId = try c.decodeIfPresent(Int.self, forKey: .assignedGroupId)
+        acceptedMode = try c.decodeIfPresent(String.self, forKey: .acceptedMode)
+        rescuerLatitude = try c.decodeIfPresent(Double.self, forKey: .rescuerLatitude)
+        rescuerLongitude = try c.decodeIfPresent(Double.self, forKey: .rescuerLongitude)
+        createdAt = try c.decodeIfPresent(String.self, forKey: .createdAt)
+        updatedAt = try c.decodeIfPresent(String.self, forKey: .updatedAt)
+        assignedAt = try c.decodeIfPresent(String.self, forKey: .assignedAt)
+        resolvedAt = try c.decodeIfPresent(String.self, forKey: .resolvedAt)
+        lastCancelledBy = try c.decodeIfPresent(Int.self, forKey: .lastCancelledBy)
+        lastCancelledAt = try c.decodeIfPresent(String.self, forKey: .lastCancelledAt)
+        userName = try c.decodeIfPresent(String.self, forKey: .userName)
+        userPhone = try c.decodeIfPresent(String.self, forKey: .userPhone)
+        userGender = try c.decodeIfPresent(String.self, forKey: .userGender)
+        userDateOfBirth = try c.decodeIfPresent(String.self, forKey: .userDateOfBirth)
+        userAge = try c.decodeIfPresent(Int.self, forKey: .userAge)
+        userAddress = try c.decodeIfPresent(String.self, forKey: .userAddress)
+        assignedName = try c.decodeIfPresent(String.self, forKey: .assignedName)
+        assignedGroupName = try c.decodeIfPresent(String.self, forKey: .assignedGroupName)
+        lastCancelledByName = try c.decodeIfPresent(String.self, forKey: .lastCancelledByName)
+
+        // ── Flexible images parsing ──
+        // Backend may return images as:
+        //   1. JSON array:   ["url1","url2"]
+        //   2. JSON string:  "[\"url1\",\"url2\"]"
+        //   3. Postgres literal: "{url1,url2}"
+        //   4. Single string: "url1"
+        //   5. null
+        if let arr = try? c.decodeIfPresent([String].self, forKey: .images) {
+            images = arr
+        } else if let str = try? c.decodeIfPresent(String.self, forKey: .images) {
+            // Try JSON-encoded string: "[\"url1\",\"url2\"]"
+            if str.hasPrefix("["),
+               let data = str.data(using: .utf8),
+               let parsed = try? JSONDecoder().decode([String].self, from: data) {
+                images = parsed
+            }
+            // Try Postgres array literal: "{url1,url2}"
+            else if str.hasPrefix("{") && str.hasSuffix("}") {
+                let inner = String(str.dropFirst().dropLast())
+                images = inner.isEmpty ? [] : inner.components(separatedBy: ",").map {
+                    $0.trimmingCharacters(in: .init(charactersIn: "\" "))
+                }
+            }
+            // Single URL string
+            else if !str.isEmpty {
+                images = [str]
+            } else {
+                images = nil
+            }
+        } else {
+            images = nil
+        }
+
+        if let imgs = images, !imgs.isEmpty {
+            print("[APIRescueRequest] 🖼️ #\(id) decoded images: \(imgs)")
+        }
+    }
+
     // MARK: Computed
 
     var sosStatus: SOSStatus {

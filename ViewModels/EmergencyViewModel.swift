@@ -100,12 +100,25 @@ class EmergencyViewModel: ObservableObject {
 
                 if let apiRequests = response.data {
                     self.requests = apiRequests.map { r in
-                        EmergencyRequest(
+                        // Filter valid image URLs (non-empty, valid URL format)
+                        let validImageURLs = (r.images ?? []).filter { urlStr in
+                            guard !urlStr.isEmpty, URL(string: urlStr) != nil else {
+                                print("[EmergencyVM] ⚠️ Invalid image URL skipped: '\(urlStr)'")
+                                return false
+                            }
+                            return true
+                        }
+
+                        if !validImageURLs.isEmpty {
+                            print("[EmergencyVM] 🖼️ Request #\(r.id) has \(validImageURLs.count) images: \(validImageURLs)")
+                        }
+
+                        return EmergencyRequest(
                             id: "\(r.id)",
                             userId: "\(r.userId ?? 0)",
                             localImage: nil,
-                            photoURL: r.images?.first,
-                            imageURLs: r.images ?? [],
+                            photoURL: validImageURLs.first,
+                            imageURLs: validImageURLs,
                             latitude: r.latitude ?? 0,
                             longitude: r.longitude ?? 0,
                             address: r.location ?? "",
