@@ -5,7 +5,7 @@
 //  Unified view model for the Emergency tab.
 //  Handles both Quick SOS (camera capture → send) and
 //  Detailed Rescue Request (form → send) flows.
-//  Currently uses in-memory dummy data for testing.
+//  Now uses backend REST API instead of in-memory dummy data.
 //
 
 import Combine
@@ -18,7 +18,7 @@ class EmergencyViewModel: ObservableObject {
 
     // MARK: - Request History
 
-    /// All emergency requests (newest first) — stored in memory
+    /// All emergency requests (newest first) — fetched from backend
     @Published var requests: [EmergencyRequest] = []
 
     /// Currently selected request (for tracking sheet)
@@ -59,6 +59,7 @@ class EmergencyViewModel: ObservableObject {
     @Published var showErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     @Published var showTrackingSheet: Bool = false
+    @Published var isLoadingHistory: Bool = false
 
     // MARK: - Dependencies
 
@@ -82,8 +83,51 @@ class EmergencyViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Load mock history
-        loadMockData()
+        // Load real data from backend
+        fetchMyRequests()
+    }
+
+    // MARK: - Fetch My Requests from Backend
+
+    func fetchMyRequests() {
+        guard TokenManager.shared.isAuthenticated else { return }
+
+        isLoadingHistory = true
+
+        Task {
+            do {
+                let response: APIResponse<[APIRescueRequest]> = try await APIService.shared.getRaw("/sos/my")
+
+                if let apiRequests = response.data {
+                    self.requests = apiRequests.map { r in
+                        EmergencyRequest(
+                            id: "\(r.id)",
+                            userId: "\(r.userId ?? 0)",
+                            localImage: nil,
+                            photoURL: r.images?.first,
+                            latitude: r.latitude ?? 0,
+                            longitude: r.longitude ?? 0,
+                            address: r.location ?? "",
+                            description: r.description ?? "",
+                            requestType: .quickSOS,
+                            status: r.sosStatus,
+                            timestamp: r.createdDate,
+                            rescuerId: r.assignedTo != nil ? "\(r.assignedTo!)" : nil,
+                            rescuerLatitude: r.rescuerLatitude,
+                            rescuerLongitude: r.rescuerLongitude,
+                            rescuerName: r.assignedName
+                        )
+                    }
+                    print("[EmergencyVM] Loaded \(self.requests.count) requests from backend")
+                } else {
+                    print("[EmergencyVM] API returned success=\(response.success) but data is nil. message=\(response.message ?? "none")")
+                }
+                self.isLoadingHistory = false
+            } catch {
+                print("[EmergencyVM] ❌ Failed to fetch requests: \(error)")
+                self.isLoadingHistory = false
+            }
+        }
     }
 
     // MARK: - Reverse Geocoding
@@ -101,11 +145,7 @@ class EmergencyViewModel: ObservableObject {
             Task { @MainActor in
                 guard let self = self else { return }
                 if let placemark = placemarks?.first {
-                    // Strategy: build the most detailed address possible
-                    // 1. Try combining specific fields for maximum detail
                     var streetParts: [String] = []
-
-                    // House number + Street (e.g. "192 Nguyễn Đình Chiểu")
                     if let number = placemark.subThoroughfare {
                         streetParts.append(number)
                     }
@@ -114,37 +154,24 @@ class EmergencyViewModel: ObservableObject {
                     }
 
                     var fullParts: [String] = []
-
-                    // Street address
                     if !streetParts.isEmpty {
                         fullParts.append(streetParts.joined(separator: " "))
                     }
-
-                    // Ward/Phường
                     if let ward = placemark.subLocality {
                         fullParts.append(ward)
                     }
-
-                    // District/Quận
                     if let district = placemark.subAdministrativeArea {
                         fullParts.append(district)
                     }
-
-                    // City
                     if let city = placemark.locality {
                         fullParts.append(city)
                     }
 
-                    // 2. If we got a detailed address, use it
                     if fullParts.count >= 2 {
                         self.resolvedAddress = fullParts.joined(separator: ", ")
-                    }
-                    // 3. Fallback: use placemark.name (often the most complete)
-                    else if let name = placemark.name, !name.isEmpty {
+                    } else if let name = placemark.name, !name.isEmpty {
                         self.resolvedAddress = name
-                    }
-                    // 4. Last resort
-                    else {
+                    } else {
                         self.resolvedAddress = fullParts.joined(separator: ", ")
                     }
                 } else {
@@ -162,9 +189,14 @@ class EmergencyViewModel: ObservableObject {
         showPreview = true
     }
 
-    /// Submit a Quick SOS request (camera capture flow)
+    /// Submit a Quick SOS request via backend POST /api/sos
     func submitQuickSOS() {
         guard let image = capturedImage else { return }
+        guard TokenManager.shared.isAuthenticated else {
+            errorMessage = "You must be signed in to send SOS."
+            showErrorAlert = true
+            return
+        }
 
         let coordinate = locationService.currentLocation ?? CLLocationCoordinate2D(
             latitude: 10.7769, longitude: 106.7009
@@ -172,31 +204,45 @@ class EmergencyViewModel: ObservableObject {
 
         isSubmitting = true
 
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-            guard let self = self else { return }
+        Task {
+            do {
+                let addressText = resolvedAddress.isEmpty ? gpsString : resolvedAddress
+                let descText = caption.isEmpty ? "Quick SOS — Emergency" : caption
 
-            let request = EmergencyRequest(
-                id: UUID().uuidString,
-                userId: "dummy_user",
-                localImage: image,
-                photoURL: nil,
-                latitude: coordinate.latitude,
-                longitude: coordinate.longitude,
-                address: self.resolvedAddress.isEmpty
-                    ? self.gpsString
-                    : self.resolvedAddress,
-                description: self.caption,
-                requestType: .quickSOS,
-                status: .pending,
-                timestamp: Date(),
-                rescuerId: nil
-            )
+                let fields: [String: String] = [
+                    "location": addressText,
+                    "description": descText,
+                    "urgency": "critical",
+                    "latitude": String(coordinate.latitude),
+                    "longitude": String(coordinate.longitude),
+                ]
 
-            self.requests.insert(request, at: 0)
-            self.isSubmitting = false
-            self.showSuccessAlert = true
-            self.resetForms()
+                var images: [(fieldName: String, data: Data, filename: String)] = []
+                if let imageData = image.jpegData(compressionQuality: 0.7) {
+                    images.append((
+                        fieldName: "images",
+                        data: imageData,
+                        filename: "sos_\(UUID().uuidString).jpg"
+                    ))
+                }
+
+                let _: APIRescueRequest = try await APIService.shared.uploadMultipart(
+                    "/sos",
+                    fields: fields,
+                    images: images
+                )
+
+                self.isSubmitting = false
+                self.showSuccessAlert = true
+                self.resetForms()
+
+                // Refresh history to include the new request
+                self.fetchMyRequests()
+            } catch {
+                self.isSubmitting = false
+                self.errorMessage = error.localizedDescription
+                self.showErrorAlert = true
+            }
         }
     }
 
@@ -223,39 +269,59 @@ class EmergencyViewModel: ObservableObject {
         }
     }
 
-    /// Submit a detailed rescue request (form flow)
+    /// Submit a detailed rescue request via backend POST /api/sos
     func submitDetailedRequest() {
+        guard TokenManager.shared.isAuthenticated else {
+            errorMessage = "You must be signed in to send a request."
+            showErrorAlert = true
+            return
+        }
+
         let coordinate = locationService.currentLocation ?? CLLocationCoordinate2D(
             latitude: 10.7769, longitude: 106.7009
         )
 
         isSubmitting = true
 
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-            guard let self = self else { return }
+        Task {
+            do {
+                let addressText = resolvedAddress.isEmpty ? gpsString : resolvedAddress
 
-            let request = EmergencyRequest(
-                id: UUID().uuidString,
-                userId: "dummy_user",
-                localImage: self.selectedImage,
-                photoURL: nil,
-                latitude: coordinate.latitude,
-                longitude: coordinate.longitude,
-                address: self.resolvedAddress.isEmpty
-                    ? self.gpsString
-                    : self.resolvedAddress,
-                description: self.reportDescription,
-                requestType: .detailed,
-                status: .pending,
-                timestamp: Date(),
-                rescuerId: nil
-            )
+                var fields: [String: String] = [
+                    "location": addressText,
+                    "description": reportDescription.isEmpty ? "Flood rescue request" : reportDescription,
+                    "urgency": "high",
+                    "latitude": String(coordinate.latitude),
+                    "longitude": String(coordinate.longitude),
+                ]
 
-            self.requests.insert(request, at: 0)
-            self.isSubmitting = false
-            self.showSuccessAlert = true
-            self.resetForms()
+                var images: [(fieldName: String, data: Data, filename: String)] = []
+                if let image = selectedImage,
+                   let imageData = image.jpegData(compressionQuality: 0.7) {
+                    images.append((
+                        fieldName: "images",
+                        data: imageData,
+                        filename: "rescue_\(UUID().uuidString).jpg"
+                    ))
+                }
+
+                let _: APIRescueRequest = try await APIService.shared.uploadMultipart(
+                    "/sos",
+                    fields: fields,
+                    images: images
+                )
+
+                self.isSubmitting = false
+                self.showSuccessAlert = true
+                self.resetForms()
+
+                // Refresh history
+                self.fetchMyRequests()
+            } catch {
+                self.isSubmitting = false
+                self.errorMessage = error.localizedDescription
+                self.showErrorAlert = true
+            }
         }
     }
 
@@ -264,55 +330,6 @@ class EmergencyViewModel: ObservableObject {
     func openTracking(for request: EmergencyRequest) {
         activeRequest = request
         showTrackingSheet = true
-    }
-
-    // MARK: - Mock Data
-
-    private func loadMockData() {
-        requests = [
-            EmergencyRequest(
-                id: "mock_1",
-                userId: "dummy_user",
-                localImage: nil,
-                photoURL: nil,
-                latitude: 10.7731,
-                longitude: 106.6880,
-                address: "12 Nguyen Hue, District 1",
-                description: "Water flooding into first floor, family of 4 needs help",
-                requestType: .quickSOS,
-                status: .pending,
-                timestamp: Date().addingTimeInterval(-420),
-                rescuerId: nil
-            ),
-            EmergencyRequest(
-                id: "mock_2",
-                userId: "dummy_user",
-                localImage: nil,
-                photoURL: nil,
-                latitude: 10.7540,
-                longitude: 106.6633,
-                address: "456 Le Loi, District 5",
-                description: "Elderly person stranded on rooftop due to rising water",
-                requestType: .detailed,
-                status: .inProgress,
-                timestamp: Date().addingTimeInterval(-1920),
-                rescuerId: "rescuer_alpha"
-            ),
-            EmergencyRequest(
-                id: "mock_3",
-                userId: "dummy_user",
-                localImage: nil,
-                photoURL: nil,
-                latitude: 10.7688,
-                longitude: 106.6925,
-                address: "78 Tran Hung Dao, District 1",
-                description: "Road completely flooded, car stuck and cannot move",
-                requestType: .quickSOS,
-                status: .resolved,
-                timestamp: Date().addingTimeInterval(-7200),
-                rescuerId: "rescuer_bravo"
-            ),
-        ]
     }
 
     // MARK: - Helpers

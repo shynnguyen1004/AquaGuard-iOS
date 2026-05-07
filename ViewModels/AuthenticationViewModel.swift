@@ -4,10 +4,11 @@
 //
 //  Created by Shyn Nguyễn on 28/1/26.
 //
+//  Handles login, registration, and password reset via the
+//  AquaGuard backend REST API (JWT-based, no Firebase Auth).
+//
 
 import Foundation
-import FirebaseAuth
-import FirebaseCore
 import SwiftUI
 import Combine
 
@@ -18,11 +19,29 @@ class AuthenticationViewModel: ObservableObject {
     @Published var showAlert: Bool = false
     @Published var alertIsSuccess: Bool = false
 
-    // MARK: - Form Fields
+    // MARK: - Login / Register Fields
     @Published var phoneNumber: String = ""
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
     @Published var displayName: String = ""
+
+    // MARK: - Register Extra Fields
+    @Published var selectedRole: String = "citizen"
+    @Published var rolePassword: String = ""
+    @Published var gender: String = ""
+    @Published var dateOfBirth: Date? = nil
+
+    // MARK: - Forgot Password Fields
+    @Published var otpCode: String = ""
+    @Published var newPassword: String = ""
+    @Published var sessionToken: String = ""
+    @Published var forgotPasswordStep: ForgotPasswordStep = .enterPhone
+
+    enum ForgotPasswordStep {
+        case enterPhone
+        case enterOTP
+        case enterNewPassword
+    }
 
     // MARK: - UI State
     @Published var isPasswordVisible: Bool = false
@@ -32,126 +51,234 @@ class AuthenticationViewModel: ObservableObject {
         !confirmPassword.isEmpty && password != confirmPassword
     }
 
-    // MARK: - Phone/Password Login (via Firebase Email auth using phone as email)
-    // Since Firebase phone auth requires SMS verification, we use email/password
-    // with phone number formatted as email: phone@aquaguard.app
+    // MARK: - Dependencies
+
+    private let api = APIService.shared
+    private let tokenManager = TokenManager.shared
+
+    // MARK: - Login
+
+    /// Sign in with phone number + password via POST /api/auth/login
     @MainActor
     func signInWithPhone() {
-        guard !phoneNumber.isEmpty, !password.isEmpty else {
-            alertMessage = "Please enter your phone number and password."
-            showAlert = true
+        let phone = normalizedPhone()
+        guard !phone.isEmpty, !password.isEmpty else {
+            showError("Please enter your phone number and password.")
             return
         }
 
         isLoading = true
-        let email = normalizedEmail(from: phoneNumber)
 
-        Auth.auth().signIn(withEmail: email, password: password) { [weak self] result, error in
-            guard let self = self else { return }
-            self.isLoading = false
-            if let error = error {
-                self.alertMessage = self.friendlyError(error)
-                self.alertIsSuccess = false
-                self.showAlert = true
-            } else {
-                print("Signed in: \(result?.user.uid ?? "")")
+        Task {
+            do {
+                let authData: AuthData = try await api.postNoAuth("/auth/login", body: [
+                    "phone_number": phone,
+                    "password": password,
+                ])
+
+                // Save session
+                tokenManager.saveSession(token: authData.accessToken, user: authData.user)
+
+                // Update AppState role
+                AppState.shared.selectRole(authData.user.userRole)
+
+                isLoading = false
+                print("✅ Signed in: \(authData.user.displayName) (\(authData.user.role))")
+            } catch {
+                isLoading = false
+                showError(error.localizedDescription)
             }
         }
     }
 
-    // MARK: - Register with Phone + Password
+    // MARK: - Register
+
+    /// Register with phone + password via POST /api/auth/register
+    /// After successful registration, auto-login and navigate to app.
     @MainActor
     func registerWithPhone() {
         guard !displayName.isEmpty else {
-            alertMessage = "Please enter your full name."
-            showAlert = true
+            showError("Please enter your full name.")
             return
         }
-        guard !phoneNumber.isEmpty else {
-            alertMessage = "Please enter your phone number."
-            showAlert = true
+
+        let phone = normalizedPhone()
+        guard !phone.isEmpty else {
+            showError("Please enter your phone number.")
             return
         }
         guard password.count >= 6 else {
-            alertMessage = "Password must be at least 6 characters."
-            showAlert = true
+            showError("Password must be at least 6 characters.")
             return
         }
         guard password == confirmPassword else {
-            alertMessage = "Passwords do not match."
-            showAlert = true
+            showError("Passwords do not match.")
             return
         }
 
         isLoading = true
-        let email = normalizedEmail(from: phoneNumber)
 
-        Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
-            guard let self = self else { return }
+        Task {
+            do {
+                let body: [String: Any] = [
+                    "phone_number": phone,
+                    "password": password,
+                    "display_name": displayName,
+                    "role": "citizen",
+                ]
 
-            if let error = error {
-                self.isLoading = false
-                self.alertMessage = self.friendlyError(error)
-                self.alertIsSuccess = false
-                self.showAlert = true
-                return
-            }
+                let authData: AuthData = try await api.postNoAuth("/auth/register", body: body)
 
-            // Update display name
-            let changeRequest = result?.user.createProfileChangeRequest()
-            changeRequest?.displayName = self.displayName
-            changeRequest?.commitChanges { _ in
-                self.isLoading = false
-                self.alertMessage = "Account created successfully! You can now sign in."
-                self.alertIsSuccess = true
-                self.showAlert = true
+                // Auto-login: save session and go straight to app
+                tokenManager.saveSession(token: authData.accessToken, user: authData.user)
+                AppState.shared.selectRole(.citizen)
+
+                isLoading = false
+                print("✅ Registered & auto-logged in: \(authData.user.displayName)")
+            } catch {
+                isLoading = false
+                showError(error.localizedDescription)
             }
         }
     }
 
-    // MARK: - Guest Login (Dev)
+    // MARK: - Forgot Password Flow
+
+    /// Step 1: Send OTP to phone via POST /api/auth/forgot-password
     @MainActor
-    func signInAsGuest() {
+    func sendForgotPasswordOTP() {
+        let phone = normalizedPhone()
+        guard !phone.isEmpty else {
+            showError("Please enter your phone number.")
+            return
+        }
+
         isLoading = true
-        Auth.auth().signInAnonymously { [weak self] result, error in
-            guard let self = self else { return }
-            self.isLoading = false
-            if let error = error {
-                self.alertMessage = error.localizedDescription
-                self.alertIsSuccess = false
-                self.showAlert = true
-            } else {
-                print("Guest sign-in: \(result?.user.uid ?? "")")
+
+        Task {
+            do {
+                let response: APIResponse<EmptyData> = try await api.postNoAuthRaw("/auth/forgot-password", body: [
+                    "phone_number": phone,
+                ])
+
+                isLoading = false
+
+                if response.success {
+                    forgotPasswordStep = .enterOTP
+                    alertMessage = response.message ?? "OTP sent to your phone."
+                    alertIsSuccess = true
+                    showAlert = true
+                } else {
+                    showError(response.message ?? "Failed to send OTP.")
+                }
+            } catch {
+                isLoading = false
+                showError(error.localizedDescription)
             }
         }
+    }
+
+    /// Step 2: Verify OTP via POST /api/auth/verify-otp
+    @MainActor
+    func verifyOTP() {
+        let phone = normalizedPhone()
+        guard !otpCode.isEmpty else {
+            showError("Please enter the OTP code.")
+            return
+        }
+
+        isLoading = true
+
+        Task {
+            do {
+                let data: OTPVerifyData = try await api.postNoAuth("/auth/verify-otp", body: [
+                    "phone_number": phone,
+                    "otp": otpCode,
+                ])
+
+                sessionToken = data.sessionToken
+                isLoading = false
+                forgotPasswordStep = .enterNewPassword
+            } catch {
+                isLoading = false
+                showError(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Step 3: Reset password via POST /api/auth/reset-password
+    @MainActor
+    func resetPassword() {
+        let phone = normalizedPhone()
+        guard !newPassword.isEmpty, newPassword.count >= 6 else {
+            showError("New password must be at least 6 characters.")
+            return
+        }
+
+        isLoading = true
+
+        Task {
+            do {
+                let response: APIResponse<EmptyData> = try await api.postNoAuthRaw("/auth/reset-password", body: [
+                    "phone_number": phone,
+                    "sessionToken": sessionToken,
+                    "newPassword": newPassword,
+                ])
+
+                isLoading = false
+
+                if response.success {
+                    alertMessage = "Password reset successful. Please sign in again."
+                    alertIsSuccess = true
+                    showAlert = true
+                    forgotPasswordStep = .enterPhone
+                } else {
+                    showError(response.message ?? "Failed to reset password.")
+                }
+            } catch {
+                isLoading = false
+                showError(error.localizedDescription)
+            }
+        }
+    }
+
+    // MARK: - Logout
+
+    @MainActor
+    func signOut() {
+        tokenManager.clearSession()
+        AppState.shared.logout()
     }
 
     // MARK: - Helpers
-    private func normalizedEmail(from phone: String) -> String {
-        let cleaned = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    /// Normalize phone number to +84 format
+    /// Accepts: "0901234567", "84901234567", "+84901234567"
+    private func normalizedPhone() -> String {
+        var phone = phoneNumber
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "+", with: "")
-        return "\(cleaned)@aquaguard.app"
+            .replacingOccurrences(of: "-", with: "")
+
+        // Convert "0xx" → "+84xx"
+        if phone.hasPrefix("0") {
+            phone = "+84" + phone.dropFirst()
+        }
+        // Convert "84xx" → "+84xx"
+        else if phone.hasPrefix("84") && !phone.hasPrefix("+") {
+            phone = "+" + phone
+        }
+        // Ensure it starts with "+"
+        else if !phone.hasPrefix("+") && !phone.isEmpty {
+            phone = "+84" + phone
+        }
+
+        return phone
     }
 
-    private func friendlyError(_ error: Error) -> String {
-        let nsError = error as NSError
-        guard let code = AuthErrorCode(rawValue: nsError.code) else {
-            return error.localizedDescription
-        }
-        switch code {
-        case .wrongPassword:
-            return "Incorrect password. Please try again."
-        case .userNotFound:
-            return "No account found with this phone number."
-        case .emailAlreadyInUse:
-            return "This phone number is already registered."
-        case .weakPassword:
-            return "Password is too weak. Use at least 6 characters."
-        case .networkError:
-            return "Network error. Please check your connection."
-        default:
-            return error.localizedDescription
-        }
+    private func showError(_ message: String) {
+        alertMessage = message
+        alertIsSuccess = false
+        showAlert = true
     }
 }

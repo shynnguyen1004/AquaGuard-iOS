@@ -4,7 +4,7 @@
 //
 //  Map sheet showing real-time tracking between
 //  the victim and assigned rescuer.
-//  Includes MKDirections route polyline drawing.
+//  Uses real rescuer coordinates from the backend database.
 //
 
 import MapKit
@@ -21,12 +21,19 @@ struct LiveTrackingSheet: View {
     @State private var route: MKRoute?
     @State private var isLoadingRoute = true
 
-    // Simulated rescuer position (nearby)
-    private var rescuerCoord: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(
-            latitude: request.latitude + 0.004,
-            longitude: request.longitude + 0.003
-        )
+    // Real rescuer coordinate from backend
+    private var rescuerCoord: CLLocationCoordinate2D? {
+        request.rescuerCoordinate
+    }
+
+    // Whether we have a valid rescuer location
+    private var hasRescuerLocation: Bool {
+        rescuerCoord != nil
+    }
+
+    // Rescuer display name
+    private var rescuerDisplayName: String {
+        request.rescuerName ?? languageManager.localize("Rescuer")
     }
 
     // Computed from real route data
@@ -87,11 +94,11 @@ struct LiveTrackingSheet: View {
                             }
                         }
 
-                        // Rescuer pin (if assigned)
-                        if request.rescuerId != nil {
+                        // Rescuer pin (real location from backend)
+                        if let coord = rescuerCoord {
                             Annotation(
-                                languageManager.localize("Rescuer"),
-                                coordinate: rescuerCoord
+                                rescuerDisplayName,
+                                coordinate: coord
                             ) {
                                 VStack(spacing: 0) {
                                     Image(systemName: "figure.wave")
@@ -110,14 +117,30 @@ struct LiveTrackingSheet: View {
                     }
 
                     // Loading indicator
-                    if isLoadingRoute && request.rescuerId != nil {
+                    if isLoadingRoute && hasRescuerLocation {
                         HStack(spacing: 6) {
                             ProgressView()
                                 .scaleEffect(0.7)
-                            Text("Đang tải lộ trình...")
+                            Text(languageManager.localize("Loading route..."))
                                 .font(.caption2)
                                 .foregroundColor(.aquaSubtitle)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(20)
+                        .padding(12)
+                    }
+
+                    // No rescuer location warning
+                    if request.rescuerId != nil && !hasRescuerLocation {
+                        HStack(spacing: 6) {
+                            Image(systemName: "location.slash")
+                                .font(.caption)
+                            Text(languageManager.localize("Rescuer location unavailable"))
+                                .font(.caption2)
+                        }
+                        .foregroundColor(.orange)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(.ultraThinMaterial)
@@ -141,8 +164,10 @@ struct LiveTrackingSheet: View {
                 }
             }
             .task {
-                if request.rescuerId != nil {
+                if hasRescuerLocation {
                     await calculateRoute()
+                } else {
+                    isLoadingRoute = false
                 }
             }
         }
@@ -151,8 +176,13 @@ struct LiveTrackingSheet: View {
     // MARK: - Route Calculation
 
     private func calculateRoute() async {
+        guard let rescuer = rescuerCoord else {
+            isLoadingRoute = false
+            return
+        }
+
         let dirRequest = MKDirections.Request()
-        dirRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: rescuerCoord))
+        dirRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: rescuer))
         dirRequest.destination = MKMapItem(placemark: MKPlacemark(coordinate: request.coordinate))
         dirRequest.transportType = .automobile
 
@@ -195,7 +225,7 @@ struct LiveTrackingSheet: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(request.status.rawValue)
+                Text(request.status.displayName)
                     .font(.headline)
                     .foregroundColor(.aquaNavy)
 
@@ -204,9 +234,15 @@ struct LiveTrackingSheet: View {
                         .font(.caption)
                         .foregroundColor(.aquaSubtitle)
                 } else if request.status == .inProgress {
-                    Text(languageManager.localize("Rescuer is on the way"))
-                        .font(.caption)
-                        .foregroundColor(.aquaPrimary)
+                    if let name = request.rescuerName {
+                        Text("\(name) " + languageManager.localize("is on the way"))
+                            .font(.caption)
+                            .foregroundColor(.aquaPrimary)
+                    } else {
+                        Text(languageManager.localize("Rescuer is on the way"))
+                            .font(.caption)
+                            .foregroundColor(.aquaPrimary)
+                    }
                 } else {
                     Text(languageManager.localize("This request has been resolved"))
                         .font(.caption)
@@ -220,7 +256,7 @@ struct LiveTrackingSheet: View {
             HStack(spacing: 4) {
                 Image(systemName: request.status.icon)
                     .font(.caption2)
-                Text(request.status.rawValue)
+                Text(request.status.displayName)
                     .font(.caption)
                     .fontWeight(.medium)
             }
@@ -239,17 +275,19 @@ struct LiveTrackingSheet: View {
 
     private var requestInfoBar: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Route info (show when rescuer assigned and route loaded)
-            if request.rescuerId != nil, route != nil {
+            // Route info (show when rescuer has location and route loaded)
+            if hasRescuerLocation, route != nil {
                 HStack(spacing: 12) {
                     VStack(spacing: 3) {
                         Image(systemName: "figure.wave")
                             .font(.system(size: 14))
                             .foregroundColor(.aquaPrimary)
-                        Text("Rescuer")
+                        Text(rescuerDisplayName)
                             .font(.system(size: 8, weight: .semibold))
                             .foregroundColor(.aquaSubtitle)
+                            .lineLimit(1)
                     }
+                    .frame(minWidth: 40)
 
                     VStack(spacing: 2) {
                         HStack(spacing: 3) {
@@ -268,7 +306,7 @@ struct LiveTrackingSheet: View {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 14))
                             .foregroundColor(.red)
-                        Text("You")
+                        Text(languageManager.localize("You"))
                             .font(.system(size: 8, weight: .semibold))
                             .foregroundColor(.aquaSubtitle)
                     }

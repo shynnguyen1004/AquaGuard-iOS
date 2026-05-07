@@ -28,14 +28,15 @@ struct AdminRescueGroup: Identifiable {
 
 struct AdminSOSView: View {
     @EnvironmentObject var languageManager: LanguageManager
+    @StateObject private var viewModel = RescuerViewModel()
     @State private var selectedTab = 0  // 0=Tất cả, 1=Đang chờ, 2=Đang xử lý, 3=Hoàn thành
-    @State private var requests = SosRequest.dummyRequests
     @State private var toastMessage: String?
 
-    private var allRequests: [SosRequest] { requests }
-    private var pendingRequests: [SosRequest] { requests.filter { $0.status == "pending" } }
-    private var activeRequests: [SosRequest] { requests.filter { $0.status == "assigned" || $0.status == "in_progress" } }
-    private var resolvedRequests: [SosRequest] { requests.filter { $0.status == "resolved" } }
+    private var requests: [SosRequest] { viewModel.allRequests }
+    private var allRequests: [SosRequest] { viewModel.allRequests }
+    private var pendingRequests: [SosRequest] { viewModel.pendingRequests }
+    private var activeRequests: [SosRequest] { viewModel.inProgressRequests }
+    private var resolvedRequests: [SosRequest] { viewModel.resolvedRequests }
 
     var body: some View {
         NavigationStack {
@@ -91,6 +92,9 @@ struct AdminSOSView: View {
             }
             .background(Color.aquaBackground)
             .navigationBarHidden(true)
+            .onAppear {
+                viewModel.fetchAllRequests()
+            }
             .overlay(alignment: .bottom) {
                 if let msg = toastMessage {
                     Text(msg)
@@ -273,17 +277,14 @@ struct AdminSOSView: View {
     // MARK: - Actions
 
     private func assignToGroup(_ request: SosRequest, group: AdminRescueGroup) {
-        if let idx = requests.firstIndex(where: { $0.id == request.id }) {
-            requests[idx].status = "assigned"
-            showToast("Đã phân công cho \(group.name)")
-        }
+        // TODO: Call admin assign API when available
+        viewModel.acceptRequest(request)
+        showToast("Đã phân công cho \(group.name)")
     }
 
     private func adminComplete(_ request: SosRequest) {
-        if let idx = requests.firstIndex(where: { $0.id == request.id }) {
-            requests[idx].status = "resolved"
-            showToast("Đã hoàn thành")
-        }
+        viewModel.completeRequest(request)
+        showToast("Đã hoàn thành")
     }
 
     private func showToast(_ message: String) {

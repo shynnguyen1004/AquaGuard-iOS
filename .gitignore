@@ -18,3 +18,5 @@ DerivedData/
 # Project folders to ignore
 docs/
 aquaguard-backend/
+backend/
+infrastructure/

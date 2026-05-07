@@ -4,12 +4,12 @@
 //
 //  Created by Shyn Nguyễn on 15/12/25.
 //
+//  Community flood report submission — now uses the backend
+//  REST API (POST /api/sos) instead of Firebase Firestore/Storage.
+//
 
 import Combine
 import CoreLocation
-import FirebaseAuth
-import FirebaseFirestore
-import FirebaseStorage
 import Foundation
 import SwiftUI
 
@@ -62,10 +62,10 @@ class ReportViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Submit Report
+    // MARK: - Submit Report via Backend API
 
     func submitReport() {
-        guard let user = Auth.auth().currentUser else {
+        guard TokenManager.shared.isAuthenticated else {
             self.errorMessage = "You must be signed in to submit a report."
             self.showErrorAlert = true
             return
@@ -78,82 +78,60 @@ class ReportViewModel: ObservableObject {
 
         isSubmitting = true
 
-        if let image = selectedImage {
-            uploadImage(image) { [weak self] result in
-                switch result {
-                case .success(let url):
-                    self?.saveDataToFirestore(photoURL: url, user: user, location: location)
-                case .failure(let error):
-                    self?.isSubmitting = false
-                    self?.errorMessage = "Image upload error: \(error.localizedDescription)"
-                    self?.showErrorAlert = true
+        // Map water level percentage to urgency
+        let urgency: String
+        switch waterLevelPercentage {
+        case 0..<25: urgency = "low"
+        case 25..<50: urgency = "medium"
+        case 50..<75: urgency = "high"
+        default: urgency = "critical"
+        }
+
+        Task { @MainActor in
+            do {
+                // Build form fields
+                var fields: [String: String] = [
+                    "location": locationName,
+                    "description": reportDescription.isEmpty
+                        ? "Community flood report"
+                        : reportDescription,
+                    "urgency": urgency,
+                    "latitude": String(location.latitude),
+                    "longitude": String(location.longitude),
+                ]
+
+                // Build image data (if any)
+                var images: [(fieldName: String, data: Data, filename: String)] = []
+                if let image = selectedImage,
+                   let imageData = image.jpegData(compressionQuality: 0.7) {
+                    images.append((
+                        fieldName: "images",
+                        data: imageData,
+                        filename: "report_\(UUID().uuidString).jpg"
+                    ))
                 }
+
+                let _: APIRescueRequest = try await APIService.shared.uploadMultipart(
+                    "/sos",
+                    fields: fields,
+                    images: images
+                )
+
+                self.isSubmitting = false
+                self.showSuccessAlert = true
+                self.resetForm()
+            } catch {
+                self.isSubmitting = false
+                self.errorMessage = error.localizedDescription
+                self.showErrorAlert = true
             }
-        } else {
-            saveDataToFirestore(photoURL: nil, user: user, location: location)
         }
     }
 
     // MARK: - Helpers
-
-    private func uploadImage(
-        _ image: UIImage, completion: @escaping (Result<String, Error>) -> Void
-    ) {
-        let filename = "report_images/\(UUID().uuidString).jpg"
-        let storageRef = Storage.storage().reference().child(filename)
-
-        guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
-
-        storageRef.putData(imageData, metadata: nil) { metadata, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-
-            storageRef.downloadURL { url, error in
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
-                if let url = url { completion(.success(url.absoluteString)) }
-            }
-        }
-    }
-
-    private func saveDataToFirestore(
-        photoURL: String?, user: User, location: CLLocationCoordinate2D
-    ) {
-        let db = Firestore.firestore()
-
-        let reportData: [String: Any] = [
-            "user_id": user.uid,
-            "user_name": user.displayName ?? "Anonymous",
-            "location": GeoPoint(latitude: location.latitude, longitude: location.longitude),
-            "location_name": self.locationName,
-            "water_level": Float(self.waterLevelPercentage / 100.0 * 2.0),
-            "description": self.reportDescription,
-            "photo_url": photoURL ?? "",
-            "status": "pending",
-            "timestamp": FieldValue.serverTimestamp(),
-        ]
-
-        db.collection("reports").addDocument(data: reportData) { [weak self] error in
-            DispatchQueue.main.async {
-                self?.isSubmitting = false
-                if let error = error {
-                    self?.errorMessage = error.localizedDescription
-                    self?.showErrorAlert = true
-                } else {
-                    self?.showSuccessAlert = true
-                    self?.resetForm()
-                }
-            }
-        }
-    }
 
     private func resetForm() {
         reportDescription = ""
         selectedImage = nil
     }
 }
-

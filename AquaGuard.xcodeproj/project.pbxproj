@@ -25,6 +25,18 @@
 		3A94DFE82F2AF52B00CDF258 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFE72F2AF52B00CDF258 /* FirebaseStorageCombine-Community */; };
 		3A94DFEB2F2AF5A100CDF258 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFEA2F2AF5A100CDF258 /* GoogleSignIn */; };
 		3A94DFED2F2AF5A100CDF258 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3A94DFEC2F2AF5A100CDF258 /* GoogleSignInSwift */; };
+		BB03CE412FAB539D0013B884 /* NetworkConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */; };
+		BB03CE422FAB539D0013B884 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3D2FAB539D0013B884 /* APIService.swift */; };
+		BB03CE432FAB539D0013B884 /* WebSocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE402FAB539D0013B884 /* WebSocketService.swift */; };
+		BB03CE442FAB539D0013B884 /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3F2FAB539D0013B884 /* TokenManager.swift */; };
+		BB03CE452FAB539E0013B884 /* NetworkConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */; };
+		BB03CE462FAB539E0013B884 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3D2FAB539D0013B884 /* APIService.swift */; };
+		BB03CE472FAB539E0013B884 /* WebSocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE402FAB539D0013B884 /* WebSocketService.swift */; };
+		BB03CE482FAB539E0013B884 /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3F2FAB539D0013B884 /* TokenManager.swift */; };
+		BB03CE492FAB539E0013B884 /* NetworkConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */; };
+		BB03CE4A2FAB539E0013B884 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3D2FAB539D0013B884 /* APIService.swift */; };
+		BB03CE4B2FAB539E0013B884 /* WebSocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE402FAB539D0013B884 /* WebSocketService.swift */; };
+		BB03CE4C2FAB539E0013B884 /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3F2FAB539D0013B884 /* TokenManager.swift */; };
 		BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		BBB304AA2F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
@@ -57,6 +69,10 @@
 		3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AquaGuardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9F39422F03FA88001F31D5 /* sydney.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = sydney.gpx; path = ../../../../truongsonnguyen/Downloads/sydney.gpx; sourceTree = "<group>"; };
 		3A9F39442F041FA4001F31D5 /* hcmc.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = hcmc.gpx; path = ../../../../truongsonnguyen/Downloads/hcmc.gpx; sourceTree = "<group>"; };
+		BB03CE3D2FAB539D0013B884 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConfig.swift; sourceTree = "<group>"; };
+		BB03CE3F2FAB539D0013B884 /* TokenManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenManager.swift; sourceTree = "<group>"; };
+		BB03CE402FAB539D0013B884 /* WebSocketService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketService.swift; sourceTree = "<group>"; };
 		BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		CC000001FA000000003B4C7D /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -150,6 +166,10 @@
 		3A41D3912F4F226E00355F07 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				BB03CE3D2FAB539D0013B884 /* APIService.swift */,
+				BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */,
+				BB03CE3F2FAB539D0013B884 /* TokenManager.swift */,
+				BB03CE402FAB539D0013B884 /* WebSocketService.swift */,
 				CC000001FA000000003B4C7D /* CameraService.swift */,
 				BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */,
 				3A41D39F2F4F32E000355F07 /* LanguageManager.swift */,
@@ -353,6 +373,10 @@
 				CC000001FA000001003B4C7D /* CameraService.swift in Sources */,
 				3A41D39C2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
 				BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
+				BB03CE412FAB539D0013B884 /* NetworkConfig.swift in Sources */,
+				BB03CE422FAB539D0013B884 /* APIService.swift in Sources */,
+				BB03CE432FAB539D0013B884 /* WebSocketService.swift in Sources */,
+				BB03CE442FAB539D0013B884 /* TokenManager.swift in Sources */,
 				3A41D3922F4F226E00355F07 /* LocationService.swift in Sources */,
 				3A41D3A12F4F32E000355F07 /* LanguageManager.swift in Sources */,
 			);
@@ -364,6 +388,10 @@
 			files = (
 				3A41D3A22F4F32E000355F07 /* LanguageManager.swift in Sources */,
 				3A41D39E2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
+				BB03CE452FAB539E0013B884 /* NetworkConfig.swift in Sources */,
+				BB03CE462FAB539E0013B884 /* APIService.swift in Sources */,
+				BB03CE472FAB539E0013B884 /* WebSocketService.swift in Sources */,
+				BB03CE482FAB539E0013B884 /* TokenManager.swift in Sources */,
 				BBB304AA2F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -373,6 +401,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A41D39D2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
+				BB03CE492FAB539E0013B884 /* NetworkConfig.swift in Sources */,
+				BB03CE4A2FAB539E0013B884 /* APIService.swift in Sources */,
+				BB03CE4B2FAB539E0013B884 /* WebSocketService.swift in Sources */,
+				BB03CE4C2FAB539E0013B884 /* TokenManager.swift in Sources */,
 				3A41D3932F4F226E00355F07 /* LocationService.swift in Sources */,
 				3A41D3A02F4F32E000355F07 /* LanguageManager.swift in Sources */,
 				BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */,

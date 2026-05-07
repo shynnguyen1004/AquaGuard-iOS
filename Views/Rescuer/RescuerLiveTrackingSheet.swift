@@ -20,6 +20,7 @@ struct RescuerLiveTrackingSheet: View {
     @State private var cameraPosition: MapCameraPosition
     @State private var route: MKRoute?
     @State private var isLoadingRoute = true
+    @StateObject private var locationService = LocationService()
 
     // Citizen coordinate (victim location)
     private var citizenCoord: CLLocationCoordinate2D {
@@ -29,9 +30,9 @@ struct RescuerLiveTrackingSheet: View {
         )
     }
 
-    // Simulated rescuer coordinate (offset from citizen)
+    // Rescuer coordinate = device's real GPS location
     private var rescuerCoord: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(
+        locationService.currentLocation ?? CLLocationCoordinate2D(
             latitude: (request.latitude ?? 10.7769) + 0.004,
             longitude: (request.longitude ?? 106.7009) + 0.003
         )

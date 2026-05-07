@@ -3,7 +3,7 @@
 //  AquaGuard
 //
 
-import FirebaseAuth
+
 import SwiftUI
 
 struct SettingsView: View {
@@ -15,13 +15,16 @@ struct SettingsView: View {
 
     // User info
     private var displayName: String {
-        Auth.auth().currentUser?.displayName ?? "Responder Alpha"
+        TokenManager.shared.currentUser?.displayName ?? "Responder Alpha"
     }
     private var email: String {
-        Auth.auth().currentUser?.email ?? "guest@aquaguard.app"
+        TokenManager.shared.currentUser?.email ?? TokenManager.shared.currentUser?.phoneNumber ?? "guest@aquaguard.app"
     }
     private var photoURL: URL? {
-        Auth.auth().currentUser?.photoURL
+        if let urlStr = TokenManager.shared.currentUser?.avatarUrl, !urlStr.isEmpty {
+            return URL(string: urlStr)
+        }
+        return nil
     }
 
     // Glass card style
