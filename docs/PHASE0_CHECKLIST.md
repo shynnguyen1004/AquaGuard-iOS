@@ -13,6 +13,10 @@
 - [x] `AdminAccessBlockedView` + login reject for admin role
 - [x] Build verified
 
-## Next: Phase 2
+## Phase 2 — Done
 
-1. Create `Views/Shared/` and move shared screens
+- [x] `Views/Shared/` — Auth, Main, Map, Settings, Components, Helpers
+
+## Next: Phase 3
+
+1. Create `Views/Citizen/` and `Views/Rescuer/` (reorganize active role screens)

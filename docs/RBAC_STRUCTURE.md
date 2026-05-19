@@ -210,7 +210,7 @@ if tokenManager.isAuthenticated {
 |-------|--------|--------|
 | **0** | Branch, this doc, baseline build | Done |
 | **1** | Move orphans + Admin views → `Views/_Legacy/`; legacy VMs → `ViewModels/_Legacy/`; block admin on mobile | Done |
-| **2** | Create `Views/Shared/`, move shared views |
+| **2** | Create `Views/Shared/`, move shared views | Done |
 | **3** | Create `Views/Citizen/`, `Views/Rescuer/` |
 | **4** | Reorganize `ViewModels/` (Shared / Citizen / Rescuer / _Legacy) |
 | **5** | Block admin login + remove `AdminContentView` from `AquaGuardApp` |
