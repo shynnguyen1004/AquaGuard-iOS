@@ -2,9 +2,8 @@
 //  UserRole.swift
 //  AquaGuard
 //
-//  Defines user roles (Citizen, Rescuer, Admin) and
-//  a shared AppState to manage current role selection
-//  for navigation routing throughout the app.
+//  Defines user roles (Citizen, Rescuer, Admin) and AppState for routing.
+//  Mobile app: citizen + rescuer only; admin accounts are blocked at login (web-only).
 //
 
 import Combine

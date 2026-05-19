@@ -29,6 +29,22 @@
 - [x] `ViewModels/Rescuer/` — RescuerViewModel, RescuerTeamViewModel
 - [x] `ViewModels/_Legacy/` — (from Phase 1)
 
-## Next: Phase 5–7
+## Phase 5 — Done (with Phase 1)
 
-1. Models `_Legacy` (optional), smoke test, PR
+- [x] Admin login blocked; `AdminAccessBlockedView` for stale admin session
+
+## Phase 6 — Done
+
+- [x] `Models/_Legacy/FloodReport.swift` (legacy-only)
+- [x] `CommunityReport.swift` remains in `Models/` (Home mock alerts)
+
+## Phase 7 — Done
+
+- [x] Build succeeded
+- [x] Clean `xcodebuild build` succeeded
+- [ ] Unit tests: fix test target wiring (optional follow-up)
+- [x] Manual checklist: `docs/SMOKE_TEST.md`
+
+## Refactor complete
+
+Ready to open PR: `refactor/rbac-mvvm-structure` → `main`

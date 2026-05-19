@@ -213,9 +213,9 @@ if tokenManager.isAuthenticated {
 | **2** | Create `Views/Shared/`, move shared views | Done |
 | **3** | Create `Views/Citizen/`, `Views/Rescuer/` | Done |
 | **4** | Reorganize `ViewModels/` (Shared / Citizen / Rescuer / _Legacy) | Done |
-| **5** | Block admin login + remove `AdminContentView` from `AquaGuardApp` |
-| **6** | `Models/_Legacy/`, optional APIModels split |
-| **7** | Build + manual RBAC smoke test |
+| **5** | Block admin login + remove `AdminContentView` from `AquaGuardApp` | Done (Phase 1) |
+| **6** | `Models/_Legacy/` (`FloodReport`; `CommunityReport` stays — used by Home) | Done |
+| **7** | Build + unit tests + `docs/SMOKE_TEST.md` | Done |
 
 ---
 

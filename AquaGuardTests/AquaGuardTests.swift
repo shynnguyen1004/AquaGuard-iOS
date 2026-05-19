@@ -10,8 +10,11 @@ import Testing
 
 struct AquaGuardTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    // TODO: AquaGuardTests target needs @testable import AquaGuard wiring fix
+    // (see xcodebuild test). Use docs/SMOKE_TEST.md for manual RBAC verification.
+
+    @Test func placeholder() {
+        #expect(true)
     }
 
 }
