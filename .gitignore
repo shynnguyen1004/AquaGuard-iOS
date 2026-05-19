@@ -15,8 +15,11 @@ project.xcworkspace/
 xcuserdata/
 DerivedData/
 
-# Project folders to ignore
-docs/
+# Project folders to ignore (allow refactor docs)
+docs/*
+!docs/RBAC_STRUCTURE.md
+!docs/PHASE0_CHECKLIST.md
+!docs/SMOKE_TEST.md
 aquaguard-backend/
 backend/
 infrastructure/

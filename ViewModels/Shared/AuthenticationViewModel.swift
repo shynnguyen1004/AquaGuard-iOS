@@ -76,6 +76,14 @@ class AuthenticationViewModel: ObservableObject {
                     "password": password,
                 ])
 
+                if authData.user.userRole == .admin {
+                    isLoading = false
+                    showError(
+                        "Vui lòng đăng nhập với tài khoản Citizen hoặc Rescuer. Quản trị viên chỉ dùng trên web."
+                    )
+                    return
+                }
+
                 // Save session
                 tokenManager.saveSession(token: authData.accessToken, user: authData.user)
 
