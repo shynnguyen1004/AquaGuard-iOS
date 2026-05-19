@@ -17,6 +17,11 @@
 
 - [x] `Views/Shared/` — Auth, Main, Map, Settings, Components, Helpers
 
-## Next: Phase 3
+## Phase 3 — Done
 
-1. Create `Views/Citizen/` and `Views/Rescuer/` (reorganize active role screens)
+- [x] `Views/Citizen/` — Home, Emergency, Safety, Profile
+- [x] `Views/Rescuer/` — Requests, Dashboard, Team (+ RescuerContentView)
+
+## Next: Phase 4
+
+1. Reorganize `ViewModels/` → Shared, Citizen, Rescuer, _Legacy
