@@ -38,7 +38,7 @@ struct AquaGuardApp: App {
                             case .rescuer:
                                 RescuerContentView()
                             case .admin:
-                                AdminContentView()
+                                AdminAccessBlockedView()
                             }
                         } else {
                             LoginView()

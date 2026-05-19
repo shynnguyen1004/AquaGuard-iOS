@@ -6,9 +6,13 @@
 - [x] Baseline build: **BUILD SUCCEEDED** (`xcodebuild`, iPhone 17 Pro Simulator)
 - [ ] Team review of `RBAC_STRUCTURE.md` before Phase 1
 
-## Next: Phase 1
+## Phase 1 — Done
 
-1. Move orphan + Admin views → `Views/_Legacy/`
-2. Move orphan view models → `ViewModels/_Legacy/`
-3. Remove `AdminContentView` branch from app (Phase 5) — **after** legacy move
-4. Block admin at login (Phase 5)
+- [x] Orphan + Admin views → `Views/_Legacy/`
+- [x] Legacy view models → `ViewModels/_Legacy/`
+- [x] `AdminAccessBlockedView` + login reject for admin role
+- [x] Build verified
+
+## Next: Phase 2
+
+1. Create `Views/Shared/` and move shared screens

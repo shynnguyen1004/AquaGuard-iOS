@@ -197,6 +197,16 @@ enum AppStrings {
             .english: "Sign in with Google", .vietnamese: "Đăng nhập bằng Google",
         ],
         "OK": [.english: "OK", .vietnamese: "OK"],
+
+        // MARK: Admin (mobile blocked)
+        "Admin Web Only Title": [
+            .english: "Admin — Web Only",
+            .vietnamese: "Quản trị — chỉ trên Web",
+        ],
+        "Admin Web Only Message": [
+            .english: "Please sign in with a Citizen or Rescuer account. Admin access is available on the web platform only.",
+            .vietnamese: "Vui lòng đăng nhập với tài khoản Citizen hoặc Rescuer. Quản trị viên chỉ sử dụng trên nền tảng web.",
+        ],
     ]
 }
 
