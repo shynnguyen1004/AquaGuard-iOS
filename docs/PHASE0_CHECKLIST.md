@@ -22,6 +22,13 @@
 - [x] `Views/Citizen/` — Home, Emergency, Safety, Profile
 - [x] `Views/Rescuer/` — Requests, Dashboard, Team (+ RescuerContentView)
 
-## Next: Phase 4
+## Phase 4 — Done
 
-1. Reorganize `ViewModels/` → Shared, Citizen, Rescuer, _Legacy
+- [x] `ViewModels/Shared/` — AuthenticationViewModel, MapViewModel
+- [x] `ViewModels/Citizen/` — Emergency, Family, Home
+- [x] `ViewModels/Rescuer/` — RescuerViewModel, RescuerTeamViewModel
+- [x] `ViewModels/_Legacy/` — (from Phase 1)
+
+## Next: Phase 5–7
+
+1. Models `_Legacy` (optional), smoke test, PR
