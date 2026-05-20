@@ -27,6 +27,9 @@ struct RescuerTeamView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                LogoHeaderView()
+                    .padding(.bottom, 4)
+
                 // 3 tabs
                 Picker("", selection: $selectedTab) {
                     Text("Đội của tôi").tag(0)
@@ -58,8 +61,7 @@ struct RescuerTeamView: View {
                 }
             }
             .background(Color.aquaBackground)
-            .navigationTitle("Đội cứu hộ")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
             .overlay(alignment: .bottom) {
                 if let msg = toastMessage {
                     Text(msg)

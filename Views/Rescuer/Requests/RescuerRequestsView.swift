@@ -52,6 +52,8 @@ struct RescuerRequestsView: View {
 
                 ScrollView {
                     VStack(spacing: 14) {
+                        LogoHeaderView()
+
                         // Header
                         headerSection
 

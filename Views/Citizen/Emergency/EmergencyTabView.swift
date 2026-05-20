@@ -23,6 +23,7 @@ struct EmergencyTabView: View {
 
     // Gallery picker
     @State private var showGalleryPicker = false
+    @FocusState private var captionFocused: Bool
 
     // Segmented mode: camera vs history
     @State private var selectedMode: EmergencyMode = .camera
@@ -37,42 +38,51 @@ struct EmergencyTabView: View {
             wrappedValue: EmergencyViewModel(locationService: locationService))
     }
 
-    private var bgColor: Color {
-        colorScheme == .dark
-            ? Color(red: 0.063, green: 0.106, blue: 0.149)
-            : Color(red: 0.96, green: 0.97, blue: 0.98)
-    }
-
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Top bar
-                topBar
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
+            ZStack {
+                Color.aquaBackground.ignoresSafeArea()
 
-                // Mode picker
-                Picker("", selection: $selectedMode) {
-                    ForEach(EmergencyMode.allCases, id: \.self) { mode in
-                        Text(languageManager.localize(mode.rawValue))
-                            .tag(mode)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            LogoHeaderView()
+
+                            topBar
+
+                            Picker("", selection: $selectedMode) {
+                                ForEach(EmergencyMode.allCases, id: \.self) { mode in
+                                    Text(languageManager.localize(mode.rawValue))
+                                        .tag(mode)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+
+                            if selectedMode == .camera {
+                                cameraPreview
+                                cameraControls
+                                    .id("cameraControls")
+                            } else {
+                                historyContent
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .padding(.bottom, 28)
+                    }
+                    .onChange(of: captionFocused) { _, isFocused in
+                        guard isFocused else { return }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            withAnimation(.easeOut(duration: 0.25)) {
+                                proxy.scrollTo("cameraControls", anchor: .bottom)
+                            }
+                        }
                     }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
-
-                if selectedMode == .camera {
-                    cameraSection
-                } else {
-                    historySection
-                }
             }
-            .background(bgColor.ignoresSafeArea())
             .navigationBarHidden(true)
             .onAppear {
-                if selectedMode == .camera {
+                if selectedMode == .camera, !viewModel.hasCapturedImage {
                     cameraService.startSession()
                 }
                 viewModel.locationService.requestCurrentLocation()
@@ -82,7 +92,9 @@ struct EmergencyTabView: View {
             }
             .onChange(of: selectedMode) { _, newMode in
                 if newMode == .camera {
-                    cameraService.startSession()
+                    if !viewModel.hasCapturedImage {
+                        cameraService.startSession()
+                    }
                 } else {
                     cameraService.stopSession()
                     // Refresh history from backend when switching to History tab
@@ -93,12 +105,13 @@ struct EmergencyTabView: View {
                 if let image = newImage {
                     viewModel.onImageCaptured(image)
                     cameraService.capturedImage = nil
+                    cameraService.stopSession()
                 }
             }
-            // Quick SOS preview
-            .sheet(isPresented: $viewModel.showPreview) {
-                QuickSOSPreview(viewModel: viewModel)
-                    .environmentObject(languageManager)
+            .onChange(of: viewModel.capturedImage) { _, image in
+                if image == nil, selectedMode == .camera {
+                    cameraService.startSession()
+                }
             }
             // Gallery picker
             .sheet(isPresented: $showGalleryPicker) {
@@ -134,7 +147,21 @@ struct EmergencyTabView: View {
             } message: {
                 Text(viewModel.errorMessage)
             }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(languageManager.localize("Done")) {
+                        captionFocused = false
+                    }
+                    .fontWeight(.bold)
+                    .foregroundColor(.aquaPrimary)
+                }
+            }
         }
+    }
+
+    private var hasCapture: Bool {
+        viewModel.hasCapturedImage
     }
 
     // MARK: - Top Bar
@@ -208,158 +235,298 @@ struct EmergencyTabView: View {
         }
     }
 
-    // MARK: - Camera Section
+    // MARK: - Camera Preview (1:1)
 
-    private var cameraSection: some View {
-        VStack(spacing: 0) {
-            // Camera preview
-            ZStack {
-                if cameraService.isAuthorized {
-                    CameraPreviewView(session: cameraService.session)
-                        .cornerRadius(28)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 28)
-                                .stroke(Color.aquaPrimary.opacity(0.15), lineWidth: 1)
-                        )
-                } else {
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(
-                            colorScheme == .dark
-                                ? Color(red: 0.12, green: 0.16, blue: 0.22)
-                                : Color(red: 0.92, green: 0.93, blue: 0.95)
-                        )
-                        .overlay(
-                            VStack(spacing: 12) {
-                                Image(systemName: "camera.fill")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.secondary)
-                                Text(languageManager.localize("Camera access required"))
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                        )
-                }
+    private var cameraPreview: some View {
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .overlay {
+                GeometryReader { geo in
+                    ZStack {
+                        cameraPreviewContent(size: geo.size)
 
-                // Flash toggle (top-left)
-                VStack {
-                    HStack {
-                        Button { cameraService.toggleFlash() } label: {
-                            Image(
-                                systemName: cameraService.isFlashOn
-                                    ? "bolt.fill" : "bolt.slash.fill"
-                            )
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
+                        if hasCapture {
+                            liveTimestampOverlay
+                            captureCaptionOverlay
+                        } else {
+                            flashToggleOverlay
+                            liveTimestampOverlay
                         }
-                        .padding(14)
-                        Spacer()
                     }
-                    Spacer()
-                }
-
-                // Timestamp (bottom-left)
-                VStack {
-                    Spacer()
-                    HStack {
-                        HStack(spacing: 5) {
-                            Image(systemName: "clock.fill")
-                                .font(.system(size: 9))
-                            Text({
-                                let f = DateFormatter()
-                                f.dateFormat = "HH:mm · dd/MM/yyyy"
-                                return f.string(from: Date())
-                            }())
-                            .font(.system(size: 10, design: .monospaced))
-                        }
-                        .foregroundColor(.white.opacity(0.9))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.black.opacity(0.35))
-                        .cornerRadius(14)
-                        .padding(14)
-                        Spacer()
-                    }
+                    .frame(width: geo.size.width, height: geo.size.height)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
+            .clipShape(RoundedRectangle(cornerRadius: 28))
+            .overlay(
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(Color.aquaPrimary.opacity(0.15), lineWidth: 1)
+            )
+    }
 
-            Spacer(minLength: 12)
-
-            // Camera controls
-            HStack(alignment: .center, spacing: 0) {
-                // Gallery
-                Button { showGalleryPicker = true } label: {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(
-                                colorScheme == .dark
-                                    ? Color.white.opacity(0.1) : Color.black.opacity(0.06))
-                            .frame(width: 46, height: 46)
-                        Image(systemName: "photo.on.rectangle")
-                            .font(.system(size: 18))
-                            .foregroundColor(colorScheme == .dark ? .white : .primary)
+    @ViewBuilder
+    private func cameraPreviewContent(size: CGSize) -> some View {
+        if let image = viewModel.capturedImage {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: size.width, height: size.height)
+                .clipped()
+        } else if cameraService.isAuthorized {
+            CameraPreviewView(
+                session: cameraService.session,
+                mirrored: cameraService.isFrontCamera
+            )
+            .frame(width: size.width, height: size.height)
+        } else {
+            Rectangle()
+                .fill(
+                    colorScheme == .dark
+                        ? Color(red: 0.12, green: 0.16, blue: 0.22)
+                        : Color(red: 0.92, green: 0.93, blue: 0.95)
+                )
+                .overlay(
+                    VStack(spacing: 12) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
+                        Text(languageManager.localize("Camera access required"))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
-                }
-                .frame(maxWidth: .infinity)
-
-                // Capture
-                Button {
-                    viewModel.locationService.requestCurrentLocation()
-                    cameraService.capturePhoto()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color.aquaDanger, Color(red: 0.96, green: 0.40, blue: 0.40),
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 4
-                            )
-                            .frame(width: 74, height: 74)
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 60, height: 60)
-                            .shadow(color: .aquaDanger.opacity(0.3), radius: 8, x: 0, y: 4)
-                        Text("SOS")
-                            .font(.system(size: 14, weight: .black))
-                            .foregroundColor(.aquaDanger)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-                // Flip camera
-                Button { cameraService.flipCamera() } label: {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(
-                                colorScheme == .dark
-                                    ? Color.white.opacity(0.1) : Color.black.opacity(0.06))
-                            .frame(width: 46, height: 46)
-                        Image(systemName: "arrow.triangle.2.circlepath.camera")
-                            .font(.system(size: 16))
-                            .foregroundColor(colorScheme == .dark ? .white : .primary)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .padding(.horizontal, 30)
-            .padding(.bottom, 16)
+                )
+                .frame(width: size.width, height: size.height)
         }
     }
 
-    // MARK: - History Section
+    // MARK: - Camera Frame Overlays (live)
 
-    private var historySection: some View {
-        ScrollView {
-            VStack(spacing: 16) {
+    private var flashToggleOverlay: some View {
+        VStack {
+            HStack {
+                Button { cameraService.toggleFlash() } label: {
+                    Image(
+                        systemName: cameraService.isFlashOn
+                            ? "bolt.fill" : "bolt.slash.fill"
+                    )
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(10)
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(Circle())
+                }
+                .padding(14)
+                Spacer()
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var liveTimestampOverlay: some View {
+        VStack {
+            HStack {
+                Spacer()
+                HStack(spacing: 5) {
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 9))
+                    Text({
+                        let f = DateFormatter()
+                        f.dateFormat = "HH:mm · dd/MM/yyyy"
+                        return f.string(from: Date())
+                    }())
+                    .font(.system(size: 10, design: .monospaced))
+                }
+                .foregroundColor(.white.opacity(0.9))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.black.opacity(0.35))
+                .cornerRadius(14)
+                .padding(14)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+    }
+
+    // MARK: - Camera Frame Overlays (captured)
+
+    private var captureCaptionOverlay: some View {
+        let placeholder = languageManager.localize("What's your emergency?")
+        let sizerText = viewModel.caption.isEmpty ? placeholder : viewModel.caption
+
+        return VStack(spacing: 0) {
+            Spacer(minLength: 0)
+
+            ZStack {
+                // Invisible sizer — drives the capsule width based on text length
+                Text(sizerText)
+                    .font(.system(size: 15, weight: .bold))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(1...3)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 10)
+                    .opacity(0)
+                    .accessibilityHidden(true)
+
+                if viewModel.caption.isEmpty && !captionFocused {
+                    Text(placeholder)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1...3)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 10)
+                        .allowsHitTesting(false)
+                }
+
+                TextField("", text: $viewModel.caption, axis: .vertical)
+                    .lineLimit(1...3)
+                    .focused($captionFocused)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.white)
+                    .tint(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 10)
+            }
+            .background(Capsule().fill(Color.black.opacity(0.45)))
+            .frame(maxWidth: 240)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.bottom, 14)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    }
+
+    // MARK: - Camera Controls
+
+    private var cameraControls: some View {
+        HStack(alignment: .center, spacing: 0) {
+            Group {
+                if hasCapture {
+                    retakeButton
+                } else {
+                    galleryButton
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            Group {
+                if hasCapture {
+                    sendButton
+                } else {
+                    captureButton
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            Group {
+                flipCameraButton
+                    .opacity(hasCapture ? 0 : 1)
+                    .disabled(hasCapture)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(.horizontal, 10)
+    }
+
+    private var galleryButton: some View {
+        Button { showGalleryPicker = true } label: {
+            sideControlIcon("photo.on.rectangle", size: 18)
+        }
+    }
+
+    private var retakeButton: some View {
+        Button {
+            viewModel.cancelPreview()
+        } label: {
+            sideControlIcon("arrow.counterclockwise", size: 18)
+        }
+    }
+
+    private var flipCameraButton: some View {
+        Button { cameraService.flipCamera() } label: {
+            sideControlIcon("arrow.triangle.2.circlepath.camera", size: 16)
+        }
+    }
+
+    private func sideControlIcon(_ systemName: String, size: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(
+                    colorScheme == .dark
+                        ? Color.white.opacity(0.1) : Color.black.opacity(0.06))
+                .frame(width: 46, height: 46)
+            Image(systemName: systemName)
+                .font(.system(size: size))
+                .foregroundColor(colorScheme == .dark ? .white : .primary)
+        }
+    }
+
+    private var captureButton: some View {
+        Button {
+            viewModel.locationService.requestCurrentLocation()
+            cameraService.capturePhoto()
+        } label: {
+            ZStack {
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.aquaDanger, Color(red: 0.96, green: 0.40, blue: 0.40),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 4
+                    )
+                    .frame(width: 74, height: 74)
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 60, height: 60)
+                    .shadow(color: .aquaDanger.opacity(0.3), radius: 8, x: 0, y: 4)
+                Text("SOS")
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundColor(.aquaDanger)
+            }
+        }
+    }
+
+    private var sendButton: some View {
+        Button {
+            viewModel.submitQuickSOS()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.aquaDanger,
+                                Color(red: 0.96, green: 0.40, blue: 0.40),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 74, height: 74)
+                    .shadow(color: .aquaDanger.opacity(0.35), radius: 8, x: 0, y: 4)
+
+                if viewModel.isSubmitting {
+                    ProgressView().tint(.white)
+                } else {
+                    Image(systemName: "paperplane.fill")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
+        .disabled(viewModel.isSubmitting)
+    }
+
+    // MARK: - History Content
+
+    private var historyContent: some View {
+        VStack(spacing: 16) {
                 if viewModel.isLoadingHistory {
                     VStack(spacing: 12) {
                         ProgressView()
@@ -412,7 +579,6 @@ struct EmergencyTabView: View {
                             .font(.caption)
                             .foregroundColor(.gray)
                         }
-                        .padding(.horizontal, 20)
 
                         LazyVStack(spacing: 12) {
                             ForEach(activeRequests) { request in
@@ -422,7 +588,6 @@ struct EmergencyTabView: View {
                                     }
                             }
                         }
-                        .padding(.horizontal, 20)
                     }
 
                     if !resolvedRequests.isEmpty {
@@ -441,7 +606,6 @@ struct EmergencyTabView: View {
                             .font(.caption)
                             .foregroundColor(.gray)
                         }
-                        .padding(.horizontal, 20)
                         .padding(.top, activeRequests.isEmpty ? 0 : 12)
 
                         LazyVStack(spacing: 12) {
@@ -449,12 +613,9 @@ struct EmergencyTabView: View {
                                 RequestHistoryCard(request: request)
                             }
                         }
-                        .padding(.horizontal, 20)
                     }
                 }
-            }
-            .padding(.top, 8)
-            .padding(.bottom, 30)
         }
+        .frame(maxWidth: .infinity)
     }
 }

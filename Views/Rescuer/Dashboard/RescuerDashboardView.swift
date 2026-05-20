@@ -98,6 +98,8 @@ struct RescuerDashboardView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
+                        LogoHeaderView()
+
                         // 1. Header Row
                         headerRow
 

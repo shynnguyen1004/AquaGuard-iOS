@@ -42,6 +42,7 @@ struct SettingsView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
+                        LogoHeaderView()
 
                         // ── Profile Card ────────────────────────────
                         HStack(spacing: 16) {
@@ -281,7 +282,6 @@ struct SettingsView: View {
                     .padding(.top, 10)
                 }
             }
-            .navigationTitle(languageManager.localize("Settings"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

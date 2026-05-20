@@ -32,8 +32,7 @@ class EmergencyViewModel: ObservableObject {
     /// Caption for quick SOS
     @Published var caption: String = ""
 
-    /// Show preview sheet after capture
-    @Published var showPreview: Bool = false
+    var hasCapturedImage: Bool { capturedImage != nil }
 
     // MARK: - Detailed Mode
 
@@ -200,7 +199,6 @@ class EmergencyViewModel: ObservableObject {
     /// Called after camera captures an image
     func onImageCaptured(_ image: UIImage) {
         capturedImage = image
-        showPreview = true
     }
 
     /// Submit a Quick SOS request via backend POST /api/sos
@@ -264,7 +262,6 @@ class EmergencyViewModel: ObservableObject {
     func cancelPreview() {
         capturedImage = nil
         caption = ""
-        showPreview = false
     }
 
     // MARK: - Detailed Request Actions
@@ -352,7 +349,6 @@ class EmergencyViewModel: ObservableObject {
         // Quick SOS
         capturedImage = nil
         caption = ""
-        showPreview = false
 
         // Detailed
         reportDescription = ""

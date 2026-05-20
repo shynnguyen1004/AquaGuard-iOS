@@ -141,7 +141,26 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
         else { return }
 
         DispatchQueue.main.async { [weak self] in
-            self?.capturedImage = image
+            guard let self else { return }
+            // Front-camera preview is mirrored; keep the saved photo matching what the user saw.
+            self.capturedImage = self.isFrontCamera ? image.horizontallyMirrored() : image
+        }
+    }
+}
+
+// MARK: - UIImage mirroring (match front-camera preview)
+
+private extension UIImage {
+    func horizontallyMirrored() -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = scale
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            let rect = CGRect(origin: .zero, size: size)
+            guard let context = UIGraphicsGetCurrentContext() else { return }
+            context.translateBy(x: size.width, y: 0)
+            context.scaleBy(x: -1, y: 1)
+            draw(in: rect)
         }
     }
 }
