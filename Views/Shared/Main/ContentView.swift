@@ -44,7 +44,7 @@ struct ContentView: View {
                 }
                 .tag(3)
 
-            ProfileView(locationService: locationService)
+            SettingsView(locationService: locationService)
                 .tabItem {
                     Label(languageManager.localize("Profile"), systemImage: "person.crop.circle.fill")
                 }
