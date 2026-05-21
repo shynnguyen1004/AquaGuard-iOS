@@ -61,6 +61,14 @@ enum NetworkConfig {
         #endif
     }
 
+    // MARK: - Open-Meteo
+
+    /// Weather Forecast API (no API key on free tier).
+    static let openMeteoForecastURL = "https://api.open-meteo.com/v1/forecast"
+
+    /// How long cached weather responses stay valid.
+    static let weatherCacheTTL: TimeInterval = 900  // 15 minutes
+
     // MARK: - Timeouts
 
     /// Default timeout for API requests (seconds)

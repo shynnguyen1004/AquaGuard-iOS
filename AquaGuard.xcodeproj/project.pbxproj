@@ -41,6 +41,11 @@
 		BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		BBB304AA2F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		CC000001FA000001003B4C7D /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000001FA000000003B4C7D /* CameraService.swift */; };
+		CC000002FA000001003B4C7D /* WeatherError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000002FA000000003B4C7D /* WeatherError.swift */; };
+		CC000003FA000001003B4C7D /* WeatherProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000003FA000000003B4C7D /* WeatherProviding.swift */; };
+		CC000004FA000001003B4C7D /* WeatherCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004FA000000003B4C7D /* WeatherCache.swift */; };
+		CC000005FA000001003B4C7D /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000005FA000000003B4C7D /* OpenMeteoService.swift */; };
+		CC000007FA000001003B4C7D /* WeatherRiskCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +80,11 @@
 		BB03CE402FAB539D0013B884 /* WebSocketService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketService.swift; sourceTree = "<group>"; };
 		BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		CC000001FA000000003B4C7D /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
+		CC000002FA000000003B4C7D /* WeatherError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherError.swift; sourceTree = "<group>"; };
+		CC000003FA000000003B4C7D /* WeatherProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherProviding.swift; sourceTree = "<group>"; };
+		CC000004FA000000003B4C7D /* WeatherCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCache.swift; sourceTree = "<group>"; };
+		CC000005FA000000003B4C7D /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
+		CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherRiskCalculator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -163,6 +173,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CC000006FA000000003B4C7D /* Weather */ = {
+			isa = PBXGroup;
+			children = (
+				CC000002FA000000003B4C7D /* WeatherError.swift */,
+				CC000003FA000000003B4C7D /* WeatherProviding.swift */,
+				CC000004FA000000003B4C7D /* WeatherCache.swift */,
+				CC000005FA000000003B4C7D /* OpenMeteoService.swift */,
+				CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */,
+			);
+			path = Weather;
+			sourceTree = "<group>";
+		};
 		3A41D3912F4F226E00355F07 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -170,6 +192,7 @@
 				BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */,
 				BB03CE3F2FAB539D0013B884 /* TokenManager.swift */,
 				BB03CE402FAB539D0013B884 /* WebSocketService.swift */,
+				CC000006FA000000003B4C7D /* Weather */,
 				CC000001FA000000003B4C7D /* CameraService.swift */,
 				BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */,
 				3A41D39F2F4F32E000355F07 /* LanguageManager.swift */,
@@ -371,6 +394,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC000001FA000001003B4C7D /* CameraService.swift in Sources */,
+				CC000002FA000001003B4C7D /* WeatherError.swift in Sources */,
+				CC000003FA000001003B4C7D /* WeatherProviding.swift in Sources */,
+				CC000004FA000001003B4C7D /* WeatherCache.swift in Sources */,
+				CC000005FA000001003B4C7D /* OpenMeteoService.swift in Sources */,
+				CC000007FA000001003B4C7D /* WeatherRiskCalculator.swift in Sources */,
 				3A41D39C2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
 				BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
 				BB03CE412FAB539D0013B884 /* NetworkConfig.swift in Sources */,
