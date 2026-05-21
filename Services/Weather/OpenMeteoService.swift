@@ -60,6 +60,9 @@ final class OpenMeteoService: WeatherProviding, @unchecked Sendable {
         do {
             apiResponse = try decoder.decode(OpenMeteoResponse.self, from: data)
         } catch {
+            #if DEBUG
+            print("OpenMeteoService: decode failed — \(error)")
+            #endif
             throw WeatherError.decodingFailed
         }
 

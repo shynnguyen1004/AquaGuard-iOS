@@ -96,6 +96,17 @@ enum AppStrings {
             .english: "Could not load weather data",
             .vietnamese: "Không tải được dữ liệu thời tiết",
         ],
+        "Weather unavailable": [
+            .english: "Weather unavailable",
+            .vietnamese: "Chưa có dữ liệu thời tiết",
+        ],
+        "Rain": [.english: "Rain", .vietnamese: "Mưa"],
+        "Wind": [.english: "Wind", .vietnamese: "Gió"],
+        "Humidity": [.english: "Humidity", .vietnamese: "Độ ẩm"],
+        "Humidity unavailable": [
+            .english: "—",
+            .vietnamese: "—",
+        ],
         "Conditions look stable near you": [
             .english: "Conditions look stable near you",
             .vietnamese: "Thời tiết ổn định quanh bạn",
@@ -111,6 +122,25 @@ enum AppStrings {
         "Take immediate precautions": [
             .english: "Take immediate precautions",
             .vietnamese: "Cần phòng ngừa ngay",
+        ],
+
+        // MARK: Dev Mode
+        "Dev Mode": [.english: "Dev Mode", .vietnamese: "Chế độ Dev"],
+        "Simulate weather status": [
+            .english: "Simulate weather status",
+            .vietnamese: "Giả lập trạng thái thời tiết",
+        ],
+        "Real (current location)": [
+            .english: "Real (current location)",
+            .vietnamese: "Thật (vị trí hiện tại)",
+        ],
+        "Preview: Safe": [.english: "Preview: Safe", .vietnamese: "Xem thử: An toàn"],
+        "Preview: Caution": [.english: "Preview: Caution", .vietnamese: "Xem thử: Cảnh giác"],
+        "Preview: Danger": [.english: "Preview: Danger", .vietnamese: "Xem thử: Nguy hiểm"],
+        "Preview: Critical": [.english: "Preview: Critical", .vietnamese: "Xem thử: Nghiêm trọng"],
+        "Dev mode uses mock location and weather for the Status Card preview.": [
+            .english: "Dev mode uses mock location and weather for the Status Card preview.",
+            .vietnamese: "Chế độ Dev dùng vị trí và thời tiết giả lập để xem thử thẻ trạng thái.",
         ],
 
         // MARK: SafetyView

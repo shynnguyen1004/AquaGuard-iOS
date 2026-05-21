@@ -101,6 +101,7 @@ struct HomeView: View {
                         location: viewModel.currentRiskLocation,
                         level: viewModel.currentRiskLevel,
                         summary: viewModel.weatherSummary,
+                        metrics: viewModel.weatherMetrics,
                         actionLine: viewModel.statusActionLine,
                         isLoading: viewModel.isLoadingWeather,
                         hasError: viewModel.weatherError != nil
@@ -257,11 +258,19 @@ struct StatusCard: View {
     let location: String
     let level: SeverityLevel
     var summary: String = ""
+    var metrics: WeatherCardMetrics?
     var actionLine: String = ""
     var isLoading: Bool = false
     var hasError: Bool = false
 
+    private var accentColor: Color {
+        hasError ? Color.gray : level.color
+    }
+
     private var statusTitle: String {
+        if hasError {
+            return "Weather unavailable".localized
+        }
         switch level {
         case .low: return "Safe".localized
         case .moderate: return "Caution".localized
@@ -270,9 +279,12 @@ struct StatusCard: View {
         }
     }
 
-    private var backgroundColor: Color { level.color }
+    private var backgroundColor: Color {
+        hasError ? Color.gray.opacity(0.55) : level.color
+    }
 
     private var iconName: String {
+        if hasError { return "icloud.slash" }
         switch level {
         case .low: return "checkmark.shield.fill"
         case .moderate: return "cloud.sun.fill"
@@ -288,64 +300,121 @@ struct StatusCard: View {
         return "\("Location:".localized) \(location)"
     }
 
+    private var showMetricPills: Bool {
+        !isLoading && !hasError && metrics != nil
+    }
+
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                    Text("Current Risk Level".localized)
-                }
-                .font(.caption)
-                .fontWeight(.bold)
-                .textCase(.uppercase)
+        VStack(spacing: 10) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                        Text("Current Risk Level".localized)
+                    }
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .textCase(.uppercase)
 
-                if isLoading {
-                    ProgressView()
-                        .tint(.white)
-                        .scaleEffect(1.1)
-                        .padding(.vertical, 8)
-                    Text("Updating weather...".localized)
-                        .font(.subheadline)
-                        .opacity(0.9)
-                } else {
-                    Text(statusTitle)
-                        .font(.largeTitle)
-                        .fontWeight(.heavy)
-
-                    if !summary.isEmpty {
-                        Text(summary)
+                    if isLoading {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(1.1)
+                            .padding(.vertical, 8)
+                        Text("Updating weather...".localized)
                             .font(.subheadline)
-                            .opacity(0.95)
-                            .lineLimit(2)
-                    }
+                            .opacity(0.9)
+                    } else {
+                        Text(statusTitle)
+                            .font(.largeTitle)
+                            .fontWeight(.heavy)
 
-                    Text(locationText)
-                        .font(.caption)
-                        .opacity(0.85)
-                        .lineLimit(2)
+                        if !summary.isEmpty {
+                            Text(summary)
+                                .font(.subheadline)
+                                .opacity(0.95)
+                                .lineLimit(2)
+                        }
 
-                    if !actionLine.isEmpty {
-                        Text(actionLine)
+                        Text(locationText)
                             .font(.caption)
-                            .padding(.top, 2)
-                            .opacity(hasError ? 1 : 0.9)
+                            .opacity(0.85)
+                            .lineLimit(2)
+
+                        if !actionLine.isEmpty {
+                            Text(actionLine)
+                                .font(.caption)
+                                .padding(.top, 2)
+                                .opacity(hasError ? 1 : 0.9)
+                        }
                     }
+                }
+                Spacer(minLength: 8)
+                if !isLoading {
+                    Image(systemName: iconName)
+                        .font(.system(size: 60))
+                        .opacity(0.8)
                 }
             }
-            Spacer()
-            if !isLoading {
-                Image(systemName: iconName)
-                    .font(.system(size: 60))
-                    .opacity(0.8)
+            .foregroundColor(.white)
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(backgroundColor)
+            .cornerRadius(20)
+            .shadow(color: backgroundColor.opacity(0.4), radius: 10, x: 0, y: 5)
+
+            if showMetricPills, let metrics {
+                HStack(spacing: 8) {
+                    WeatherMetricPill(
+                        label: "Rain".localized,
+                        value: metrics.precipitationDisplay(),
+                        accent: accentColor
+                    )
+                    WeatherMetricPill(
+                        label: "Wind".localized,
+                        value: metrics.windDisplay(),
+                        accent: accentColor
+                    )
+                    WeatherMetricPill(
+                        label: "Humidity".localized,
+                        value: metrics.humidityDisplay() ?? "Humidity unavailable".localized,
+                        accent: accentColor
+                    )
+                }
             }
         }
-        .foregroundColor(.white)
-        .padding(20)
-        .background(backgroundColor)
-        .cornerRadius(20)
-        .shadow(color: backgroundColor.opacity(0.4), radius: 10, x: 0, y: 5)
         .animation(.easeInOut(duration: 0.25), value: isLoading)
         .animation(.easeInOut(duration: 0.25), value: level)
+    }
+}
+
+// MARK: - Weather metric pill
+
+private struct WeatherMetricPill: View {
+    let label: String
+    let value: String
+    let accent: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(value)
+                .font(.caption)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .foregroundColor(accent)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .background(Color.white)
+        .clipShape(Capsule())
+        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
     }
 }
 

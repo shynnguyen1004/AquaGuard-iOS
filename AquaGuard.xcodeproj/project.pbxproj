@@ -46,6 +46,7 @@
 		CC000004FA000001003B4C7D /* WeatherCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004FA000000003B4C7D /* WeatherCache.swift */; };
 		CC000005FA000001003B4C7D /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000005FA000000003B4C7D /* OpenMeteoService.swift */; };
 		CC000007FA000001003B4C7D /* WeatherRiskCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */; };
+		DD000001FA000001003B4C7D /* DevWeatherSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000001FA000000003B4C7D /* DevWeatherSettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +86,7 @@
 		CC000004FA000000003B4C7D /* WeatherCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCache.swift; sourceTree = "<group>"; };
 		CC000005FA000000003B4C7D /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
 		CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherRiskCalculator.swift; sourceTree = "<group>"; };
+		DD000001FA000000003B4C7D /* DevWeatherSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevWeatherSettings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -185,6 +187,14 @@
 			path = Weather;
 			sourceTree = "<group>";
 		};
+		DD000002FA000000003B4C7D /* Dev */ = {
+			isa = PBXGroup;
+			children = (
+				DD000001FA000000003B4C7D /* DevWeatherSettings.swift */,
+			);
+			path = Dev;
+			sourceTree = "<group>";
+		};
 		3A41D3912F4F226E00355F07 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -192,6 +202,7 @@
 				BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */,
 				BB03CE3F2FAB539D0013B884 /* TokenManager.swift */,
 				BB03CE402FAB539D0013B884 /* WebSocketService.swift */,
+				DD000002FA000000003B4C7D /* Dev */,
 				CC000006FA000000003B4C7D /* Weather */,
 				CC000001FA000000003B4C7D /* CameraService.swift */,
 				BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */,
@@ -399,6 +410,7 @@
 				CC000004FA000001003B4C7D /* WeatherCache.swift in Sources */,
 				CC000005FA000001003B4C7D /* OpenMeteoService.swift in Sources */,
 				CC000007FA000001003B4C7D /* WeatherRiskCalculator.swift in Sources */,
+				DD000001FA000001003B4C7D /* DevWeatherSettings.swift in Sources */,
 				3A41D39C2F4F2E0C00355F07 /* SMSHelper.swift in Sources */,
 				BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */,
 				BB03CE412FAB539D0013B884 /* NetworkConfig.swift in Sources */,

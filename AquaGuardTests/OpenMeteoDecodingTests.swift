@@ -51,6 +51,24 @@ struct OpenMeteoDecodingTests {
         #expect(key1 == key2)
     }
 
+    @Test func parsesOpenMeteoLocalTimeWithoutOffset() {
+        let parsed = OpenMeteoDateParser.parse(
+            "2026-05-21T23:00",
+            timeZoneIdentifier: "Asia/Ho_Chi_Minh"
+        )
+        #expect(parsed != nil)
+    }
+
+    @Test func snapshotUsesUpcomingHoursNotMidnightPrefix() throws {
+        let data = try loadFixture(named: "open_meteo_forecast_sample")
+        let response = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
+        let forecast = try response.toDomain()
+        let snapshot = forecast.snapshot
+
+        #expect(snapshot.nextHours.allSatisfy { $0.time >= snapshot.current.time })
+        #expect(snapshot.nextHours.count <= 6)
+    }
+
     @Test func riskCalculatorMarksThunderstormAsElevated() throws {
         let data = try loadFixture(named: "open_meteo_forecast_sample")
         let response = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)

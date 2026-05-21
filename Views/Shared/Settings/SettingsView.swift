@@ -14,6 +14,7 @@ struct SettingsView: View {
 
     @EnvironmentObject var languageManager: LanguageManager
     @ObservedObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var devWeatherSettings = DevWeatherSettings.shared
     @StateObject private var homeVM = HomeViewModel()
     @Environment(\.dismiss) var dismiss
     @Environment(\.isPresented) var isPresented
@@ -104,6 +105,9 @@ struct SettingsView: View {
 
                         sectionHeader(languageManager.localize("General"))
                         generalSection
+
+                        sectionHeader(languageManager.localize("Dev Mode"))
+                        devModeSection
 
                         sectionHeader(languageManager.localize("Support"))
                         supportSection
@@ -631,6 +635,97 @@ struct SettingsView: View {
         }
         .background(glassBackground)
         .padding(.horizontal)
+    }
+
+    // MARK: - Dev Mode Section
+
+    private var devModeSection: some View {
+        VStack(spacing: 0) {
+            settingsRow(
+                icon: "hammer.fill",
+                iconBg: Color.orange.opacity(0.12),
+                iconColor: .orange,
+                title: languageManager.localize("Simulate weather status"),
+                trailing: AnyView(EmptyView())
+            )
+
+            VStack(spacing: 6) {
+                ForEach(WeatherStatusSimulation.allCases) { mode in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            devWeatherSettings.statusSimulation = mode
+                        }
+                    } label: {
+                        HStack(spacing: 10) {
+                            simulationIndicator(for: mode)
+                            Text(languageManager.localize(mode.settingsTitleKey))
+                                .font(.subheadline)
+                                .fontWeight(
+                                    devWeatherSettings.statusSimulation == mode ? .semibold : .regular
+                                )
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.leading)
+                            Spacer(minLength: 8)
+                            if devWeatherSettings.statusSimulation == mode {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.body)
+                                    .foregroundColor(.aquaPrimary)
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            devWeatherSettings.statusSimulation == mode
+                                ? Color.aquaPrimary.opacity(0.12)
+                                : Color.primary.opacity(0.04)
+                        )
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 10)
+
+            Text(languageManager.localize(
+                "Dev mode uses mock location and weather for the Status Card preview."
+            ))
+            .font(.caption2)
+            .foregroundColor(.secondary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 14)
+        }
+        .background(glassBackground)
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func simulationIndicator(for mode: WeatherStatusSimulation) -> some View {
+        let size: CGFloat = 10
+        switch mode {
+        case .real:
+            Circle()
+                .fill(Color.aquaPrimary)
+                .frame(width: size, height: size)
+        case .safe:
+            Circle()
+                .fill(Color.aquaSafe)
+                .frame(width: size, height: size)
+        case .caution:
+            Circle()
+                .fill(Color.aquaWarning)
+                .frame(width: size, height: size)
+        case .danger:
+            Circle()
+                .fill(Color.aquaDanger)
+                .frame(width: size, height: size)
+        case .critical:
+            Circle()
+                .fill(Color.aquaCritical)
+                .frame(width: size, height: size)
+        }
     }
 
     // MARK: - Support Section

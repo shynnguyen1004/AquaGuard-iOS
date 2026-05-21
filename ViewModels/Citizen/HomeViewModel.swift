@@ -15,6 +15,7 @@ class HomeViewModel: ObservableObject {
     @Published var currentRiskLocation: String = ""
     @Published var currentRiskLevel: SeverityLevel = .moderate
     @Published var weatherSummary: String = ""
+    @Published var weatherMetrics: WeatherCardMetrics?
     @Published var statusActionLine: String = ""
     @Published var isLoadingWeather: Bool = false
     @Published var weatherError: String?
@@ -26,7 +27,9 @@ class HomeViewModel: ObservableObject {
     private let geocoder = CLGeocoder()
     private var cancellables = Set<AnyCancellable>()
     private let enablesWeatherUpdates: Bool
-    private var weatherTask: Task<Void, Never>?
+    private var locationDebounceTask: Task<Void, Never>?
+    private var pendingCoordinate: CLLocationCoordinate2D?
+    private var weatherLoadGeneration = 0
 
     init(
         locationService: LocationService,
@@ -39,6 +42,13 @@ class HomeViewModel: ObservableObject {
 
         guard enablesWeatherUpdates else { return }
 
+        DevWeatherSettings.shared.$statusSimulation
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.handleDevSimulationModeChange()
+            }
+            .store(in: &cancellables)
+
         locationService.$currentLocation
             .compactMap { $0 }
             .removeDuplicates { lhs, rhs in
@@ -47,8 +57,13 @@ class HomeViewModel: ObservableObject {
             }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] coordinate in
-                self?.reverseGeocode(coordinate: coordinate)
-                self?.scheduleWeatherRefresh(for: coordinate, forceRefresh: false)
+                guard let self else { return }
+                if DevWeatherSettings.shared.isSimulating {
+                    self.applyWeatherSimulation()
+                    return
+                }
+                self.reverseGeocode(coordinate: coordinate)
+                self.scheduleWeatherRefresh(for: coordinate, forceRefresh: false)
             }
             .store(in: &cancellables)
     }
@@ -66,6 +81,11 @@ class HomeViewModel: ObservableObject {
         locationService.requestPermission()
         locationService.requestCurrentLocation()
 
+        if DevWeatherSettings.shared.isSimulating {
+            applyWeatherSimulation()
+            return
+        }
+
         if let coordinate = locationService.currentLocation {
             if currentRiskLocation.isEmpty {
                 reverseGeocode(coordinate: coordinate)
@@ -77,20 +97,33 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    /// Pull-to-refresh — runs outside SwiftUI's refreshable cancellation hierarchy.
     func refreshWeatherRisk(forceRefresh: Bool = true) async {
         guard enablesWeatherUpdates else { return }
 
-        guard let coordinate = locationService.currentLocation else {
+        if DevWeatherSettings.shared.isSimulating {
+            applyWeatherSimulation()
+            return
+        }
+
+        locationDebounceTask?.cancel()
+        locationDebounceTask = nil
+        locationService.requestCurrentLocation()
+
+        let coordinate = locationService.currentLocation
+        guard let coordinate else {
             weatherError = nil
+            weatherMetrics = nil
             statusActionLine = localized("Enable location to see your local risk")
             return
         }
 
-        weatherTask?.cancel()
-        weatherTask = Task {
-            await loadWeather(for: coordinate, forceRefresh: forceRefresh)
-        }
-        await weatherTask?.value
+        await Task.detached(priority: .userInitiated) { @MainActor in
+            await self.executeWeatherLoad(
+                for: coordinate,
+                forceRefresh: forceRefresh
+            )
+        }.value
     }
 
     func signOut() {
@@ -103,20 +136,52 @@ class HomeViewModel: ObservableObject {
         for coordinate: CLLocationCoordinate2D,
         forceRefresh: Bool
     ) {
-        weatherTask?.cancel()
-        weatherTask = Task {
-            await loadWeather(for: coordinate, forceRefresh: forceRefresh)
+        if DevWeatherSettings.shared.isSimulating {
+            applyWeatherSimulation()
+            return
+        }
+
+        pendingCoordinate = coordinate
+        locationDebounceTask?.cancel()
+        locationDebounceTask = Task {
+            // Debounce rapid GPS updates so in-flight Open-Meteo calls are not cancelled.
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled, let coordinate = pendingCoordinate else { return }
+            await executeWeatherLoad(for: coordinate, forceRefresh: forceRefresh)
         }
     }
 
-    private func loadWeather(
+    private func executeWeatherLoad(
         for coordinate: CLLocationCoordinate2D,
         forceRefresh: Bool
     ) async {
-        guard !Task.isCancelled else { return }
+        weatherLoadGeneration += 1
+        let generation = weatherLoadGeneration
+        await performWeatherLoad(
+            for: coordinate,
+            forceRefresh: forceRefresh,
+            generation: generation
+        )
+    }
+
+    private func performWeatherLoad(
+        for coordinate: CLLocationCoordinate2D,
+        forceRefresh: Bool,
+        generation: Int
+    ) async {
+        if DevWeatherSettings.shared.isSimulating {
+            applyWeatherSimulation()
+            return
+        }
 
         isLoadingWeather = true
         weatherError = nil
+
+        defer {
+            if generation == weatherLoadGeneration {
+                isLoadingWeather = false
+            }
+        }
 
         do {
             let forecast = try await weatherService.fetchForecast(
@@ -124,28 +189,43 @@ class HomeViewModel: ObservableObject {
                 longitude: coordinate.longitude,
                 forceRefresh: forceRefresh
             )
-            guard !Task.isCancelled else { return }
+            guard generation == weatherLoadGeneration else { return }
 
             let snapshot = forecast.snapshot
             currentRiskLevel = WeatherRiskCalculator.evaluate(snapshot: snapshot)
             weatherSummary = snapshot.summaryLine
+            weatherMetrics = WeatherCardMetrics.from(current: snapshot.current)
             lastWeatherUpdate = forecast.fetchedAt
             statusActionLine = actionLine(for: currentRiskLevel)
             weatherError = nil
         } catch {
-            guard !Task.isCancelled else { return }
-            if let weatherError = error as? WeatherError {
-                self.weatherError = weatherError.localizedDescription
-            } else {
-                self.weatherError = error.localizedDescription
+            if Self.isBenignCancellation(error) {
+                return
             }
-            statusActionLine = localized("Could not load weather data")
-            if weatherSummary.isEmpty {
-                weatherSummary = ""
-            }
-        }
+            guard generation == weatherLoadGeneration else { return }
 
-        isLoadingWeather = false
+            #if DEBUG
+            print("HomeViewModel: weather load failed — \(error)")
+            #endif
+
+            weatherSummary = ""
+            weatherMetrics = nil
+            weatherError = Self.userFacingWeatherMessage(for: error)
+            statusActionLine = localized("Could not load weather data")
+        }
+    }
+
+    private static func isBenignCancellation(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        let urlError = error as? URLError
+        return urlError?.code == .cancelled
+    }
+
+    private static func userFacingWeatherMessage(for error: Error) -> String {
+        if let weatherError = error as? WeatherError {
+            return weatherError.localizedDescription
+        }
+        return error.localizedDescription
     }
 
     private func actionLine(for level: SeverityLevel) -> String {
@@ -163,7 +243,47 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Geocoding
 
+    private func handleDevSimulationModeChange() {
+        guard enablesWeatherUpdates else { return }
+
+        if DevWeatherSettings.shared.isSimulating {
+            locationDebounceTask?.cancel()
+            locationDebounceTask = nil
+            applyWeatherSimulation()
+            return
+        }
+
+        if let coordinate = locationService.currentLocation {
+            reverseGeocode(coordinate: coordinate)
+            scheduleWeatherRefresh(for: coordinate, forceRefresh: true)
+        }
+    }
+
+    private func applyWeatherSimulation() {
+        guard let preset = DevWeatherSettings.shared.activePreset else { return }
+
+        weatherLoadGeneration += 1
+        locationDebounceTask?.cancel()
+        locationDebounceTask = nil
+
+        isLoadingWeather = false
+        weatherError = nil
+        currentRiskLocation = preset.locationLabel
+        currentRiskLevel = preset.level
+        weatherSummary = preset.summary
+        weatherMetrics = preset.metrics
+        statusActionLine = actionLine(for: preset.level)
+        lastWeatherUpdate = Date()
+    }
+
     private func reverseGeocode(coordinate: CLLocationCoordinate2D) {
+        if DevWeatherSettings.shared.isSimulating {
+            if let label = DevWeatherSettings.shared.activePreset?.locationLabel {
+                currentRiskLocation = label
+            }
+            return
+        }
+
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         geocoder.cancelGeocode()
         geocoder.reverseGeocodeLocation(

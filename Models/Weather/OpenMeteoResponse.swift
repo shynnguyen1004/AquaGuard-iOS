@@ -29,8 +29,8 @@ struct OpenMeteoResponse: Decodable {
             throw WeatherError.missingData("daily")
         }
 
-        let currentWeather = try currentPayload.toDomain()
-        let hourlyItems = try hourlyPayload.toDomainItems()
+        let currentWeather = try currentPayload.toDomain(timeZoneIdentifier: timezone)
+        let hourlyItems = try hourlyPayload.toDomainItems(timeZoneIdentifier: timezone)
         let dailyItems = try dailyPayload.toDomainItems()
 
         return WeatherForecast(
@@ -64,8 +64,8 @@ struct OpenMeteoCurrent: Decodable {
         case relativeHumidity2m = "relative_humidity_2m"
     }
 
-    func toDomain() throws -> CurrentWeather {
-        guard let parsedTime = OpenMeteoDateParser.parse(time) else {
+    func toDomain(timeZoneIdentifier: String) throws -> CurrentWeather {
+        guard let parsedTime = OpenMeteoDateParser.parse(time, timeZoneIdentifier: timeZoneIdentifier) else {
             throw WeatherError.missingData("current.time")
         }
         return CurrentWeather(
@@ -98,7 +98,7 @@ struct OpenMeteoHourly: Decodable {
         case windSpeed10m = "wind_speed_10m"
     }
 
-    func toDomainItems() throws -> [HourlyForecastItem] {
+    func toDomainItems(timeZoneIdentifier: String) throws -> [HourlyForecastItem] {
         let count = time.count
         guard count > 0,
               temperature2m.count == count,
@@ -113,7 +113,10 @@ struct OpenMeteoHourly: Decodable {
         items.reserveCapacity(count)
 
         for index in 0..<count {
-            guard let parsedTime = OpenMeteoDateParser.parse(time[index]) else { continue }
+            guard let parsedTime = OpenMeteoDateParser.parse(
+                time[index],
+                timeZoneIdentifier: timeZoneIdentifier
+            ) else { continue }
             let precipProb: Int? = precipitationProbability.flatMap { probs in
                 index < probs.count ? probs[index] : nil
             }
@@ -192,13 +195,30 @@ struct OpenMeteoDaily: Decodable {
 // MARK: - Date parsing
 
 enum OpenMeteoDateParser {
-    private static let hourlyFormatter: ISO8601DateFormatter = {
+    /// Open-Meteo returns local times like `2026-05-21T23:00` (no seconds, no offset).
+    private static func openMeteoFormatter(timeZoneIdentifier: String) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
+        formatter.timeZone =
+            TimeZone(identifier: timeZoneIdentifier) ?? TimeZone(secondsFromGMT: 0)
+        return formatter
+    }
+
+    private static let openMeteoWithSecondsFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter
+    }()
+
+    private static let hourlyISOFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
-    private static let hourlyFormatterNoFraction: ISO8601DateFormatter = {
+    private static let hourlyISONoFractionFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter
@@ -212,9 +232,20 @@ enum OpenMeteoDateParser {
         return formatter
     }()
 
-    static func parse(_ isoString: String) -> Date? {
-        if let date = hourlyFormatter.date(from: isoString) { return date }
-        return hourlyFormatterNoFraction.date(from: isoString)
+    static func parse(_ isoString: String, timeZoneIdentifier: String) -> Date? {
+        if let date = openMeteoFormatter(timeZoneIdentifier: timeZoneIdentifier).date(from: isoString) {
+            return date
+        }
+
+        if let tz = TimeZone(identifier: timeZoneIdentifier) {
+            openMeteoWithSecondsFormatter.timeZone = tz
+        }
+        if let date = openMeteoWithSecondsFormatter.date(from: isoString) {
+            return date
+        }
+
+        if let date = hourlyISOFormatter.date(from: isoString) { return date }
+        return hourlyISONoFractionFormatter.date(from: isoString)
     }
 
     static func parseDaily(_ dateString: String) -> Date? {

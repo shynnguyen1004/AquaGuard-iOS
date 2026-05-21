@@ -25,9 +25,19 @@ struct WeatherForecast: Equatable, Sendable {
             longitude: longitude,
             timezone: timezone,
             current: current,
-            nextHours: Array(hourly.prefix(6)),
+            nextHours: Self.upcomingHours(from: hourly, after: current.time, count: 6),
             fetchedAt: fetchedAt
         )
+    }
+
+    /// Hourly rows from the current moment onward (not midnight of the forecast day).
+    static func upcomingHours(
+        from hourly: [HourlyForecastItem],
+        after currentTime: Date,
+        count: Int
+    ) -> [HourlyForecastItem] {
+        let upcoming = hourly.filter { $0.time >= currentTime }
+        return Array(upcoming.prefix(count))
     }
 }
 
@@ -83,10 +93,43 @@ struct WeatherSnapshot: Equatable, Sendable {
     let nextHours: [HourlyForecastItem]
     let fetchedAt: Date
 
-    /// Human-readable one-liner, e.g. "Thunderstorm · 28°C · Wind 5 km/h"
+    /// Human-readable one-liner, e.g. "Thunderstorm · 28°C"
     var summaryLine: String {
         let temp = Int(current.temperatureCelsius.rounded())
-        let wind = Int(current.windSpeedKmh.rounded())
-        return "\(current.wmo.shortDescription) · \(temp)°C · Wind \(wind) km/h"
+        return "\(current.wmo.shortDescription) · \(temp)°C"
+    }
+}
+
+// MARK: - Status Card metric pills
+
+struct WeatherCardMetrics: Equatable, Sendable {
+    let precipitationMm: Double
+    let windSpeedKmh: Double
+    let relativeHumidityPercent: Int?
+
+    static func from(current: CurrentWeather) -> WeatherCardMetrics {
+        WeatherCardMetrics(
+            precipitationMm: current.precipitationMm,
+            windSpeedKmh: current.windSpeedKmh,
+            relativeHumidityPercent: current.relativeHumidityPercent
+        )
+    }
+
+    func precipitationDisplay() -> String {
+        if precipitationMm < 0.05 {
+            return "0 mm"
+        }
+        if precipitationMm < 10 {
+            return String(format: "%.1f mm", precipitationMm)
+        }
+        return String(format: "%.0f mm", precipitationMm)
+    }
+
+    func windDisplay() -> String {
+        "\(Int(windSpeedKmh.rounded())) km/h"
+    }
+
+    func humidityDisplay() -> String? {
+        relativeHumidityPercent.map { "\($0)%" }
     }
 }
