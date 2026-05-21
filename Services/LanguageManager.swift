@@ -85,6 +85,33 @@ enum AppStrings {
         "Danger": [.english: "Danger", .vietnamese: "Nguy hiểm"],
         "Critical": [.english: "Critical", .vietnamese: "Nghiêm trọng"],
         "Current Risk Level": [.english: "Current Risk Level", .vietnamese: "Mức độ nguy hiểm"],
+        "Location:": [.english: "Location:", .vietnamese: "Vị trí:"],
+        "Location unavailable": [.english: "Location unavailable", .vietnamese: "Chưa có vị trí"],
+        "Updating weather...": [.english: "Updating weather...", .vietnamese: "Đang cập nhật thời tiết..."],
+        "Enable location to see your local risk": [
+            .english: "Enable location to see your local risk",
+            .vietnamese: "Bật vị trí để xem mức rủi ro tại chỗ bạn",
+        ],
+        "Could not load weather data": [
+            .english: "Could not load weather data",
+            .vietnamese: "Không tải được dữ liệu thời tiết",
+        ],
+        "Conditions look stable near you": [
+            .english: "Conditions look stable near you",
+            .vietnamese: "Thời tiết ổn định quanh bạn",
+        ],
+        "Stay alert for changing weather": [
+            .english: "Stay alert for changing weather",
+            .vietnamese: "Theo dõi thời tiết thay đổi",
+        ],
+        "Limit travel and prepare for flooding": [
+            .english: "Limit travel and prepare for flooding",
+            .vietnamese: "Hạn chế di chuyển và chuẩn bị chống ngập",
+        ],
+        "Take immediate precautions": [
+            .english: "Take immediate precautions",
+            .vietnamese: "Cần phòng ngừa ngay",
+        ],
 
         // MARK: SafetyView
         "Emergency Assistance": [.english: "Emergency Assistance", .vietnamese: "Hỗ trợ khẩn cấp"],

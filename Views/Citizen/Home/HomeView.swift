@@ -13,7 +13,8 @@ struct HomeView: View {
         static let emergency = 2
     }
 
-    @StateObject var viewModel = HomeViewModel()
+    let locationService: LocationService
+    @StateObject var viewModel: HomeViewModel
     @StateObject var familyVM = FamilyViewModel()
     @EnvironmentObject var languageManager: LanguageManager
     @State private var showLogoutAlert = false
@@ -26,6 +27,14 @@ struct HomeView: View {
 
     // Family page
     @State private var showFamily = false
+
+    init(selectedTab: Binding<Int>, locationService: LocationService) {
+        _selectedTab = selectedTab
+        self.locationService = locationService
+        _viewModel = StateObject(
+            wrappedValue: HomeViewModel(locationService: locationService)
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -89,7 +98,12 @@ struct HomeView: View {
 
                     // Risk Status Card
                     StatusCard(
-                        location: viewModel.currentRiskLocation, level: viewModel.currentRiskLevel
+                        location: viewModel.currentRiskLocation,
+                        level: viewModel.currentRiskLevel,
+                        summary: viewModel.weatherSummary,
+                        actionLine: viewModel.statusActionLine,
+                        isLoading: viewModel.isLoadingWeather,
+                        hasError: viewModel.weatherError != nil
                     )
                     .padding(.horizontal)
 
@@ -187,14 +201,18 @@ struct HomeView: View {
                 }
                 .padding(.top)
             }
+            .refreshable {
+                await viewModel.refreshWeatherRisk(forceRefresh: true)
+            }
             .background(Color.aquaBackground)
             .navigationTitle("AquaGuard")
             .navigationBarHidden(true)
             .onAppear {
                 familyVM.fetchMembers()
+                viewModel.onAppear()
             }
             .sheet(isPresented: $showSettings) {
-                SettingsView()
+                SettingsView(locationService: locationService)
                     .environmentObject(languageManager)
             }
             .fullScreenCover(isPresented: $showFamily) {
@@ -238,8 +256,11 @@ struct QuickActionButton: View {
 struct StatusCard: View {
     let location: String
     let level: SeverityLevel
+    var summary: String = ""
+    var actionLine: String = ""
+    var isLoading: Bool = false
+    var hasError: Bool = false
 
-    // Status title based on severity level
     private var statusTitle: String {
         switch level {
         case .low: return "Safe".localized
@@ -249,10 +270,8 @@ struct StatusCard: View {
         }
     }
 
-    // Background color — delegates to SeverityLevel.color (single source of truth)
     private var backgroundColor: Color { level.color }
 
-    // Icon based on severity level
     private var iconName: String {
         switch level {
         case .low: return "checkmark.shield.fill"
@@ -260,6 +279,13 @@ struct StatusCard: View {
         case .severe: return "cloud.heavyrain.fill"
         case .critical: return "exclamationmark.octagon.fill"
         }
+    }
+
+    private var locationText: String {
+        if location.isEmpty {
+            return "Location unavailable".localized
+        }
+        return "\("Location:".localized) \(location)"
     }
 
     var body: some View {
@@ -273,31 +299,53 @@ struct StatusCard: View {
                 .fontWeight(.bold)
                 .textCase(.uppercase)
 
-                // Use computed statusTitle
-                Text(statusTitle)
-                    .font(.largeTitle)
-                    .fontWeight(.heavy)
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(1.1)
+                        .padding(.vertical, 8)
+                    Text("Updating weather...".localized)
+                        .font(.subheadline)
+                        .opacity(0.9)
+                } else {
+                    Text(statusTitle)
+                        .font(.largeTitle)
+                        .fontWeight(.heavy)
 
-                Text("Location: \(location)")
-                    .font(.subheadline)
-                    .opacity(0.9)
+                    if !summary.isEmpty {
+                        Text(summary)
+                            .font(.subheadline)
+                            .opacity(0.95)
+                            .lineLimit(2)
+                    }
 
-                Text("Take action immediately")
-                    .font(.caption)
-                    .padding(.top, 4)
+                    Text(locationText)
+                        .font(.caption)
+                        .opacity(0.85)
+                        .lineLimit(2)
+
+                    if !actionLine.isEmpty {
+                        Text(actionLine)
+                            .font(.caption)
+                            .padding(.top, 2)
+                            .opacity(hasError ? 1 : 0.9)
+                    }
+                }
             }
             Spacer()
-            // Use computed iconName
-            Image(systemName: iconName)
-                .font(.system(size: 60))
-                .opacity(0.8)
+            if !isLoading {
+                Image(systemName: iconName)
+                    .font(.system(size: 60))
+                    .opacity(0.8)
+            }
         }
         .foregroundColor(.white)
         .padding(20)
-        // Use computed backgroundColor
         .background(backgroundColor)
         .cornerRadius(20)
         .shadow(color: backgroundColor.opacity(0.4), radius: 10, x: 0, y: 5)
+        .animation(.easeInOut(duration: 0.25), value: isLoading)
+        .animation(.easeInOut(duration: 0.25), value: level)
     }
 }
 
