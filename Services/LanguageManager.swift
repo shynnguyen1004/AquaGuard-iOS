@@ -85,6 +85,63 @@ enum AppStrings {
         "Danger": [.english: "Danger", .vietnamese: "Nguy hiểm"],
         "Critical": [.english: "Critical", .vietnamese: "Nghiêm trọng"],
         "Current Risk Level": [.english: "Current Risk Level", .vietnamese: "Mức độ nguy hiểm"],
+        "Location:": [.english: "Location:", .vietnamese: "Vị trí:"],
+        "Location unavailable": [.english: "Location unavailable", .vietnamese: "Chưa có vị trí"],
+        "Updating weather...": [.english: "Updating weather...", .vietnamese: "Đang cập nhật thời tiết..."],
+        "Enable location to see your local risk": [
+            .english: "Enable location to see your local risk",
+            .vietnamese: "Bật vị trí để xem mức rủi ro tại chỗ bạn",
+        ],
+        "Could not load weather data": [
+            .english: "Could not load weather data",
+            .vietnamese: "Không tải được dữ liệu thời tiết",
+        ],
+        "Weather unavailable": [
+            .english: "Weather unavailable",
+            .vietnamese: "Chưa có dữ liệu thời tiết",
+        ],
+        "Rain": [.english: "Rain", .vietnamese: "Mưa"],
+        "Wind": [.english: "Wind", .vietnamese: "Gió"],
+        "Humidity": [.english: "Humidity", .vietnamese: "Độ ẩm"],
+        "Humidity unavailable": [
+            .english: "—",
+            .vietnamese: "—",
+        ],
+        "Conditions look stable near you": [
+            .english: "Conditions look stable near you",
+            .vietnamese: "Thời tiết ổn định quanh bạn",
+        ],
+        "Stay alert for changing weather": [
+            .english: "Stay alert for changing weather",
+            .vietnamese: "Theo dõi thời tiết thay đổi",
+        ],
+        "Limit travel and prepare for flooding": [
+            .english: "Limit travel and prepare for flooding",
+            .vietnamese: "Hạn chế di chuyển và chuẩn bị chống ngập",
+        ],
+        "Take immediate precautions": [
+            .english: "Take immediate precautions",
+            .vietnamese: "Cần phòng ngừa ngay",
+        ],
+
+        // MARK: Dev Mode
+        "Dev Mode": [.english: "Dev Mode", .vietnamese: "Chế độ Dev"],
+        "Simulate weather status": [
+            .english: "Simulate weather status",
+            .vietnamese: "Giả lập trạng thái thời tiết",
+        ],
+        "Real (current location)": [
+            .english: "Real (current location)",
+            .vietnamese: "Thật (vị trí hiện tại)",
+        ],
+        "Preview: Safe": [.english: "Preview: Safe", .vietnamese: "Xem thử: An toàn"],
+        "Preview: Caution": [.english: "Preview: Caution", .vietnamese: "Xem thử: Cảnh giác"],
+        "Preview: Danger": [.english: "Preview: Danger", .vietnamese: "Xem thử: Nguy hiểm"],
+        "Preview: Critical": [.english: "Preview: Critical", .vietnamese: "Xem thử: Nghiêm trọng"],
+        "Dev mode uses mock location and weather for the Status Card preview.": [
+            .english: "Dev mode uses mock location and weather for the Status Card preview.",
+            .vietnamese: "Chế độ Dev dùng vị trí và thời tiết giả lập để xem thử thẻ trạng thái.",
+        ],
 
         // MARK: SafetyView
         "Emergency Assistance": [.english: "Emergency Assistance", .vietnamese: "Hỗ trợ khẩn cấp"],

@@ -18,7 +18,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView(selectedTab: $selectedTab)
+            HomeView(selectedTab: $selectedTab, locationService: locationService)
                 .tabItem {
                     Label(languageManager.localize("Home"), systemImage: "house.fill")
                 }
