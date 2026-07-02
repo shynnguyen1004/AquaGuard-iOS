@@ -73,6 +73,20 @@ class WebSocketService: ObservableObject {
     private var currentRequestId: Int?
     private var pingTimer: Timer?
 
+    // MARK: - Call Signaling
+
+    /// Parsed WebRTC call signaling messages. `CallManager` subscribes to this.
+    /// The same socket carries both tracking and call signaling (one socket per
+    /// user, matching the backend's `userSockets` registry).
+    let callSignals = PassthroughSubject<CallSignal, Never>()
+
+    // MARK: - Reconnection
+
+    /// True while we intend to stay connected (i.e. logged in). Enables the call
+    /// channel to survive transient network drops so incoming calls still ring.
+    private var shouldStayConnected = false
+    private var reconnectAttempt = 0
+
     private init() {}
 
     // MARK: - Connect
@@ -89,8 +103,11 @@ class WebSocketService: ObservableObject {
             return
         }
 
-        // Close existing connection
-        disconnect()
+        // We intend to stay connected from now on (until an explicit disconnect).
+        shouldStayConnected = true
+
+        // Tear down any existing socket without cancelling the reconnect intent.
+        closeSocket()
 
         let session = URLSession(configuration: .default)
         webSocket = session.webSocketTask(with: url)
@@ -108,16 +125,20 @@ class WebSocketService: ObservableObject {
         // Start ping timer (keep alive)
         startPingTimer()
 
+        // Re-join a tracking room if one was active before a reconnect.
+        if let requestId = currentRequestId {
+            joinTracking(requestId: requestId)
+        }
+
         print("[WS] Connected")
     }
 
-    /// Disconnect and clean up
+    /// Fully disconnect (e.g. on logout) — stops reconnecting.
     func disconnect() {
-        pingTimer?.invalidate()
-        pingTimer = nil
-        webSocket?.cancel(with: .goingAway, reason: nil)
-        webSocket = nil
+        shouldStayConnected = false
+        reconnectAttempt = 0
         currentRequestId = nil
+        closeSocket()
 
         DispatchQueue.main.async {
             self.isConnected = false
@@ -127,6 +148,32 @@ class WebSocketService: ObservableObject {
         }
 
         print("[WS] Disconnected")
+    }
+
+    /// Cancel the current socket + ping timer without changing reconnect intent.
+    private func closeSocket() {
+        pingTimer?.invalidate()
+        pingTimer = nil
+        webSocket?.cancel(with: .goingAway, reason: nil)
+        webSocket = nil
+    }
+
+    /// Called when the socket drops. Reconnects (with backoff) if we still want
+    /// to be connected, so the call channel survives transient network loss.
+    private func handleConnectionDrop() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.isConnected = false
+            guard self.shouldStayConnected else { return }
+
+            self.reconnectAttempt += 1
+            let delay = min(Double(self.reconnectAttempt) * 2.0, 20.0)   // 2s, 4s, … capped at 20s
+            print("[WS] Connection dropped — reconnecting in \(delay)s (attempt \(self.reconnectAttempt))")
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, self.shouldStayConnected else { return }
+                self.connect()
+            }
+        }
     }
 
     // MARK: - Send Messages
@@ -155,12 +202,55 @@ class WebSocketService: ObservableObject {
         sendJSON(message)
     }
 
+    // MARK: - Send Call Signaling
+    //
+    // The backend resolves the counterpart from `requestId` (citizen + assigned
+    // rescuer of an active mission), so the client only ever sends `requestId`.
+
+    func sendCallInvite(requestId: Int, media: String = "audio") {
+        sendJSON(["type": "call_invite", "requestId": requestId, "media": media])
+    }
+
+    func sendCallAccept(requestId: Int) {
+        sendJSON(["type": "call_accept", "requestId": requestId])
+    }
+
+    func sendCallReject(requestId: Int) {
+        sendJSON(["type": "call_reject", "requestId": requestId])
+    }
+
+    func sendCallCancel(requestId: Int) {
+        sendJSON(["type": "call_cancel", "requestId": requestId])
+    }
+
+    func sendCallHangup(requestId: Int) {
+        sendJSON(["type": "call_hangup", "requestId": requestId])
+    }
+
+    /// The `type` (offer/answer) is conveyed by the message type itself; the
+    /// `sdp` field carries the raw SDP string.
+    func sendOffer(requestId: Int, sdp: String) {
+        sendJSON(["type": "webrtc_offer", "requestId": requestId, "sdp": sdp])
+    }
+
+    func sendAnswer(requestId: Int, sdp: String) {
+        sendJSON(["type": "webrtc_answer", "requestId": requestId, "sdp": sdp])
+    }
+
+    /// `candidate` matches the web's `RTCIceCandidate` JSON shape:
+    /// `{ candidate, sdpMid, sdpMLineIndex }`.
+    func sendIce(requestId: Int, candidate: [String: Any]) {
+        sendJSON(["type": "webrtc_ice", "requestId": requestId, "candidate": candidate])
+    }
+
     // MARK: - Receive Messages
 
     private func receiveMessage() {
         webSocket?.receive { [weak self] result in
             switch result {
             case .success(let message):
+                // We are receiving fine — reset the reconnect backoff.
+                self?.reconnectAttempt = 0
                 switch message {
                 case .string(let text):
                     self?.handleMessage(text)
@@ -177,9 +267,7 @@ class WebSocketService: ObservableObject {
 
             case .failure(let error):
                 print("[WS] Receive error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    self?.isConnected = false
-                }
+                self?.handleConnectionDrop()
             }
         }
     }
@@ -237,9 +325,79 @@ class WebSocketService: ObservableObject {
                 self.trackingEnded = true
             }
 
+        // ── WebRTC call signaling → forwarded to CallManager via `callSignals` ──
+
+        case "call_incoming":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.incoming(
+                requestId: requestId,
+                media: json["media"] as? String ?? "audio",
+                fromUserId: json["fromUserId"] as? Int ?? 0,
+                fromName: json["fromName"] as? String ?? "",
+                fromRole: json["fromRole"] as? String ?? ""
+            ))
+
+        case "call_ringing":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.ringing(requestId: requestId, toName: json["toName"] as? String ?? ""))
+
+        case "call_unavailable":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.unavailable(requestId: requestId, reason: json["reason"] as? String ?? ""))
+
+        case "call_accepted":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.accepted(requestId: requestId))
+
+        case "call_rejected":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.rejected(requestId: requestId))
+
+        case "call_cancelled":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.cancelled(requestId: requestId))
+
+        case "call_hangup":
+            guard let requestId = json["requestId"] as? Int else { return }
+            emitCall(.hangup(requestId: requestId))
+
+        case "webrtc_offer":
+            guard let requestId = json["requestId"] as? Int,
+                  let sdp = sdpString(from: json["sdp"]) else { return }
+            emitCall(.offer(requestId: requestId, sdp: sdp))
+
+        case "webrtc_answer":
+            guard let requestId = json["requestId"] as? Int,
+                  let sdp = sdpString(from: json["sdp"]) else { return }
+            emitCall(.answer(requestId: requestId, sdp: sdp))
+
+        case "webrtc_ice":
+            guard let requestId = json["requestId"] as? Int,
+                  let cand = json["candidate"] as? [String: Any],
+                  let candidateStr = cand["candidate"] as? String else { return }
+            let payload = ICECandidatePayload(
+                candidate: candidateStr,
+                sdpMid: cand["sdpMid"] as? String,
+                sdpMLineIndex: Int32((cand["sdpMLineIndex"] as? Int) ?? 0)
+            )
+            emitCall(.ice(requestId: requestId, candidate: payload))
+
         default:
             print("[WS] Unknown message type: \(type)")
         }
+    }
+
+    /// Publish a parsed call signal on the main thread (CallManager is UI-facing).
+    private func emitCall(_ signal: CallSignal) {
+        DispatchQueue.main.async { self.callSignals.send(signal) }
+    }
+
+    /// Accept `sdp` either as a plain SDP string or as an `{ type, sdp }` object,
+    /// so we interoperate regardless of how the web client serializes it.
+    private func sdpString(from value: Any?) -> String? {
+        if let s = value as? String { return s }
+        if let dict = value as? [String: Any], let s = dict["sdp"] as? String { return s }
+        return nil
     }
 
     // MARK: - Helpers

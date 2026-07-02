@@ -37,6 +37,7 @@
 		BB03CE4A2FAB539E0013B884 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3D2FAB539D0013B884 /* APIService.swift */; };
 		BB03CE4B2FAB539E0013B884 /* WebSocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE402FAB539D0013B884 /* WebSocketService.swift */; };
 		BB03CE4C2FAB539E0013B884 /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3F2FAB539D0013B884 /* TokenManager.swift */; };
+		BB7F64032FF66F4500A2579F /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = BB7F64022FF66F4500A2579F /* WebRTC */; };
 		BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		BBB304AA2F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
@@ -147,6 +148,7 @@
 			files = (
 				3A94DFE42F2AF52B00CDF258 /* FirebaseMessaging in Frameworks */,
 				3A94DFDA2F2AF52B00CDF258 /* FirebaseAuth in Frameworks */,
+				BB7F64032FF66F4500A2579F /* WebRTC in Frameworks */,
 				3A94DFE82F2AF52B00CDF258 /* FirebaseStorageCombine-Community in Frameworks */,
 				3A94DFE02F2AF52B00CDF258 /* FirebaseFirestoreCombine-Community in Frameworks */,
 				3A94DFDC2F2AF52B00CDF258 /* FirebaseAuthCombine-Community in Frameworks */,
@@ -175,26 +177,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		CC000006FA000000003B4C7D /* Weather */ = {
-			isa = PBXGroup;
-			children = (
-				CC000002FA000000003B4C7D /* WeatherError.swift */,
-				CC000003FA000000003B4C7D /* WeatherProviding.swift */,
-				CC000004FA000000003B4C7D /* WeatherCache.swift */,
-				CC000005FA000000003B4C7D /* OpenMeteoService.swift */,
-				CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */,
-			);
-			path = Weather;
-			sourceTree = "<group>";
-		};
-		DD000002FA000000003B4C7D /* Dev */ = {
-			isa = PBXGroup;
-			children = (
-				DD000001FA000000003B4C7D /* DevWeatherSettings.swift */,
-			);
-			path = Dev;
-			sourceTree = "<group>";
-		};
 		3A41D3912F4F226E00355F07 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -227,6 +209,7 @@
 				3AB1AA482EF06ADD006C37A3 /* Models */,
 				3AB1AA4C2EF06ADD006C37A3 /* ViewModels */,
 				3AB1AA572EF06ADD006C37A3 /* Views */,
+				BB7F64012FF66F4500A2579F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -238,6 +221,33 @@
 				3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BB7F64012FF66F4500A2579F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CC000006FA000000003B4C7D /* Weather */ = {
+			isa = PBXGroup;
+			children = (
+				CC000002FA000000003B4C7D /* WeatherError.swift */,
+				CC000003FA000000003B4C7D /* WeatherProviding.swift */,
+				CC000004FA000000003B4C7D /* WeatherCache.swift */,
+				CC000005FA000000003B4C7D /* OpenMeteoService.swift */,
+				CC000007FA000000003B4C7D /* WeatherRiskCalculator.swift */,
+			);
+			path = Weather;
+			sourceTree = "<group>";
+		};
+		DD000002FA000000003B4C7D /* Dev */ = {
+			isa = PBXGroup;
+			children = (
+				DD000001FA000000003B4C7D /* DevWeatherSettings.swift */,
+			);
+			path = Dev;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -274,6 +284,7 @@
 				3A94DFE72F2AF52B00CDF258 /* FirebaseStorageCombine-Community */,
 				3A94DFEA2F2AF5A100CDF258 /* GoogleSignIn */,
 				3A94DFEC2F2AF5A100CDF258 /* GoogleSignInSwift */,
+				BB7F64022FF66F4500A2579F /* WebRTC */,
 			);
 			productName = AquaGuard;
 			productReference = 3A7D4C512EF035C7006B202E /* AquaGuard.app */;
@@ -362,6 +373,7 @@
 			packageReferences = (
 				3A94DFD82F2AF52B00CDF258 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				3A94DFE92F2AF5A100CDF258 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				BB7F64002FF66E1D00A2579F /* XCRemoteSwiftPackageReference "WebRTC" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3A7D4C522EF035C7006B202E /* Products */;
@@ -599,6 +611,7 @@
 				INFOPLIST_FILE = AquaGuard/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "AquaGuard cần truy cập camera để chụp ảnh hiện trường ngập lụt";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AquaGuard cần vị trí của bạn để hiển thị cảnh báo lũ lụt xung quanh";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "AquaGuard cần micro để bạn gọi thoại giữa người dân và đội cứu hộ";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AquaGuard cần truy cập thư viện ảnh để tải ảnh báo cáo";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -636,6 +649,7 @@
 				INFOPLIST_FILE = AquaGuard/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "AquaGuard cần truy cập camera để chụp ảnh hiện trường ngập lụt";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AquaGuard cần vị trí của bạn để hiển thị cảnh báo lũ lụt xung quanh";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "AquaGuard cần micro để bạn gọi thoại giữa người dân và đội cứu hộ";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AquaGuard cần truy cập thư viện ảnh để tải ảnh báo cáo";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -798,6 +812,14 @@
 				minimumVersion = 9.1.0;
 			};
 		};
+		BB7F64002FF66E1D00A2579F /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 149.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -850,6 +872,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3A94DFE92F2AF5A100CDF258 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		BB7F64022FF66F4500A2579F /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB7F64002FF66E1D00A2579F /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

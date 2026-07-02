@@ -46,10 +46,27 @@ struct AquaGuardApp: App {
                     }
                     .transition(.opacity)
                 }
+
+                // Global voice-call UI — above everything, any role / screen.
+                CallOverlayView()
             }
             .environmentObject(languageManager)
             .environmentObject(tokenManager)
             .preferredColorScheme(themeManager.colorScheme)
+            .task {
+                // Keep the signaling socket alive whenever logged in so incoming
+                // calls can ring even without a tracking sheet open.
+                if tokenManager.isAuthenticated {
+                    WebSocketService.shared.connect()
+                }
+            }
+            .onChange(of: tokenManager.isAuthenticated) { _, isAuthenticated in
+                if isAuthenticated {
+                    WebSocketService.shared.connect()
+                } else {
+                    WebSocketService.shared.disconnect()
+                }
+            }
             .onAppear {
                 // Dismiss splash after 3 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {

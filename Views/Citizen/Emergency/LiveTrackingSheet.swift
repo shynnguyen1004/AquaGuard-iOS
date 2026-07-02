@@ -65,6 +65,29 @@ struct LiveTrackingSheet: View {
         )
     }
 
+    // Voice call is available while the mission is active and a rescuer is assigned.
+    private var canCall: Bool {
+        (request.status == .inProgress || request.status == .assigned) && request.rescuerId != nil
+    }
+
+    private var callButton: some View {
+        Button {
+            guard let requestId = Int(request.id) else { return }
+            CallManager.shared.startCall(requestId: requestId, peerName: rescuerDisplayName)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "phone.fill")
+                Text("Gọi người cứu hộ")
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.aquaPrimary)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -275,6 +298,12 @@ struct LiveTrackingSheet: View {
 
     private var requestInfoBar: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Voice call to the assigned rescuer (active missions only)
+            if canCall {
+                callButton
+                Divider()
+            }
+
             // Route info (show when rescuer has location and route loaded)
             if hasRescuerLocation, route != nil {
                 HStack(spacing: 12) {

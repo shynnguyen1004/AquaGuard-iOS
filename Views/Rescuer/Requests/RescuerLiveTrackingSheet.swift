@@ -70,6 +70,28 @@ struct RescuerLiveTrackingSheet: View {
         )
     }
 
+    // Voice call is available while the mission is active.
+    private var canCall: Bool {
+        request.status == "in_progress" || request.status == "assigned"
+    }
+
+    private var callButton: some View {
+        Button {
+            CallManager.shared.startCall(requestId: request.id, peerName: request.userName)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "phone.fill")
+                Text("Gọi người dân")
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.aquaPrimary)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -234,6 +256,12 @@ struct RescuerLiveTrackingSheet: View {
 
     private var requestInfoBar: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Voice call to the citizen (active missions only)
+            if canCall {
+                callButton
+                Divider()
+            }
+
             // Route indicator with real data
             HStack(spacing: 12) {
                 // Rescuer icon
