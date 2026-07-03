@@ -20,6 +20,7 @@ struct AquaGuardApp: App {
     @StateObject private var tokenManager = TokenManager.shared
     @ObservedObject private var themeManager = ThemeManager.shared
     @ObservedObject private var appState = AppState.shared
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showSplash: Bool = true
 
     var body: some Scene {
@@ -46,14 +47,15 @@ struct AquaGuardApp: App {
                     }
                     .transition(.opacity)
                 }
-
-                // Global voice-call UI — above everything, any role / screen.
-                CallOverlayView()
             }
             .environmentObject(languageManager)
             .environmentObject(tokenManager)
             .preferredColorScheme(themeManager.colorScheme)
             .task {
+                // Present the call UI in its own high-level window so it floats
+                // above sheets (e.g. the live-tracking sheet), not behind them.
+                CallOverlayWindow.shared.start()
+
                 // Keep the signaling socket alive whenever logged in so incoming
                 // calls can ring even without a tracking sheet open.
                 if tokenManager.isAuthenticated {
@@ -65,6 +67,13 @@ struct AquaGuardApp: App {
                     WebSocketService.shared.connect()
                 } else {
                     WebSocketService.shared.disconnect()
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                // iOS kills the socket when the app is backgrounded — reconnect
+                // on return so incoming calls can ring again.
+                if phase == .active && tokenManager.isAuthenticated {
+                    WebSocketService.shared.ensureConnected()
                 }
             }
             .onAppear {

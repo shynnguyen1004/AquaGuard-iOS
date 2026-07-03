@@ -21,9 +21,23 @@ struct LiveTrackingSheet: View {
     @State private var route: MKRoute?
     @State private var isLoadingRoute = true
 
-    // Real rescuer coordinate from backend
+    // Live tracking: rescuer position streams in over the WebSocket room, with
+    // an initial REST fetch (/locations/live/:id) — /sos/my itself carries no
+    // rescuer coordinates. We also stream our own position into the room so the
+    // rescuer's map sees us move.
+    @ObservedObject private var ws = WebSocketService.shared
+    @StateObject private var locationService = LocationService()
+    @State private var initialRescuerCoord: CLLocationCoordinate2D?
+    @State private var lastRoutedRescuerCoord: CLLocationCoordinate2D?
+
+    // Best-available rescuer coordinate: live WS > live REST > request snapshot
     private var rescuerCoord: CLLocationCoordinate2D? {
-        request.rescuerCoordinate
+        ws.rescuerLocation ?? initialRescuerCoord ?? request.rescuerCoordinate
+    }
+
+    // Tracking + calling are only meaningful while the mission is active.
+    private var isActiveMission: Bool {
+        request.status == .assigned || request.status == .inProgress
     }
 
     // Whether we have a valid rescuer location
@@ -187,13 +201,62 @@ struct LiveTrackingSheet: View {
                 }
             }
             .task {
+                await startLiveTracking()
                 if hasRescuerLocation {
                     await calculateRoute()
                 } else {
                     isLoadingRoute = false
                 }
             }
+            .onReceive(ws.$rescuerLocation) { coord in
+                guard let coord else { return }
+                Task { await refreshRouteIfNeeded(to: coord) }
+            }
+            .onReceive(locationService.$currentLocation) { coord in
+                guard let coord, isActiveMission else { return }
+                ws.sendLocation(latitude: coord.latitude, longitude: coord.longitude)
+            }
+            .onDisappear {
+                locationService.stopStreaming()
+            }
         }
+    }
+
+    // MARK: - Live Tracking
+
+    /// Join the WS tracking room, start streaming our own GPS, and fetch the
+    /// rescuer's current position for an immediate pin.
+    private func startLiveTracking() async {
+        guard isActiveMission, let requestId = Int(request.id) else { return }
+        WebSocketService.shared.ensureConnected()
+        WebSocketService.shared.joinTracking(requestId: requestId)
+        locationService.requestPermission()
+        locationService.startStreaming()
+
+        guard initialRescuerCoord == nil, let rescuerId = request.rescuerId else { return }
+        do {
+            let response: APIResponse<APILiveLocation> =
+                try await APIService.shared.getRaw("/locations/live/\(rescuerId)")
+            if let loc = response.data {
+                initialRescuerCoord = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
+                await calculateRoute()
+            } else {
+                print("[Tracking] Rescuer \(rescuerId) has no stored location yet")
+            }
+        } catch {
+            print("[Tracking] Live rescuer location fetch failed: \(error)")
+        }
+    }
+
+    /// Recalculate the route when the rescuer has moved meaningfully (>100 m) —
+    /// MKDirections is rate-limited, so don't re-route every GPS tick.
+    private func refreshRouteIfNeeded(to coord: CLLocationCoordinate2D) async {
+        if let last = lastRoutedRescuerCoord {
+            let moved = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
+                .distance(from: CLLocation(latitude: last.latitude, longitude: last.longitude))
+            guard moved > 100 else { return }
+        }
+        await calculateRoute()
     }
 
     // MARK: - Route Calculation
@@ -203,6 +266,7 @@ struct LiveTrackingSheet: View {
             isLoadingRoute = false
             return
         }
+        lastRoutedRescuerCoord = rescuer
 
         let dirRequest = MKDirections.Request()
         dirRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: rescuer))

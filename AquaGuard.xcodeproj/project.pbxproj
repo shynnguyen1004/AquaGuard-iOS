@@ -37,6 +37,9 @@
 		BB03CE4A2FAB539E0013B884 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3D2FAB539D0013B884 /* APIService.swift */; };
 		BB03CE4B2FAB539E0013B884 /* WebSocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE402FAB539D0013B884 /* WebSocketService.swift */; };
 		BB03CE4C2FAB539E0013B884 /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03CE3F2FAB539D0013B884 /* TokenManager.swift */; };
+		BB6CEF4E2FF7BE3000B51200 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB6CEF4D2FF7BE3000B51200 /* WidgetKit.framework */; };
+		BB6CEF502FF7BE3000B51200 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB6CEF4F2FF7BE3000B51200 /* SwiftUI.framework */; };
+		BB6CEF5F2FF7BE3100B51200 /* CallWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BB6CEF4C2FF7BE3000B51200 /* CallWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BB7F64032FF66F4500A2579F /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = BB7F64022FF66F4500A2579F /* WebRTC */; };
 		BBB304A82F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
 		BBB304A92F9E81F7003B4C7D /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */; };
@@ -65,7 +68,28 @@
 			remoteGlobalIDString = 3A7D4C502EF035C7006B202E;
 			remoteInfo = AquaGuard;
 		};
+		BB6CEF5D2FF7BE3100B51200 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3A7D4C492EF035C7006B202E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BB6CEF4B2FF7BE3000B51200;
+			remoteInfo = CallWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BB6CEF642FF7BE3100B51200 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BB6CEF5F2FF7BE3100B51200 /* CallWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3A41D3902F4F226E00355F07 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
@@ -80,6 +104,9 @@
 		BB03CE3E2FAB539D0013B884 /* NetworkConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConfig.swift; sourceTree = "<group>"; };
 		BB03CE3F2FAB539D0013B884 /* TokenManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenManager.swift; sourceTree = "<group>"; };
 		BB03CE402FAB539D0013B884 /* WebSocketService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketService.swift; sourceTree = "<group>"; };
+		BB6CEF4C2FF7BE3000B51200 /* CallWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CallWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB6CEF4D2FF7BE3000B51200 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		BB6CEF4F2FF7BE3000B51200 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		BBB304A72F9E81F7003B4C7D /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		CC000001FA000000003B4C7D /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		CC000002FA000000003B4C7D /* WeatherError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherError.swift; sourceTree = "<group>"; };
@@ -97,6 +124,20 @@
 				Info.plist,
 			);
 			target = 3A7D4C502EF035C7006B202E /* AquaGuard */;
+		};
+		BB6CEF632FF7BE3100B51200 /* Exceptions for "CallWidget" folder in "CallWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = BB6CEF4B2FF7BE3000B51200 /* CallWidgetExtension */;
+		};
+		BB6CEF662FF7BF1F00B51200 /* Exceptions for "Models" folder in "CallWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CallActivityAttributes.swift,
+			);
+			target = BB6CEF4B2FF7BE3000B51200 /* CallWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -126,6 +167,9 @@
 		};
 		3AB1AA482EF06ADD006C37A3 /* Models */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BB6CEF662FF7BF1F00B51200 /* Exceptions for "Models" folder in "CallWidgetExtension" target */,
+			);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -137,6 +181,14 @@
 		3AB1AA572EF06ADD006C37A3 /* Views */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Views;
+			sourceTree = "<group>";
+		};
+		BB6CEF512FF7BE3000B51200 /* CallWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BB6CEF632FF7BE3100B51200 /* Exceptions for "CallWidget" folder in "CallWidgetExtension" target */,
+			);
+			path = CallWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -174,6 +226,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BB6CEF492FF7BE3000B51200 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB6CEF502FF7BE3000B51200 /* SwiftUI.framework in Frameworks */,
+				BB6CEF4E2FF7BE3000B51200 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -205,6 +266,7 @@
 				3A7D4C532EF035C7006B202E /* AquaGuard */,
 				3A7D4C612EF035CC006B202E /* AquaGuardTests */,
 				3A7D4C6B2EF035CC006B202E /* AquaGuardUITests */,
+				BB6CEF512FF7BE3000B51200 /* CallWidget */,
 				3A7D4C522EF035C7006B202E /* Products */,
 				3AB1AA482EF06ADD006C37A3 /* Models */,
 				3AB1AA4C2EF06ADD006C37A3 /* ViewModels */,
@@ -219,6 +281,7 @@
 				3A7D4C512EF035C7006B202E /* AquaGuard.app */,
 				3A7D4C5E2EF035CC006B202E /* AquaGuardTests.xctest */,
 				3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */,
+				BB6CEF4C2FF7BE3000B51200 /* CallWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -226,6 +289,8 @@
 		BB7F64012FF66F4500A2579F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BB6CEF4D2FF7BE3000B51200 /* WidgetKit.framework */,
+				BB6CEF4F2FF7BE3000B51200 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -260,10 +325,12 @@
 				3A7D4C4D2EF035C7006B202E /* Sources */,
 				3A7D4C4E2EF035C7006B202E /* Frameworks */,
 				3A7D4C4F2EF035C7006B202E /* Resources */,
+				BB6CEF642FF7BE3100B51200 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				BB6CEF5E2FF7BE3100B51200 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				145E53832F9E31330086EDD1 /* Logo */,
@@ -338,6 +405,28 @@
 			productReference = 3A7D4C682EF035CC006B202E /* AquaGuardUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		BB6CEF4B2FF7BE3000B51200 /* CallWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB6CEF602FF7BE3100B51200 /* Build configuration list for PBXNativeTarget "CallWidgetExtension" */;
+			buildPhases = (
+				BB6CEF482FF7BE3000B51200 /* Sources */,
+				BB6CEF492FF7BE3000B51200 /* Frameworks */,
+				BB6CEF4A2FF7BE3000B51200 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				BB6CEF512FF7BE3000B51200 /* CallWidget */,
+			);
+			name = CallWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = CallWidgetExtension;
+			productReference = BB6CEF4C2FF7BE3000B51200 /* CallWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -345,7 +434,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2610;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					3A7D4C502EF035C7006B202E = {
@@ -358,6 +447,9 @@
 					3A7D4C672EF035CC006B202E = {
 						CreatedOnToolsVersion = 26.1.1;
 						TestTargetID = 3A7D4C502EF035C7006B202E;
+					};
+					BB6CEF4B2FF7BE3000B51200 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -383,6 +475,7 @@
 				3A7D4C502EF035C7006B202E /* AquaGuard */,
 				3A7D4C5D2EF035CC006B202E /* AquaGuardTests */,
 				3A7D4C672EF035CC006B202E /* AquaGuardUITests */,
+				BB6CEF4B2FF7BE3000B51200 /* CallWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -403,6 +496,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		3A7D4C662EF035CC006B202E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB6CEF4A2FF7BE3000B51200 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -463,6 +563,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BB6CEF482FF7BE3000B51200 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -475,6 +582,11 @@
 			isa = PBXTargetDependency;
 			target = 3A7D4C502EF035C7006B202E /* AquaGuard */;
 			targetProxy = 3A7D4C692EF035CC006B202E /* PBXContainerItemProxy */;
+		};
+		BB6CEF5E2FF7BE3100B51200 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BB6CEF4B2FF7BE3000B51200 /* CallWidgetExtension */;
+			targetProxy = BB6CEF5D2FF7BE3100B51200 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -754,6 +866,68 @@
 			};
 			name = Release;
 		};
+		BB6CEF612FF7BE3100B51200 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GV2ANVD55S;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CallWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CallWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hcmut.aquaguard.test.CallWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BB6CEF622FF7BE3100B51200 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GV2ANVD55S;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CallWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CallWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hcmut.aquaguard.test.CallWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -789,6 +963,15 @@
 			buildConfigurations = (
 				3A7D4C792EF035CC006B202E /* Debug */,
 				3A7D4C7A2EF035CC006B202E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB6CEF602FF7BE3100B51200 /* Build configuration list for PBXNativeTarget "CallWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB6CEF612FF7BE3100B51200 /* Debug */,
+				BB6CEF622FF7BE3100B51200 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

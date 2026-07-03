@@ -22,8 +22,15 @@ struct CallOverlayView: View {
 
     private var content: some View {
         ZStack {
+            // Fully opaque backdrop — the call screen must not show the app
+            // behind it (no transparency in the gradient stops).
+            Color.black.ignoresSafeArea()
             LinearGradient(
-                colors: [Color.aquaPrimary, Color.aquaPrimary.opacity(0.75), .black.opacity(0.9)],
+                colors: [
+                    Color.aquaPrimary,
+                    Color(red: 0.05, green: 0.25, blue: 0.35),
+                    Color(red: 0.02, green: 0.08, blue: 0.14),
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )

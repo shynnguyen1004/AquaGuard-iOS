@@ -54,7 +54,7 @@ struct WSTrackingStarted {
 
 // MARK: - WebSocket Service
 
-class WebSocketService: ObservableObject {
+final class WebSocketService: NSObject, ObservableObject {
 
     static let shared = WebSocketService()
 
@@ -86,8 +86,23 @@ class WebSocketService: ObservableObject {
     /// channel to survive transient network drops so incoming calls still ring.
     private var shouldStayConnected = false
     private var reconnectAttempt = 0
+    private var reconnectPending = false
+    /// True from resume() until didOpen (or a drop) — lets ensureConnected leave
+    /// an in-flight handshake alone instead of restarting it.
+    private var isHandshaking = false
 
-    private init() {}
+    /// Messages queued while the socket is still handshaking (or briefly down).
+    /// Flushed on `didOpen` so a call invite tapped right after foregrounding
+    /// isn't silently dropped into a dead socket.
+    private var pendingOutbound: [String] = []
+
+    /// Session with `self` as delegate so we learn the *real* open/close state
+    /// (isConnected was previously set optimistically before the handshake).
+    private lazy var session: URLSession = URLSession(
+        configuration: .default, delegate: self, delegateQueue: nil
+    )
+
+    private override init() { super.init() }
 
     // MARK: - Connect
 
@@ -105,38 +120,44 @@ class WebSocketService: ObservableObject {
 
         // We intend to stay connected from now on (until an explicit disconnect).
         shouldStayConnected = true
+        reconnectPending = false
+        isHandshaking = true
 
         // Tear down any existing socket without cancelling the reconnect intent.
         closeSocket()
 
-        let session = URLSession(configuration: .default)
         webSocket = session.webSocketTask(with: url)
         webSocket?.resume()
 
         DispatchQueue.main.async {
-            self.isConnected = true
             self.trackingEnded = false
             self.trackingCancelled = false
         }
 
-        // Start receiving messages
+        // Start receiving messages. `isConnected` flips to true only when the
+        // delegate reports the handshake actually completed (didOpen).
         receiveMessage()
 
         // Start ping timer (keep alive)
         startPingTimer()
 
-        // Re-join a tracking room if one was active before a reconnect.
-        if let requestId = currentRequestId {
-            joinTracking(requestId: requestId)
-        }
+        print("[WS] Connecting…")
+    }
 
-        print("[WS] Connected")
+    /// Connect only if we don't already have a live socket. Call sites that just
+    /// need the channel up (foregrounding, placing a call) use this so they don't
+    /// tear down a healthy connection — or one that is mid-handshake (tearing
+    /// down a handshaking socket at launch is what created stale-callback races).
+    func ensureConnected() {
+        if webSocket != nil && (isConnected || isHandshaking) { return }
+        connect()
     }
 
     /// Fully disconnect (e.g. on logout) — stops reconnecting.
     func disconnect() {
         shouldStayConnected = false
         reconnectAttempt = 0
+        isHandshaking = false
         currentRequestId = nil
         closeSocket()
 
@@ -160,17 +181,21 @@ class WebSocketService: ObservableObject {
 
     /// Called when the socket drops. Reconnects (with backoff) if we still want
     /// to be connected, so the call channel survives transient network loss.
+    /// May be reported by several paths for one drop (receive failure, didClose,
+    /// didComplete) — `reconnectPending` collapses them into one retry.
     private func handleConnectionDrop() {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.isConnected = false
-            guard self.shouldStayConnected else { return }
+            self.isHandshaking = false
+            guard self.shouldStayConnected, !self.reconnectPending else { return }
+            self.reconnectPending = true
 
             self.reconnectAttempt += 1
             let delay = min(Double(self.reconnectAttempt) * 2.0, 20.0)   // 2s, 4s, … capped at 20s
             print("[WS] Connection dropped — reconnecting in \(delay)s (attempt \(self.reconnectAttempt))")
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                guard let self, self.shouldStayConnected else { return }
+                guard let self, self.shouldStayConnected, self.reconnectPending else { return }
                 self.connect()
             }
         }
@@ -227,14 +252,19 @@ class WebSocketService: ObservableObject {
         sendJSON(["type": "call_hangup", "requestId": requestId])
     }
 
-    /// The `type` (offer/answer) is conveyed by the message type itself; the
-    /// `sdp` field carries the raw SDP string.
+    /// The `sdp` field carries a full RTCSessionDescription object
+    /// `{ type, sdp }` — this is what the React web client sends/expects (it
+    /// relays `pc.localDescription` and calls `setRemoteDescription(msg.sdp)`).
+    /// Our own receive path (`sdpString(from:)`) also accepts a bare string, so
+    /// iOS↔iOS still works.
     func sendOffer(requestId: Int, sdp: String) {
-        sendJSON(["type": "webrtc_offer", "requestId": requestId, "sdp": sdp])
+        sendJSON(["type": "webrtc_offer", "requestId": requestId,
+                  "sdp": ["type": "offer", "sdp": sdp]])
     }
 
     func sendAnswer(requestId: Int, sdp: String) {
-        sendJSON(["type": "webrtc_answer", "requestId": requestId, "sdp": sdp])
+        sendJSON(["type": "webrtc_answer", "requestId": requestId,
+                  "sdp": ["type": "answer", "sdp": sdp]])
     }
 
     /// `candidate` matches the web's `RTCIceCandidate` JSON shape:
@@ -246,11 +276,10 @@ class WebSocketService: ObservableObject {
     // MARK: - Receive Messages
 
     private func receiveMessage() {
-        webSocket?.receive { [weak self] result in
+        guard let task = webSocket else { return }
+        task.receive { [weak self] result in
             switch result {
             case .success(let message):
-                // We are receiving fine — reset the reconnect backoff.
-                self?.reconnectAttempt = 0
                 switch message {
                 case .string(let text):
                     self?.handleMessage(text)
@@ -262,12 +291,25 @@ class WebSocketService: ObservableObject {
                     break
                 }
 
-                // Continue receiving
-                self?.receiveMessage()
+                // Continue receiving — only while this task is still current.
+                DispatchQueue.main.async {
+                    guard let self, task === self.webSocket else { return }
+                    self.receiveMessage()
+                }
 
             case .failure(let error):
-                print("[WS] Receive error: \(error.localizedDescription)")
-                self?.handleConnectionDrop()
+                // A cancelled/replaced socket also fails its pending receive.
+                // Without this stale-task guard, that late callback used to stomp
+                // `isConnected = false` AFTER the replacement socket had opened —
+                // wedging every send into the pending queue forever.
+                DispatchQueue.main.async {
+                    guard let self, task === self.webSocket else {
+                        print("[WS] Receive error on stale socket (ignored): \(error.localizedDescription)")
+                        return
+                    }
+                    print("[WS] Receive error: \(error.localizedDescription)")
+                    self.handleConnectionDrop()
+                }
             }
         }
     }
@@ -277,6 +319,11 @@ class WebSocketService: ObservableObject {
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let type = json["type"] as? String
         else { return }
+
+        // Location updates are too chatty to log; everything else is useful.
+        if type != WSMessageType.locationUpdate.rawValue {
+            print("[WS] ← \(type)")
+        }
 
         switch type {
         case WSMessageType.locationUpdate.rawValue:
@@ -407,9 +454,33 @@ class WebSocketService: ObservableObject {
               let text = String(data: data, encoding: .utf8)
         else { return }
 
-        webSocket?.send(.string(text)) { error in
+        // Socket not open yet (handshaking / reconnecting) → queue and flush on
+        // didOpen instead of dropping the message into a dead socket.
+        guard let webSocket, isConnected else {
+            print("[WS] Not open — queueing message (\(dict["type"] ?? "?"))")
+            pendingOutbound.append(text)
+            if pendingOutbound.count > 30 { pendingOutbound.removeFirst() }
+            return
+        }
+
+        webSocket.send(.string(text)) { error in
             if let error = error {
                 print("[WS] Send error: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Send everything queued while the socket was down.
+    private func flushPendingOutbound() {
+        guard let webSocket, isConnected, !pendingOutbound.isEmpty else { return }
+        let queued = pendingOutbound
+        pendingOutbound.removeAll()
+        print("[WS] Flushing \(queued.count) queued message(s)")
+        for text in queued {
+            webSocket.send(.string(text)) { error in
+                if let error = error {
+                    print("[WS] Send (flush) error: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -422,6 +493,58 @@ class WebSocketService: ObservableObject {
                     print("[WS] Ping error: \(error.localizedDescription)")
                 }
             }
+        }
+    }
+}
+
+// MARK: - URLSessionWebSocketDelegate
+//
+// Ground truth for the socket lifecycle. Callbacks arrive on a background
+// queue → hop to main before touching state. Stale-task guards keep callbacks
+// from a torn-down socket from clobbering the current one.
+
+extension WebSocketService: URLSessionWebSocketDelegate {
+
+    func urlSession(_ session: URLSession,
+                    webSocketTask: URLSessionWebSocketTask,
+                    didOpenWithProtocol protocol: String?) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, webSocketTask === self.webSocket else { return }
+            self.isConnected = true
+            self.isHandshaking = false
+            self.reconnectAttempt = 0
+            self.reconnectPending = false
+            print("[WS] Socket OPEN")
+
+            // Re-join the tracking room after a reconnect, then flush anything
+            // queued while we were down (e.g. a call invite).
+            if let requestId = self.currentRequestId {
+                self.joinTracking(requestId: requestId)
+            }
+            self.flushPendingOutbound()
+        }
+    }
+
+    func urlSession(_ session: URLSession,
+                    webSocketTask: URLSessionWebSocketTask,
+                    didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
+                    reason: Data?) {
+        let reasonText = reason.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        print("[WS] Socket CLOSED code=\(closeCode.rawValue) reason=\(reasonText)")
+        DispatchQueue.main.async { [weak self] in
+            guard let self, webSocketTask === self.webSocket else { return }
+            self.handleConnectionDrop()
+        }
+    }
+
+    func urlSession(_ session: URLSession,
+                    task: URLSessionTask,
+                    didCompleteWithError error: Error?) {
+        guard let error else { return }
+        print("[WS] Socket task error: \(error.localizedDescription)")
+        DispatchQueue.main.async { [weak self] in
+            guard let self, task === self.webSocket else { return }
+            self.handleConnectionDrop()
         }
     }
 }

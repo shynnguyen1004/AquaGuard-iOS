@@ -35,6 +35,12 @@ final class CallManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var durationTimer: Timer?
 
+    /// Guards against a call getting stuck in ringing/connecting forever (e.g. the
+    /// peer errors out without sending a terminal signal). Auto-tears down so the
+    /// next call isn't blocked by `guard phase == .idle`.
+    private var setupTimer: Timer?
+    private let setupTimeout: TimeInterval = 45
+
     /// Captured on the main thread so the off-main WebRTC delegate can read it
     /// safely when relaying ICE candidates.
     private var activeRequestId: Int?
@@ -56,10 +62,15 @@ final class CallManager: ObservableObject {
     /// Place a call to the counterpart of an active rescue request.
     func startCall(requestId: Int, peerName: String) {
         guard phase == .idle else { return }
+        // Make sure the signaling socket is up before inviting. If it's still
+        // handshaking, the invite is queued and flushed on open.
+        WebSocketService.shared.ensureConnected()
+        print("[Call] startCall requestId=\(requestId) peer=\(peerName) wsConnected=\(WebSocketService.shared.isConnected)")
         endReason = nil
         callInfo = CallInfo(requestId: requestId, peerName: peerName, isCaller: true, media: "audio")
         activeRequestId = requestId
         phase = .outgoing
+        armSetupTimeout()
         WebSocketService.shared.sendCallInvite(requestId: requestId)
     }
 
@@ -108,6 +119,7 @@ final class CallManager: ObservableObject {
     private func handle(_ signal: CallSignal) {
         switch signal {
         case let .incoming(requestId, media, _, fromName, _):
+            print("[Call] ← call_incoming from=\(fromName) req=\(requestId)")
             // Busy with another call → politely decline the newcomer.
             guard phase == .idle else {
                 WebSocketService.shared.sendCallReject(requestId: requestId)
@@ -120,17 +132,21 @@ final class CallManager: ObservableObject {
                                 media: media)
             activeRequestId = requestId
             phase = .incoming
+            armSetupTimeout()
 
         case let .ringing(requestId, toName):
+            print("[Call] ← call_ringing (callee is being notified) toName=\(toName)")
             guard phase == .outgoing, callInfo?.requestId == requestId else { return }
             if !toName.isEmpty { callInfo?.peerName = toName }
 
         case let .unavailable(requestId, reason):
+            print("[Call] ← call_unavailable reason=\(reason)")
             guard callInfo?.requestId == requestId else { return }
             endWithReason(.unavailable(reason))
 
         case let .accepted(requestId):
             // Caller side: the callee picked up → we create and send the offer.
+            print("[Call] ← call_accepted — creating offer")
             guard phase == .outgoing, let info = callInfo, info.isCaller,
                   info.requestId == requestId else { return }
             phase = .connecting
@@ -285,12 +301,14 @@ final class CallManager: ObservableObject {
     }
 
     private func teardownMedia() {
+        disarmSetupTimeout()
         durationTimer?.invalidate()
         durationTimer = nil
         webrtc?.close()
         webrtc = nil
         hasRemoteDescription = false
         pendingCandidates.removeAll()
+        CallLiveActivityManager.shared.end()
     }
 
     private func startDurationTimer() {
@@ -299,6 +317,25 @@ final class CallManager: ObservableObject {
         durationTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.durationSeconds += 1
         }
+    }
+
+    // MARK: - Setup timeout
+
+    /// Arm a watchdog for the ringing/connecting stage. If we never reach
+    /// `.active`, tear the call down so it can't wedge the state machine.
+    private func armSetupTimeout() {
+        setupTimer?.invalidate()
+        setupTimer = Timer.scheduledTimer(withTimeInterval: setupTimeout, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            guard self.phase == .outgoing || self.phase == .incoming || self.phase == .connecting else { return }
+            print("[Call] setup timeout in phase \(self.phase) — tearing down")
+            self.failCall()
+        }
+    }
+
+    private func disarmSetupTimeout() {
+        setupTimer?.invalidate()
+        setupTimer = nil
     }
 }
 
@@ -325,8 +362,12 @@ extension CallManager: WebRTCServiceDelegate {
             switch state {
             case .connected, .completed:
                 if self.phase == .connecting {
+                    self.disarmSetupTimeout()
                     self.phase = .active
                     self.startDurationTimer()
+                    // Keep the call visible in the Dynamic Island / Lock Screen
+                    // when the user leaves the app mid-call.
+                    CallLiveActivityManager.shared.start(peerName: self.callInfo?.peerName ?? "AquaGuard")
                 }
             case .failed:
                 self.failCall()

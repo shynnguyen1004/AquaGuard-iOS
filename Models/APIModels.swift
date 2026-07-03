@@ -21,6 +21,18 @@ struct APIResponse<T: Decodable>: Decodable {
 /// For endpoints that return no meaningful data (e.g. DELETE)
 struct EmptyData: Decodable {}
 
+// MARK: - Live Location
+
+/// One user's live position from GET /api/locations/live/:userId.
+/// Redis (online) and Postgres fallback (last known) both return lat/lng;
+/// `data` is null when the user has no stored position at all.
+struct APILiveLocation: Decodable {
+    let userId: Int?
+    let lat: Double
+    let lng: Double
+    let online: Bool?
+}
+
 // MARK: - Auth Models
 
 struct AuthData: Decodable {

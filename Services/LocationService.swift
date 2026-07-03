@@ -52,6 +52,24 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.location
     }
 
+    /// Continuous updates — used while a live-tracking sheet is open so the
+    /// other party sees us move in real time.
+    func startStreaming() {
+        switch locationManager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.startUpdatingLocation()
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+            locationManager.startUpdatingLocation()   // begins once permission granted
+        default:
+            break
+        }
+    }
+
+    func stopStreaming() {
+        locationManager.stopUpdatingLocation()
+    }
+
     // MARK: - CLLocationManagerDelegate
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

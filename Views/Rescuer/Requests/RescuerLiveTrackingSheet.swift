@@ -22,9 +22,13 @@ struct RescuerLiveTrackingSheet: View {
     @State private var isLoadingRoute = true
     @StateObject private var locationService = LocationService()
 
-    // Citizen coordinate (victim location)
+    // Live tracking room: receive the citizen's live position and stream our
+    // own GPS so the citizen's map sees us approach.
+    @ObservedObject private var ws = WebSocketService.shared
+
+    // Citizen coordinate: live WS position > request snapshot
     private var citizenCoord: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(
+        ws.citizenLocation ?? CLLocationCoordinate2D(
             latitude: request.latitude ?? 10.7769,
             longitude: request.longitude ?? 106.7009
         )
@@ -173,7 +177,21 @@ struct RescuerLiveTrackingSheet: View {
                 }
             }
             .task {
+                // Join the tracking room + stream our GPS while the mission is active.
+                if canCall {
+                    WebSocketService.shared.ensureConnected()
+                    WebSocketService.shared.joinTracking(requestId: request.id)
+                    locationService.requestPermission()
+                    locationService.startStreaming()
+                }
                 await calculateRoute()
+            }
+            .onReceive(locationService.$currentLocation) { coord in
+                guard let coord, canCall else { return }
+                ws.sendLocation(latitude: coord.latitude, longitude: coord.longitude)
+            }
+            .onDisappear {
+                locationService.stopStreaming()
             }
         }
     }
