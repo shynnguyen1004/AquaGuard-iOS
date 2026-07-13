@@ -121,6 +121,34 @@ class RescuerTeamViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Update Team Info
+
+    /// Edit the group's name/description. Backend restricts this to the leader
+    /// (PUT /auth/rescue-groups/:id — 403s for anyone else, including co_leader).
+    func updateGroup(name: String, description: String) {
+        guard let groupId = group?.id else { return }
+        isActioning = true
+
+        Task {
+            do {
+                let body: [String: Any] = [
+                    "name": name,
+                    "description": description
+                ]
+                let response: APIResponse<APIRescueGroupData> = try await api.putRaw("/auth/rescue-groups/\(groupId)", body: body)
+                if let data = response.data {
+                    self.groupData = data
+                }
+                self.isActioning = false
+                self.successMessage = "Đã cập nhật thông tin đội"
+            } catch {
+                print("[TeamVM] ❌ updateGroup: \(error)")
+                self.errorMessage = error.localizedDescription
+                self.isActioning = false
+            }
+        }
+    }
+
     // MARK: - Invite by Phone
 
     func inviteByPhone(_ phone: String) {

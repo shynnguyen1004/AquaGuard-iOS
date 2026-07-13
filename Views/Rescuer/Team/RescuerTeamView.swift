@@ -24,6 +24,11 @@ struct RescuerTeamView: View {
     // Invite
     @State private var invitePhone = ""
 
+    // Edit team info (leader only)
+    @State private var showEditGroup = false
+    @State private var editGroupName = ""
+    @State private var editGroupDesc = ""
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -83,10 +88,14 @@ struct RescuerTeamView: View {
             .refreshable {
                 viewModel.fetchMyGroup()
             }
+            .sheet(isPresented: $showEditGroup) {
+                editGroupSheet
+            }
             .onChange(of: viewModel.successMessage) { msg in
                 if let msg = msg {
                     showToast(msg)
                     viewModel.successMessage = nil
+                    showEditGroup = false
                 }
             }
             .onChange(of: viewModel.errorMessage) { msg in
@@ -105,13 +114,10 @@ struct RescuerTeamView: View {
             if !viewModel.hasTeam {
                 createTeamForm
             } else {
-                // A. Group Hero Card
+                // A. Group Hero Card (includes the member/invite summary line)
                 groupHeroCard
 
-                // B. Stats
-                teamStatsRow
-
-                // C. Invite (leader/co_leader only)
+                // B. Invite (leader/co_leader only)
                 if viewModel.isLeaderOrCoLeader {
                     inviteSection
                 }
@@ -188,10 +194,25 @@ struct RescuerTeamView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(viewModel.group?.name ?? "")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.aquaNavy)
+                    HStack(spacing: 6) {
+                        Text(viewModel.group?.name ?? "")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.aquaNavy)
+
+                        // Edit team info — leader only (backend 403s for anyone else)
+                        if viewModel.myRole == "leader" {
+                            Button(action: {
+                                editGroupName = viewModel.group?.name ?? ""
+                                editGroupDesc = viewModel.group?.description ?? ""
+                                showEditGroup = true
+                            }) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.aquaSubtitle.opacity(0.6))
+                            }
+                        }
+                    }
 
                     Text(viewModel.group?.description ?? "")
                         .font(.caption)
@@ -228,6 +249,14 @@ struct RescuerTeamView: View {
                 .cornerRadius(8)
             }
 
+            // Slim summary line — replaces the old 3-box stats row
+            HStack(spacing: 14) {
+                summaryItem(icon: "person.2.fill", text: "\(viewModel.members.count) thành viên")
+                if !viewModel.pendingOutgoingInvites.isEmpty {
+                    summaryItem(icon: "envelope.fill", text: "\(viewModel.pendingOutgoingInvites.count) lời mời chờ", color: .orange)
+                }
+            }
+
             // Menu
             if viewModel.myRole == "leader" {
                 HStack(spacing: 10) {
@@ -262,29 +291,69 @@ struct RescuerTeamView: View {
         .padding(.horizontal, 16)
     }
 
-    private var teamStatsRow: some View {
-        HStack(spacing: 10) {
-            miniStat(label: "Thành viên", value: "\(viewModel.members.count)", color: .aquaPrimary)
-            miniStat(label: "Lời mời chờ", value: "\(viewModel.pendingOutgoingInvites.count)", color: .orange)
-            miniStat(label: "Vai trò", value: viewModel.myRole == "leader" ? "Trưởng" : viewModel.myRole == "co_leader" ? "Phó" : "TV", color: .green)
+    private var editGroupSheet: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                TextField("Tên đội cứu hộ", text: $editGroupName)
+                    .padding(14)
+                    .background(Color.aquaInputBg)
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.aquaInputBorder, lineWidth: 1))
+
+                TextField("Mô tả (tùy chọn)", text: $editGroupDesc)
+                    .padding(14)
+                    .background(Color.aquaInputBg)
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.aquaInputBorder, lineWidth: 1))
+
+                Button(action: {
+                    viewModel.updateGroup(name: editGroupName, description: editGroupDesc)
+                }) {
+                    if viewModel.isActioning {
+                        ProgressView().tint(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    } else {
+                        Text("Lưu")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    }
+                }
+                .background(Color.aquaPrimary)
+                .cornerRadius(14)
+                .disabled(viewModel.isActioning || editGroupName.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                Spacer()
+            }
+            .padding(20)
+            .background(Color.aquaBackground)
+            .navigationTitle("Chỉnh sửa đội")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showEditGroup = false }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .disabled(viewModel.isActioning)
+                }
+            }
         }
-        .padding(.horizontal, 16)
+        .presentationDetents([.medium])
     }
 
-    private func miniStat(label: String, value: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(color)
-            Text(label)
-                .font(.system(size: 9, weight: .medium))
-                .foregroundColor(.aquaSubtitle)
-                .multilineTextAlignment(.center)
+    private func summaryItem(icon: String, text: String, color: Color = .aquaSubtitle) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 10))
+            Text(text)
+                .font(.caption)
+                .fontWeight(.medium)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(color.opacity(0.12))
-        .cornerRadius(12)
+        .foregroundColor(color)
     }
 
     private var inviteSection: some View {

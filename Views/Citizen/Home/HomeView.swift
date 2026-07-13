@@ -15,7 +15,7 @@ struct HomeView: View {
 
     let locationService: LocationService
     @StateObject var viewModel: HomeViewModel
-    @StateObject var familyVM = FamilyViewModel()
+    @StateObject var notificationsVM = NotificationsViewModel()
     @EnvironmentObject var languageManager: LanguageManager
     @State private var showLogoutAlert = false
 
@@ -27,6 +27,10 @@ struct HomeView: View {
 
     // Family page
     @State private var showFamily = false
+
+    // Notifications: show a capped list until the user expands it
+    @State private var showAllNotifications = false
+    private let notificationPreviewLimit = 10
 
     init(selectedTab: Binding<Int>, locationService: LocationService) {
         _selectedTab = selectedTab
@@ -161,37 +165,81 @@ struct HomeView: View {
                         .padding(.horizontal)
                     }
 
-                    // --- FAMILY SAFETY ---
+                    // --- NOTIFICATIONS ---
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text(languageManager.localize("Family Safety"))
+                            Text(languageManager.localize("Notifications"))
                                 .font(.headline)
                                 .foregroundColor(.aquaNavy)
+                            if notificationsVM.unreadCount > 0 {
+                                Text("\(notificationsVM.unreadCount)")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 2)
+                                    .background(Color(red: 0.94, green: 0.27, blue: 0.27))
+                                    .clipShape(Capsule())
+                            }
                             Spacer()
-                            Button(action: { showFamily = true }) {
-                                Text(languageManager.localize("See All"))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.aquaPrimary)
+                            if notificationsVM.unreadCount > 0 {
+                                Button(action: { notificationsVM.markAllRead() }) {
+                                    Text(languageManager.localize("Mark all as read"))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.aquaPrimary)
+                                }
                             }
                         }
                         .padding(.horizontal)
 
-                        ForEach(familyVM.familyMembers) { member in
-                            FamilySafetyRow(member: member)
-                                .onTapGesture { showFamily = true }
+                        let visibleNotifications = showAllNotifications
+                            ? notificationsVM.notifications
+                            : Array(notificationsVM.notifications.prefix(notificationPreviewLimit))
+
+                        ForEach(visibleNotifications) { notification in
+                            NotificationRow(notification: notification)
+                                .onTapGesture {
+                                    notificationsVM.markRead(id: notification.id)
+                                }
                         }
                         .padding(.horizontal)
 
-                        if familyVM.familyMembers.isEmpty && !familyVM.isLoading {
+                        // See more / less toggle
+                        if notificationsVM.notifications.count > notificationPreviewLimit {
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showAllNotifications.toggle()
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    Text(
+                                        showAllNotifications
+                                            ? languageManager.localize("Show less")
+                                            : languageManager.localize("See more")
+                                    )
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    Image(systemName: showAllNotifications ? "chevron.up" : "chevron.down")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                .foregroundColor(.aquaPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.aquaCard)
+                                .cornerRadius(14)
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        if notificationsVM.notifications.isEmpty && !notificationsVM.isLoading {
                             VStack(spacing: 8) {
-                                Image(systemName: "person.2.slash")
+                                Image(systemName: "bell.slash")
                                     .font(.system(size: 24))
                                     .foregroundColor(.secondary.opacity(0.4))
-                                Text(languageManager.localize("No family members yet"))
+                                Text(languageManager.localize("No notifications yet"))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Text(languageManager.localize("Add family members to track their safety"))
+                                Text(languageManager.localize("You're all caught up"))
                                     .font(.caption2)
                                     .foregroundColor(.secondary.opacity(0.7))
                             }
@@ -203,13 +251,14 @@ struct HomeView: View {
                 .padding(.top)
             }
             .refreshable {
+                notificationsVM.fetch()
                 await viewModel.refreshWeatherRisk(forceRefresh: true)
             }
             .background(Color.aquaBackground)
             .navigationTitle("AquaGuard")
             .navigationBarHidden(true)
             .onAppear {
-                familyVM.fetchMembers()
+                notificationsVM.fetch()
                 viewModel.onAppear()
             }
             .sheet(isPresented: $showSettings) {
@@ -597,6 +646,62 @@ struct CommunityAlertExpandedCard: View {
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
         }
+    }
+}
+
+// MARK: - Notification Row
+struct NotificationRow: View {
+    let notification: APINotification
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(notification.iconColor.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                Image(systemName: notification.iconName)
+                    .font(.system(size: 18))
+                    .foregroundColor(notification.iconColor)
+            }
+
+            // Info
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top) {
+                    Text(notification.title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.aquaNavy)
+                        .lineLimit(2)
+                    Spacer(minLength: 8)
+                    // Unread dot
+                    if !notification.isRead {
+                        Circle()
+                            .fill(Color.aquaPrimary)
+                            .frame(width: 8, height: 8)
+                            .padding(.top, 5)
+                    }
+                }
+
+                if let body = notification.body, !body.isEmpty {
+                    Text(body)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .lineLimit(2)
+                }
+
+                Text(notification.relativeTimeString)
+                    .font(.caption2)
+                    .foregroundColor(.gray.opacity(0.7))
+            }
+        }
+        .padding(14)
+        .background(notification.isRead ? Color.aquaCard : notification.iconColor.opacity(0.06))
+        .cornerRadius(14)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(notification.iconColor.opacity(notification.isRead ? 0.12 : 0.25), lineWidth: 1)
+        )
     }
 }
 

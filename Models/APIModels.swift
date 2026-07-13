@@ -249,6 +249,19 @@ struct APIFamilyRequest: Decodable, Identifiable {
     let from: APIFamilyRequestUser
 }
 
+// MARK: - Notifications
+
+/// One in-app notification from GET /api/notifications.
+/// `type` drives the icon/color; `metadata` is free-form JSON we don't decode.
+struct APINotification: Decodable, Identifiable {
+    let id: Int
+    let type: String
+    let title: String
+    let body: String?
+    let isRead: Bool
+    let createdAt: String
+}
+
 struct APIFamilyRequestUser: Decodable {
     let id: Int
     let phoneNumber: String

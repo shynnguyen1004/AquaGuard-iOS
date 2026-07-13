@@ -29,10 +29,26 @@ struct LiveTrackingSheet: View {
     @StateObject private var locationService = LocationService()
     @State private var initialRescuerCoord: CLLocationCoordinate2D?
     @State private var lastRoutedRescuerCoord: CLLocationCoordinate2D?
+    @State private var lastRoutedMyCoord: CLLocationCoordinate2D?
 
     // Best-available rescuer coordinate: live WS > live REST > request snapshot
     private var rescuerCoord: CLLocationCoordinate2D? {
         ws.rescuerLocation ?? initialRescuerCoord ?? request.rescuerCoordinate
+    }
+
+    // My own coordinate: live GPS > the (possibly stale) location the SOS was
+    // originally submitted from. The route must track where I actually am now,
+    // not where I was when I filed the request.
+    private var myCoord: CLLocationCoordinate2D {
+        locationService.currentLocation ?? request.coordinate
+    }
+
+    // Close enough that a driving route is meaningless — hide the polyline
+    // instead of drawing (and repeatedly recomputing) a near-zero-length line.
+    private var isArrived: Bool {
+        guard let rescuer = rescuerCoord else { return false }
+        return CLLocation(latitude: myCoord.latitude, longitude: myCoord.longitude)
+            .distance(from: CLLocation(latitude: rescuer.latitude, longitude: rescuer.longitude)) <= 30
     }
 
     // Tracking + calling are only meaningful while the mission is active.
@@ -52,6 +68,7 @@ struct LiveTrackingSheet: View {
 
     // Computed from real route data
     private var distanceText: String {
+        if isArrived { return languageManager.localize("Arrived") }
         guard let route = route else { return "" }
         let km = route.distance / 1000
         if km < 1 {
@@ -61,6 +78,7 @@ struct LiveTrackingSheet: View {
     }
 
     private var etaText: String {
+        if isArrived { return "0 min" }
         guard let route = route else { return "" }
         let minutes = Int(route.expectedTravelTime / 60)
         if minutes < 1 { return "<1 min" }
@@ -117,10 +135,10 @@ struct LiveTrackingSheet: View {
                                 .stroke(Color.aquaPrimary, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
                         }
 
-                        // Victim pin
+                        // Victim pin — tracks my live GPS, not where the SOS was originally filed
                         Annotation(
                             languageManager.localize("Your Location"),
-                            coordinate: request.coordinate
+                            coordinate: myCoord
                         ) {
                             VStack(spacing: 0) {
                                 Image(systemName: "person.circle.fill")
@@ -209,12 +227,13 @@ struct LiveTrackingSheet: View {
                 }
             }
             .onReceive(ws.$rescuerLocation) { coord in
-                guard let coord else { return }
-                Task { await refreshRouteIfNeeded(to: coord) }
+                guard coord != nil else { return }
+                Task { await refreshRouteIfNeeded() }
             }
             .onReceive(locationService.$currentLocation) { coord in
                 guard let coord, isActiveMission else { return }
                 ws.sendLocation(latitude: coord.latitude, longitude: coord.longitude)
+                Task { await refreshRouteIfNeeded() }
             }
             .onDisappear {
                 locationService.stopStreaming()
@@ -248,13 +267,19 @@ struct LiveTrackingSheet: View {
         }
     }
 
-    /// Recalculate the route when the rescuer has moved meaningfully (>100 m) —
-    /// MKDirections is rate-limited, so don't re-route every GPS tick.
-    private func refreshRouteIfNeeded(to coord: CLLocationCoordinate2D) async {
-        if let last = lastRoutedRescuerCoord {
-            let moved = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-                .distance(from: CLLocation(latitude: last.latitude, longitude: last.longitude))
-            guard moved > 100 else { return }
+    /// Recompute only once either party has moved a meaningful distance since
+    /// the last route — without this, the polyline (unlike the live pins)
+    /// stayed frozen at whatever positions were current when the sheet opened,
+    /// and always ended at the SOS's original filing location rather than
+    /// wherever I've since walked to.
+    private func refreshRouteIfNeeded() async {
+        guard let rescuer = rescuerCoord else { return }
+        if let lastRescuer = lastRoutedRescuerCoord, let lastMe = lastRoutedMyCoord {
+            let rescuerMoved = CLLocation(latitude: rescuer.latitude, longitude: rescuer.longitude)
+                .distance(from: CLLocation(latitude: lastRescuer.latitude, longitude: lastRescuer.longitude))
+            let myMoved = CLLocation(latitude: myCoord.latitude, longitude: myCoord.longitude)
+                .distance(from: CLLocation(latitude: lastMe.latitude, longitude: lastMe.longitude))
+            guard rescuerMoved > 100 || myMoved > 100 else { return }
         }
         await calculateRoute()
     }
@@ -267,10 +292,19 @@ struct LiveTrackingSheet: View {
             return
         }
         lastRoutedRescuerCoord = rescuer
+        lastRoutedMyCoord = myCoord
+
+        guard !isArrived else {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.route = nil
+                self.isLoadingRoute = false
+            }
+            return
+        }
 
         let dirRequest = MKDirections.Request()
         dirRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: rescuer))
-        dirRequest.destination = MKMapItem(placemark: MKPlacemark(coordinate: request.coordinate))
+        dirRequest.destination = MKMapItem(placemark: MKPlacemark(coordinate: myCoord))
         dirRequest.transportType = .automobile
 
         let directions = MKDirections(request: dirRequest)
@@ -369,7 +403,7 @@ struct LiveTrackingSheet: View {
             }
 
             // Route info (show when rescuer has location and route loaded)
-            if hasRescuerLocation, route != nil {
+            if hasRescuerLocation, route != nil || isArrived {
                 HStack(spacing: 12) {
                     VStack(spacing: 3) {
                         Image(systemName: "figure.wave")

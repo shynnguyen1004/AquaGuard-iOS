@@ -26,6 +26,11 @@ struct RescuerLiveTrackingSheet: View {
     // own GPS so the citizen's map sees us approach.
     @ObservedObject private var ws = WebSocketService.shared
 
+    // Last positions a route was actually computed for — recompute only once
+    // either side has moved a meaningful distance (MKDirections is rate-limited).
+    @State private var lastRoutedCitizenCoord: CLLocationCoordinate2D?
+    @State private var lastRoutedRescuerCoord: CLLocationCoordinate2D?
+
     // Citizen coordinate: live WS position > request snapshot
     private var citizenCoord: CLLocationCoordinate2D {
         ws.citizenLocation ?? CLLocationCoordinate2D(
@@ -42,8 +47,16 @@ struct RescuerLiveTrackingSheet: View {
         )
     }
 
+    // Close enough that a driving route is meaningless — hide the polyline
+    // instead of drawing (and repeatedly recomputing) a near-zero-length line.
+    private var isArrived: Bool {
+        CLLocation(latitude: citizenCoord.latitude, longitude: citizenCoord.longitude)
+            .distance(from: CLLocation(latitude: rescuerCoord.latitude, longitude: rescuerCoord.longitude)) <= 30
+    }
+
     // Computed from real route data
     private var distanceText: String {
+        if isArrived { return "Đã đến nơi" }
         guard let route = route else { return "~1.2 km" }
         let km = route.distance / 1000
         if km < 1 {
@@ -53,6 +66,7 @@ struct RescuerLiveTrackingSheet: View {
     }
 
     private var etaText: String {
+        if isArrived { return "0 min" }
         guard let route = route else { return "~8 min" }
         let minutes = Int(route.expectedTravelTime / 60)
         if minutes < 1 { return "<1 min" }
@@ -186,9 +200,14 @@ struct RescuerLiveTrackingSheet: View {
                 }
                 await calculateRoute()
             }
+            .onReceive(ws.$citizenLocation) { coord in
+                guard coord != nil else { return }
+                Task { await refreshRouteIfNeeded() }
+            }
             .onReceive(locationService.$currentLocation) { coord in
                 guard let coord, canCall else { return }
                 ws.sendLocation(latitude: coord.latitude, longitude: coord.longitude)
+                Task { await refreshRouteIfNeeded() }
             }
             .onDisappear {
                 locationService.stopStreaming()
@@ -198,7 +217,32 @@ struct RescuerLiveTrackingSheet: View {
 
     // MARK: - Route Calculation
 
+    /// Recompute only once either party has moved a meaningful distance since
+    /// the last route — without this, the polyline (unlike the live pins)
+    /// stayed frozen at whatever positions were current when the sheet opened.
+    private func refreshRouteIfNeeded() async {
+        if let lastCitizen = lastRoutedCitizenCoord, let lastRescuer = lastRoutedRescuerCoord {
+            let citizenMoved = CLLocation(latitude: citizenCoord.latitude, longitude: citizenCoord.longitude)
+                .distance(from: CLLocation(latitude: lastCitizen.latitude, longitude: lastCitizen.longitude))
+            let rescuerMoved = CLLocation(latitude: rescuerCoord.latitude, longitude: rescuerCoord.longitude)
+                .distance(from: CLLocation(latitude: lastRescuer.latitude, longitude: lastRescuer.longitude))
+            guard citizenMoved > 100 || rescuerMoved > 100 else { return }
+        }
+        await calculateRoute()
+    }
+
     private func calculateRoute() async {
+        lastRoutedCitizenCoord = citizenCoord
+        lastRoutedRescuerCoord = rescuerCoord
+
+        guard !isArrived else {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.route = nil
+                self.isLoadingRoute = false
+            }
+            return
+        }
+
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: rescuerCoord))
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: citizenCoord))

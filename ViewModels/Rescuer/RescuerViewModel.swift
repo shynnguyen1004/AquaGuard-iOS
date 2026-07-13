@@ -25,6 +25,19 @@ class RescuerViewModel: ObservableObject {
 
     private let api = APIService.shared
 
+    /// Which endpoint last populated `requests` — accept/complete/cancel refresh
+    /// through this so a team-scoped list doesn't get silently replaced by the
+    /// system-wide one (or vice versa).
+    private enum FetchSource { case all, team }
+    private var lastFetchSource: FetchSource = .all
+
+    private func refreshCurrentSource() {
+        switch lastFetchSource {
+        case .all: fetchAllRequests()
+        case .team: fetchTeamRequests()
+        }
+    }
+
     // MARK: - Computed
 
     var allRequests: [SosRequest] { requests }
@@ -43,6 +56,7 @@ class RescuerViewModel: ObservableObject {
     func fetchAllRequests() {
         guard TokenManager.shared.isAuthenticated else { return }
         isLoading = true
+        lastFetchSource = .all
 
         Task {
             do {
@@ -60,17 +74,22 @@ class RescuerViewModel: ObservableObject {
         }
     }
 
-    /// Fetch team-assigned requests (for the "Nhiệm vụ" tab)
+    /// Fetch team-assigned requests (for the "Nhiệm vụ" tab).
+    /// Only requests with `assigned_group_id` = the rescuer's team show up here —
+    /// unlike `/sos/all`, this never includes other teams' or unassigned work.
     func fetchTeamRequests() {
         guard TokenManager.shared.isAuthenticated else { return }
         isLoading = true
+        lastFetchSource = .team
 
         Task {
             do {
-                // /sos/team returns { success, data: [...], group: { id, name } }
                 let response: APIResponse<[APIRescueRequest]> = try await api.getRaw("/sos/team")
                 if let apiRequests = response.data {
                     self.requests = apiRequests.map { Self.mapToSosRequest($0) }
+                    // The top-level `group` field isn't decoded by our generic APIResponse envelope,
+                    // but every row already carries assigned_group_name — reuse it instead.
+                    self.teamName = apiRequests.first?.assignedGroupName
                     print("[RescuerVM] Loaded \(self.requests.count) team requests")
                 }
                 self.isLoading = false
@@ -97,7 +116,7 @@ class RescuerViewModel: ObservableObject {
                 let _: APIRescueRequest = try await api.put("/sos/\(request.id)/accept", body: body)
 
                 // Refresh list after action
-                self.fetchAllRequests()
+                self.refreshCurrentSource()
                 self.isActioning = false
                 print("[RescuerVM] ✅ Accepted request #\(request.id)")
             } catch {
@@ -116,7 +135,7 @@ class RescuerViewModel: ObservableObject {
             do {
                 let _: APIRescueRequest = try await api.put("/sos/\(request.id)/complete", body: [:])
 
-                self.fetchAllRequests()
+                self.refreshCurrentSource()
                 self.isActioning = false
                 print("[RescuerVM] ✅ Completed request #\(request.id)")
             } catch {
@@ -135,7 +154,7 @@ class RescuerViewModel: ObservableObject {
             do {
                 let _: APIRescueRequest = try await api.put("/sos/\(request.id)/cancel", body: [:])
 
-                self.fetchAllRequests()
+                self.refreshCurrentSource()
                 self.isActioning = false
                 print("[RescuerVM] ✅ Cancelled request #\(request.id)")
             } catch {
@@ -150,7 +169,8 @@ class RescuerViewModel: ObservableObject {
 
     /// Map backend APIRescueRequest → local SosRequest for UI
     static func mapToSosRequest(_ r: APIRescueRequest) -> SosRequest {
-        SosRequest(
+        let validImageURLs = (r.images ?? []).filter { !$0.isEmpty && URL(string: $0) != nil }
+        return SosRequest(
             id: r.id,
             userName: r.userName ?? "Unknown",
             description: r.description,
@@ -160,7 +180,11 @@ class RescuerViewModel: ObservableObject {
             urgency: r.urgency ?? "medium",
             status: r.status,
             assignedName: r.assignedName ?? r.assignedGroupName,
-            createdAt: r.createdAt ?? ""
+            assignedGroupName: r.assignedGroupName,
+            createdAt: r.createdAt ?? "",
+            images: validImageURLs,
+            userAge: r.userAge,
+            userGender: r.userGender
         )
     }
 }
