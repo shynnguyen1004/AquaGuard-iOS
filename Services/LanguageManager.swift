@@ -152,52 +152,100 @@ enum AppStrings {
         "Select your Carrier": [.english: "Select your Carrier", .vietnamese: "Chọn nhà mạng"],
         "Cancel": [.english: "Cancel", .vietnamese: "Hủy"],
         "Safety Guides": [.english: "Safety Guides", .vietnamese: "Hướng dẫn an toàn"],
+        "Before a Flood": [.english: "Before a Flood", .vietnamese: "Trước khi lũ đến"],
         "During a Flood": [.english: "During a Flood", .vietnamese: "Trong lúc lũ lụt"],
         "After a Flood": [.english: "After a Flood", .vietnamese: "Sau lũ lụt"],
+        "Health & Hygiene After Flooding": [
+            .english: "Health & Hygiene After Flooding", .vietnamese: "Sức khỏe & vệ sinh sau lũ",
+        ],
         "Vehicle Safety": [.english: "Vehicle Safety", .vietnamese: "An toàn phương tiện"],
         "Medium": [.english: "Medium", .vietnamese: "Trung bình"],
         "High": [.english: "High", .vietnamese: "Cao"],
 
+        // Safety steps - Before a Flood
+        "Prepare an emergency kit with flashlight, batteries, first aid, medications, and at least 3 days of water and food": [
+            .english: "Prepare an emergency kit with flashlight, batteries, first aid, medications, and at least 3 days of water and food",
+            .vietnamese: "Chuẩn bị túi đồ khẩn cấp gồm đèn pin, pin dự phòng, dụng cụ sơ cứu, thuốc men, và ít nhất 3 ngày nước uống, thức ăn",
+        ],
+        "Know your evacuation route in advance and agree on a safe meeting point with your family": [
+            .english: "Know your evacuation route in advance and agree on a safe meeting point with your family",
+            .vietnamese: "Xác định trước lộ trình sơ tán và thống nhất với gia đình một điểm hẹn an toàn",
+        ],
+        "Keep your phone charged and turn on flood alerts so you're notified the moment your area is at risk": [
+            .english: "Keep your phone charged and turn on flood alerts so you're notified the moment your area is at risk",
+            .vietnamese: "Luôn sạc đầy điện thoại và bật cảnh báo lũ để được thông báo ngay khi khu vực của bạn có nguy cơ",
+        ],
+        "Move valuables and important documents to higher shelves or an upper floor before water starts rising": [
+            .english: "Move valuables and important documents to higher shelves or an upper floor before water starts rising",
+            .vietnamese: "Di chuyển đồ có giá trị và giấy tờ quan trọng lên kệ cao hoặc tầng trên trước khi nước bắt đầu dâng",
+        ],
+
         // Safety steps - During a Flood
-        "Move to higher ground immediately": [
-            .english: "Move to higher ground immediately",
-            .vietnamese: "Di chuyển đến vùng cao ngay lập tức",
+        "Move to higher ground or the highest floor of your home right away — floodwater can rise faster than expected, so don't wait until it looks dangerous to act": [
+            .english: "Move to higher ground or the highest floor of your home right away — floodwater can rise faster than expected, so don't wait until it looks dangerous to act",
+            .vietnamese: "Di chuyển đến vùng cao hoặc tầng cao nhất của nhà ngay lập tức — nước lũ có thể dâng nhanh hơn bạn nghĩ, đừng chờ đến khi tình hình trông nguy hiểm mới hành động",
         ],
-        "Avoid walking or driving through flood waters": [
-            .english: "Avoid walking or driving through flood waters",
-            .vietnamese: "Tránh đi bộ hoặc lái xe qua vùng ngập",
+        "Avoid walking or driving through flood waters no matter how shallow they look — just 15cm of moving water can knock an adult off their feet, and 60cm can sweep away a car": [
+            .english: "Avoid walking or driving through flood waters no matter how shallow they look — just 15cm of moving water can knock an adult off their feet, and 60cm can sweep away a car",
+            .vietnamese: "Tránh đi bộ hoặc lái xe qua vùng nước ngập dù trông có vẻ nông — chỉ 15cm nước chảy xiết cũng có thể khiến người lớn ngã, và 60cm có thể cuốn trôi cả ô tô",
         ],
-        "Stay away from downed power lines": [
-            .english: "Stay away from downed power lines",
-            .vietnamese: "Tránh xa đường dây điện bị đứt",
+        "Stay away from downed power lines and any standing water near them, since electricity can travel through water and cause electrocution from a distance": [
+            .english: "Stay away from downed power lines and any standing water near them, since electricity can travel through water and cause electrocution from a distance",
+            .vietnamese: "Tránh xa đường dây điện bị đứt và vùng nước đọng gần đó, vì điện có thể truyền qua nước và gây điện giật dù đứng cách xa",
         ],
-        "Listen to emergency broadcasts": [
-            .english: "Listen to emergency broadcasts", .vietnamese: "Theo dõi thông báo khẩn cấp",
+        "Keep a battery-powered or hand-crank radio nearby for emergency broadcasts, since cell networks and electricity often fail first during severe flooding": [
+            .english: "Keep a battery-powered or hand-crank radio nearby for emergency broadcasts, since cell networks and electricity often fail first during severe flooding",
+            .vietnamese: "Chuẩn bị sẵn radio dùng pin hoặc quay tay để theo dõi thông báo khẩn cấp, vì mạng di động và điện thường mất trước tiên khi lũ lớn xảy ra",
         ],
 
         // Safety steps - After a Flood
-        "Return home only when authorities say it's safe": [
-            .english: "Return home only when authorities say it's safe",
-            .vietnamese: "Chỉ về nhà khi chính quyền thông báo an toàn",
+        "Return home only after authorities officially confirm it's safe — floodwater can hide structural damage and contamination that isn't visible from outside": [
+            .english: "Return home only after authorities officially confirm it's safe — floodwater can hide structural damage and contamination that isn't visible from outside",
+            .vietnamese: "Chỉ về nhà sau khi chính quyền chính thức xác nhận an toàn — nước lũ có thể che giấu hư hại kết cấu và ô nhiễm mà mắt thường không thấy được",
         ],
-        "Document damage with photos": [
-            .english: "Document damage with photos", .vietnamese: "Chụp ảnh ghi nhận thiệt hại",
+        "Document all damage with clear photos and videos before starting cleanup, since this is essential for insurance claims and relief assistance": [
+            .english: "Document all damage with clear photos and videos before starting cleanup, since this is essential for insurance claims and relief assistance",
+            .vietnamese: "Chụp ảnh và quay video rõ ràng toàn bộ thiệt hại trước khi dọn dẹp, vì đây là bằng chứng cần thiết để yêu cầu bảo hiểm và hỗ trợ cứu trợ",
         ],
-        "Clean and disinfect everything that got wet": [
-            .english: "Clean and disinfect everything that got wet",
-            .vietnamese: "Vệ sinh và khử trùng mọi thứ bị ướt",
+        "Clean and disinfect everything that got wet, including floors and furniture, since floodwater often carries sewage and bacteria that can cause illness": [
+            .english: "Clean and disinfect everything that got wet, including floors and furniture, since floodwater often carries sewage and bacteria that can cause illness",
+            .vietnamese: "Vệ sinh và khử trùng mọi thứ bị ướt, kể cả sàn nhà và đồ nội thất, vì nước lũ thường mang theo nước thải và vi khuẩn gây bệnh",
         ],
-        "Watch for structural damage": [
-            .english: "Watch for structural damage", .vietnamese: "Kiểm tra hư hại cấu trúc",
+        "Inspect your home for structural damage such as cracked foundations or a sagging roof before staying inside, and leave immediately if you notice any": [
+            .english: "Inspect your home for structural damage such as cracked foundations or a sagging roof before staying inside, and leave immediately if you notice any",
+            .vietnamese: "Kiểm tra kỹ nhà xem có hư hại kết cấu như nứt móng hay mái nhà võng xuống trước khi ở lại, và rời đi ngay nếu phát hiện dấu hiệu bất thường",
+        ],
+
+        // Safety steps - Health & Hygiene After Flooding
+        "Only drink boiled or bottled water until authorities confirm the local water supply is safe again": [
+            .english: "Only drink boiled or bottled water until authorities confirm the local water supply is safe again",
+            .vietnamese: "Chỉ uống nước đã đun sôi hoặc nước đóng chai cho đến khi chính quyền xác nhận nguồn nước sinh hoạt đã an toàn trở lại",
+        ],
+        "Wash your hands frequently with soap, especially after any contact with floodwater, to avoid infection": [
+            .english: "Wash your hands frequently with soap, especially after any contact with floodwater, to avoid infection",
+            .vietnamese: "Rửa tay thường xuyên bằng xà phòng, đặc biệt sau khi tiếp xúc với nước lũ, để tránh nhiễm khuẩn",
+        ],
+        "Watch for signs of waterborne illness such as fever, diarrhea, or skin infections, and see a doctor promptly if they appear": [
+            .english: "Watch for signs of waterborne illness such as fever, diarrhea, or skin infections, and see a doctor promptly if they appear",
+            .vietnamese: "Chú ý các dấu hiệu bệnh do nguồn nước như sốt, tiêu chảy, hoặc nhiễm trùng da, và đi khám ngay nếu xuất hiện",
+        ],
+        "Throw away any food that touched floodwater, including canned goods with damaged or bulging seals": [
+            .english: "Throw away any food that touched floodwater, including canned goods with damaged or bulging seals",
+            .vietnamese: "Bỏ toàn bộ thực phẩm đã tiếp xúc với nước lũ, kể cả đồ hộp có nắp bị móp hoặc phồng",
         ],
 
         // Safety steps - Vehicle Safety
-        "Never drive through flooded roads": [
-            .english: "Never drive through flooded roads",
-            .vietnamese: "Không lái xe qua đường ngập",
+        "Never drive through flooded roads, even ones you know well — floodwater can hide missing manhole covers, washed-out pavement, and downed power lines": [
+            .english: "Never drive through flooded roads, even ones you know well — floodwater can hide missing manhole covers, washed-out pavement, and downed power lines",
+            .vietnamese: "Không bao giờ lái xe qua đường ngập, kể cả những đoạn đường quen thuộc — nước lũ có thể che giấu nắp cống bị mất, mặt đường bị cuốn trôi, và dây điện bị đứt",
         ],
-        "Turn around if water is rising": [
-            .english: "Turn around if water is rising", .vietnamese: "Quay đầu nếu nước đang dâng",
+        "If water starts rising around your car, turn around immediately and head for higher ground rather than trying to push through": [
+            .english: "If water starts rising around your car, turn around immediately and head for higher ground rather than trying to push through",
+            .vietnamese: "Nếu nước bắt đầu dâng quanh xe, hãy quay đầu ngay và tìm đến vùng cao thay vì cố đi tiếp",
+        ],
+        "If your car stalls or starts floating in rising water, get out right away and move to higher ground on foot instead of staying inside": [
+            .english: "If your car stalls or starts floating in rising water, get out right away and move to higher ground on foot instead of staying inside",
+            .vietnamese: "Nếu xe chết máy hoặc bắt đầu nổi trong nước dâng, hãy ra khỏi xe ngay lập tức và đi bộ đến vùng cao thay vì ở lại trong xe",
         ],
 
         // MARK: Rescue tab content

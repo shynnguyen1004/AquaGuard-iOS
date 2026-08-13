@@ -151,17 +151,32 @@ struct SafetyView: View {
 
                     // Safety guides list
                     SafetySection(
+                        icon: "backpack.fill",
+                        iconColor: .indigo,
+                        title: languageManager.localize("Before a Flood"),
+                        tag: languageManager.localize("High"),
+                        tagColor: .orange,
+                        steps: [
+                            languageManager.localize("Prepare an emergency kit with flashlight, batteries, first aid, medications, and at least 3 days of water and food"),
+                            languageManager.localize("Know your evacuation route in advance and agree on a safe meeting point with your family"),
+                            languageManager.localize("Keep your phone charged and turn on flood alerts so you're notified the moment your area is at risk"),
+                            languageManager.localize("Move valuables and important documents to higher shelves or an upper floor before water starts rising"),
+                        ]
+                    )
+                    .padding(.horizontal)
+
+                    SafetySection(
                         icon: "house.fill",
                         iconColor: .red,
                         title: languageManager.localize("During a Flood"),
                         tag: languageManager.localize("Critical"),
                         tagColor: .red,
                         steps: [
-                            languageManager.localize("Move to higher ground immediately"),
+                            languageManager.localize("Move to higher ground or the highest floor of your home right away — floodwater can rise faster than expected, so don't wait until it looks dangerous to act"),
                             languageManager.localize(
-                                "Avoid walking or driving through flood waters"),
-                            languageManager.localize("Stay away from downed power lines"),
-                            languageManager.localize("Listen to emergency broadcasts"),
+                                "Avoid walking or driving through flood waters no matter how shallow they look — just 15cm of moving water can knock an adult off their feet, and 60cm can sweep away a car"),
+                            languageManager.localize("Stay away from downed power lines and any standing water near them, since electricity can travel through water and cause electrocution from a distance"),
+                            languageManager.localize("Keep a battery-powered or hand-crank radio nearby for emergency broadcasts, since cell networks and electricity often fail first during severe flooding"),
                         ]
                     )
                     .padding(.horizontal)
@@ -174,10 +189,25 @@ struct SafetyView: View {
                         tagColor: .blue,
                         steps: [
                             languageManager.localize(
-                                "Return home only when authorities say it's safe"),
-                            languageManager.localize("Document damage with photos"),
-                            languageManager.localize("Clean and disinfect everything that got wet"),
-                            languageManager.localize("Watch for structural damage"),
+                                "Return home only after authorities officially confirm it's safe — floodwater can hide structural damage and contamination that isn't visible from outside"),
+                            languageManager.localize("Document all damage with clear photos and videos before starting cleanup, since this is essential for insurance claims and relief assistance"),
+                            languageManager.localize("Clean and disinfect everything that got wet, including floors and furniture, since floodwater often carries sewage and bacteria that can cause illness"),
+                            languageManager.localize("Inspect your home for structural damage such as cracked foundations or a sagging roof before staying inside, and leave immediately if you notice any"),
+                        ]
+                    )
+                    .padding(.horizontal)
+
+                    SafetySection(
+                        icon: "cross.vial.fill",
+                        iconColor: .teal,
+                        title: languageManager.localize("Health & Hygiene After Flooding"),
+                        tag: languageManager.localize("Medium"),
+                        tagColor: .blue,
+                        steps: [
+                            languageManager.localize("Only drink boiled or bottled water until authorities confirm the local water supply is safe again"),
+                            languageManager.localize("Wash your hands frequently with soap, especially after any contact with floodwater, to avoid infection"),
+                            languageManager.localize("Watch for signs of waterborne illness such as fever, diarrhea, or skin infections, and see a doctor promptly if they appear"),
+                            languageManager.localize("Throw away any food that touched floodwater, including canned goods with damaged or bulging seals"),
                         ]
                     )
                     .padding(.horizontal)
@@ -189,8 +219,9 @@ struct SafetyView: View {
                         tag: languageManager.localize("High"),
                         tagColor: .orange,
                         steps: [
-                            languageManager.localize("Never drive through flooded roads"),
-                            languageManager.localize("Turn around if water is rising"),
+                            languageManager.localize("Never drive through flooded roads, even ones you know well — floodwater can hide missing manhole covers, washed-out pavement, and downed power lines"),
+                            languageManager.localize("If water starts rising around your car, turn around immediately and head for higher ground rather than trying to push through"),
+                            languageManager.localize("If your car stalls or starts floating in rising water, get out right away and move to higher ground on foot instead of staying inside"),
                         ]
                     )
                     .padding(.horizontal)
